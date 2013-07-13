@@ -11,6 +11,11 @@ Bundle 'gmarik/vundle'
 Bundle "othree/html5.vim"
 Bundle "vim-scripts/Colour-Sampler-Pack"
 Bundle "vim-scripts/ScrollColors"
+Bundle "https://github.com/kien/ctrlp.vim.git"
+Bundle "https://github.com/ddollar/nerdcommenter.git"
+Bundle "https://github.com/majutsushi/tagbar.git"
+Bundle "https://github.com/vim-scripts/ZoomWin.git"
+Bundle "https://github.com/jeetsukumaran/vim-buffergator.git"
 
 Bundle "comment.vim"
 
