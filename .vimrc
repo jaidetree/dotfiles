@@ -16,6 +16,7 @@ Bundle "https://github.com/ddollar/nerdcommenter.git"
 Bundle "https://github.com/majutsushi/tagbar.git"
 Bundle "https://github.com/vim-scripts/ZoomWin.git"
 Bundle "https://github.com/jeetsukumaran/vim-buffergator.git"
+Bundle "https://github.com/scrooloose/syntastic.git"
 
 Bundle "comment.vim"
 
