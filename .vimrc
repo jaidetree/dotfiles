@@ -17,10 +17,14 @@ Bundle "https://github.com/majutsushi/tagbar.git"
 Bundle "https://github.com/vim-scripts/ZoomWin.git"
 Bundle "https://github.com/jeetsukumaran/vim-buffergator.git"
 Bundle "https://github.com/scrooloose/syntastic.git"
+Bundle "https://github.com/msanders/snipmate.vim.git"
+Bundle "https://github.com/hail2u/vim-css3-syntax.git"
+Bundle "https://github.com/cakebaker/scss-syntax.vim.git"
 
 Bundle "comment.vim"
 
 set t_Co=256
+syntax on
 
 " In many terminal emulators the mouse works just fine, thus enable it.
 if has('mouse')
@@ -111,8 +115,10 @@ endif
 
 " Auto Commands
 autocmd BufEnter * silent! %foldopen!
+autocmd BufRead,BufNewFile,BufEnter */instevent/* setl sw=2 sts=2 et
+autocmd BufRead,BufNewFile,BufEnter *.py,*.js setl sw=4 sts=4 et
 
-cd ~/Projects/
+cd %:p:h
 
 " Themes
 " colo freya
@@ -127,4 +133,5 @@ cd ~/Projects/
 "colo dusk
 "color darkbone
 "color denim
-color fu
+"color fu
+color rdark
