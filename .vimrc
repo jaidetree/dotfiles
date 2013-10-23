@@ -20,6 +20,7 @@ Bundle "https://github.com/scrooloose/syntastic.git"
 Bundle "https://github.com/msanders/snipmate.vim.git"
 Bundle "https://github.com/hail2u/vim-css3-syntax.git"
 Bundle "https://github.com/cakebaker/scss-syntax.vim.git"
+Bundle "https://github.com/pangloss/vim-javascript.git"
 
 Bundle "comment.vim"
 
@@ -93,6 +94,9 @@ set nowb
 set cpoptions+=$
 set ch=2
 
+" Mac settings
+set clipboard=unnamed
+
 " KEY MAPS
 inoremap <C-U> <C-G>u<C-U>
 nmap <Up> <Nop>
@@ -114,7 +118,7 @@ if has('statusline')
 endif
 
 " Auto Commands
-autocmd BufEnter * silent! %foldopen!
+autocmd BufRead * silent! %foldopen!
 autocmd BufRead,BufNewFile,BufEnter */instevent/* setl sw=2 sts=2 et
 autocmd BufRead,BufNewFile,BufEnter *.py,*.js setl sw=4 sts=4 et
 
