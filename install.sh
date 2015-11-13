@@ -2,7 +2,7 @@
 
 src="$HOME/dotfiles"
 
-target="~"
+target="$HOME"
 # target="$src/test"
 
 trim () {
