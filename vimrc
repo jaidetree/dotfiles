@@ -1,11 +1,10 @@
 " Needed on some linux distros.
 filetype off
-set rtp+=~/.vim/bundle/vundle/
+set rtp+=~/.vim/bundle/Vundle.vim/
 call vundle#rc()
 
-" let Vundle manage Vundle
-" required! 
-Plugin 'gmarik/vundle'
+" let Vundle manage Vundle, required! 
+Plugin 'VundleVim/Vundle.vim'
 
 " Plugins
 Plugin 'othree/html5.vim'
@@ -34,6 +33,7 @@ Plugin 'briancollins/vim-jst'
 Plugin 'kchmck/vim-coffee-script'
 Plugin 'tpope/vim-surround'
 Plugin 'digitaltoad/vim-jade'
+call vundle#end()
 
 set t_Co=256
 syntax on
