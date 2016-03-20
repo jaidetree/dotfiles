@@ -47,7 +47,7 @@ printf "\e[96m->\e[0m Generating tmux config for \e[95m$os...\e[0m\n"
 # Generate the proper config for the OSX
 cat > $target/.tmux.conf << EOF
   source-file $src/tmux.d/base.conf
-  ource-file $src/tmux.d/$os.conf
+  source-file $src/tmux.d/$os.conf
 EOF
 printf "\e[96m->\e[0m \e[92mDone.\e[0m\n\n"
 
