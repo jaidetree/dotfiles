@@ -1,14 +1,14 @@
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH=/Users/jay/.oh-my-zsh
+export ZSH=/home/vagrant/.oh-my-zsh
 
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 # ZSH_THEME="robbyrussell"
-ZSH_THEME="jay-light"
+ZSH_THEME="jay"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -59,16 +59,14 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-export PATH=/usr/local/share/npm/bin/:/usr/local:/usr/local/bin:/Users/jay/Scripts:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/share/npm/bin/:/Users/jay/Scripts:$PATH
+export PATH=/usr/local/share/npm/bin/:/usr/local:/usr/local/bin/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/share/npm/bin/:$PATH
 export NODE_PATH=/usr/local/lib/node_modules
 # export EDITOR=vim
-export EDITOR="subl -w"
-export ATOM_REPOS_HOME=/Users/jay/Projects/Atom/
+export EDITOR="vi"
 export FZF_DEFAULT_COMMAND='ag -g ""'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
-source ~/dotfiles/zsh/shellvars.zsh
-source ~/.bin/tmuxinator.zsh
+source ~/dotfiles/venuebook-vagrant/bin/tmuxinator.zsh
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -97,21 +95,3 @@ source ~/.bin/tmuxinator.zsh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-if [ -n "$BASH_VERSION" ] || [ -n "$ZSH_VERSION" ]; then
-  source /usr/local/opt/chruby/share/chruby/chruby.sh
-  chruby 2.1.3
-fi
-
-alias rb="bundle exec ruby"
-alias tmux="unset TMUX && tmux"
-alias fuck='$(thefuck $(fc -ln -1))'
-alias build="gulp build:js -p -f"
-alias watchify="gulp build:js -w -f"
-alias bundle="gulp build:js -f"
-alias vb="cd ~/Projects/venuebook/venuebook.com"
-alias vbjs="cd ~/Projects/venuebook/venuebook.com/instevent/app/main/js/app && cd "
-alias prune-local-branches="git branch --list --no-color | sed 's/\*/ /g' | xargs -n1 -p git branch -D"
-alias prune-remote-branches="git branch --list --no-color -r | grep origin/ | tail +2 | sed 's/\// :/g' | xargs -n2 -p git push"
-alias prune-branches="prune-local-branches && prune-remote-branches"
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

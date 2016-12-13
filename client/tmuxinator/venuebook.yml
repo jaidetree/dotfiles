@@ -1,0 +1,17 @@
+# ~/.tmuxinator/venuebook.yml
+# you can make as many tabs as you wish...
+#
+#  - vagrant up && vagrant ssh -- -t 'cd ~/workspace/venuebook; /bin/bash runserver'
+
+project_name: venuebook
+project_root: ~/Projects/Vagrant/venuebook/workspace/venuebook
+windows:
+    - editor:
+        layout: main-horizontal
+        panes:
+          -
+          -
+          - gulp watch
+    - gulp:
+        panes:
+          - cd gulp
