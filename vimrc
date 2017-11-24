@@ -1,7 +1,9 @@
 " Needed on some linux distros.
+set nocompatible
 filetype off
-set rtp+=~/.vim/bundle/Vundle.vim/
-call vundle#rc()
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
 
 " let Vundle manage Vundle, required! 
 Plugin 'VundleVim/Vundle.vim'
@@ -19,7 +21,6 @@ Plugin 'https://github.com/jeetsukumaran/vim-buffergator.git'
 Plugin 'https://github.com/msanders/snipmate.vim.git'
 Plugin 'https://github.com/hail2u/vim-css3-syntax.git'
 Plugin 'https://github.com/cakebaker/scss-syntax.vim.git'
-Plugin 'https://github.com/pangloss/vim-javascript.git'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'mustache/vim-mustache-handlebars'
 Plugin 'editorconfig/editorconfig-vim'
@@ -28,25 +29,35 @@ Plugin 'comment.vim'
 " Plugin 'scrooloose/nerdtree'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'mileszs/ack.vim'
-Plugin 'Valloric/YouCompleteMe'
+" Plugin 'Valloric/YouCompleteMe'
 Plugin 'briancollins/vim-jst'
 Plugin 'kchmck/vim-coffee-script'
 Plugin 'tpope/vim-surround'
 Plugin 'digitaltoad/vim-jade'
+Plugin 'mxw/vim-jsx'
+Plugin 'isRuslan/vim-es6'
+Plugin 'vim-scripts/Miranda-syntax-highlighting'
+Plugin 'guns/vim-clojure-static'
+Plugin 'tpope/vim-fireplace'
+Plugin 'bhurlow/vim-parinfer'
+" Plugin 'kien/rainbow_parentheses.vim'
+" Plugin 'ervandew/screen'
 call vundle#end()
+
+filetype plugin indent on
 
 set t_Co=256
 syntax on
 
 " In many terminal emulators the mouse works just fine, thus enable it.
-if has('mouse')
-    set mouse=a
-endif
+"if has('mouse')
+    "set mouse=a
+"endif
 
 " Only do this part when compiled with support for autocommands.
-if has("autocmd")
-    filetype plugin indent on
-endif
+" if has("autocmd")
+    "filetype plugin indent on
+" endif
 
 " Jay's Edits
 scriptencoding utf-8
@@ -58,12 +69,11 @@ set relativenumber
 set guioptions-=T
 set showcmd   " display incomplete commands
 set showmode
-set lazyredraw
+" set lazyredraw
 set gdefault
 let loaded_matchparen = 1
 set hidden
 set laststatus=2
-let g:closetag_html_style=1
 
 " Grep settings
 set grepprg=ack\ -k
@@ -76,12 +86,11 @@ set shiftwidth=2
 set expandtab
 set smarttab
 set autoindent
+" set autoindent
 " set copyindent
 
 " Fold Settings
 set foldenable
-set foldmethod=indent
-set foldminlines=3
 
 " Cursor Settings
 set guicursor=n-v-c:block-Cursor-blinkon0,ve:ver35-Cursor,o:hor50-Cursor,i-ci:ver25-Cursor,r-cr:hor20-Cursor,sm:block-Cursor-blinkwait175-blinkoff150-blinkon175
@@ -106,13 +115,16 @@ set nowb
 
 " Change command settings
 set cpoptions+=$
-set ch=2
+set ch=2            
 set pastetoggle=<F2>
 
 " Make vim faster in terminal
 set lazyredraw
 set ttyfast
-set shell=/bin/bash\ -i
+set shell=/bin/zsh\ -l
+set colorcolumn=80,120
+
+let g:clojure_align_multiline_strings=1
 
 " Mac settings
 " set clipboard=unnamed
@@ -127,6 +139,7 @@ nmap <Up> <Nop>
 nmap <Down> <Nop>
 nmap <Left> <Nop>
 nmap <Right> <Nop>
+nmap <C-c><C-c> :ScreenShell<cr>
 
 map ,cd :cd %:p:h<CR>
 map <C-k>b :NERDTreeToggle<CR>
@@ -134,8 +147,7 @@ map <C-k>b :NERDTreeToggle<CR>
 nnoremap <silent> <Esc><Esc> :nohls<CR><CR>
 nnoremap j gj
 nnoremap k gk
-nnoremap <Up> <C-W>-
-nnoremap <Down> <C-W>+
+nnoremap <Up> <C-W>- nnoremap <Down> <C-W>+
 nnoremap <Left> <C-W><
 nnoremap <Right> <C-W>>
 nnoremap <silent> <C-t> :Tex<CR>
@@ -147,6 +159,8 @@ nnoremap <silent> <C-j><S-k> :Hexplore!<CR>
 noremap <Leader>c "+y
 noremap <silent> ,s :syntax sync fromstart<CR>
 
+" DISABLE NORMAL MODE H,J,K,L binding to train better habits
+
 " Makes parts of an_underscored_word a seperate word.
 " set isk-=_
 
@@ -155,7 +169,7 @@ if has('statusline')
 endif
 
 " Auto Commands
-autocmd BufRead,BufEnter * silent! %foldopen!
+" autocmd BufRead,BufEnter * silent! %foldopen!
 
 " PLUGIN SETTINGS
 
@@ -178,5 +192,8 @@ cd %:p:h
 " color rdark
 " color railscasts
 " color made-of-code
-color blacksea
+" color blacksea
+" color leo
+color mizore
 
+hi ColorColumn ctermbg=5

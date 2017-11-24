@@ -25,22 +25,22 @@ export ZSH_THEME="jay"
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git npm osx sublime history-substring-search django cloudapp dircycle dirhistory git-extras pip tmux tmuxinator vagrant web-search)
+plugins=(git npm osx sublime history-substring-search django cloudapp dircycle dirhistory git-extras pip tmux tmuxinator vagrant web-search virtualenvwrapper)
 
 source $ZSH/oh-my-zsh.sh
 
 # Customize to your needs...
-export PATH=/usr/local/share/npm/bin/:/usr/local/bin::/Library/PostgreSQL/9.2/bin/Users/jay/Scripts:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/git/bin:/usr/local/share/npm/bin/:/Library/PostgreSQL/9.2/bin:/Users/jay/Scripts
+# export PATH=/usr/local/share/npm/bin/:/usr/local/bin::/Library/PostgreSQL/9.2/bin/Users/jay/Scripts:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/git/bin:/usr/local/share/npm/bin/:/Library/PostgreSQL/9.2/bin:/Users/jay/Scripts
 export NODE_PATH=/usr/local/lib/node_modules
 
 export EDITOR=vim
 
 source ~/.bin/tmuxinator.zsh
 
-if [ -n "$BASH_VERSION" ] || [ -n "$ZSH_VERSION" ]; then
-  source /usr/local/opt/chruby/share/chruby/chruby.sh
-  chruby 2.1.3
-fi
+# if [ -n "$BASH_VERSION" ] || [ -n "$ZSH_VERSION" ]; then
+#   source /usr/local/opt/chruby/share/chruby/chruby.sh
+#   chruby 2.1.3
+# fi
 
 alias rb="bundle exec ruby"
 alias tmux="unset TMUX && tmux"
@@ -60,23 +60,5 @@ alias watchify="gulp watchify-this -f"
 # zle -N zle-line-init
 # zle -N zle-keymap-select
 
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
-alias vim="subl -w"
-export EDITOR=vim="subl -w"
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$HOME/bin:$PATH"
