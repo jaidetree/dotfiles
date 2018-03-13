@@ -83,7 +83,13 @@
     js2-mode
     
     ;; use .editorconfig files
-    editorconfig))
+    editorconfig
+
+    ;; highlight indentation
+    highlight-indent-guides
+    
+    ;; vertical ruler
+    fill-column-indicator))
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
@@ -123,6 +129,7 @@
 ;; Add a directory to our load path so that when you `load` things
 ;; below, Emacs knows where to look for the corresponding file.
 (add-to-list 'load-path "~/.emacs.d/customizations")
+(add-to-list 'load-path "~/.emacs.d/packages")
 
 ;; Sets up exec-path-from-shell so that Emacs will use the correct
 ;; environment variables
@@ -150,18 +157,3 @@
 (load "setup-js.el")
 
 ;; Other stuff
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (editorconfig tagedit smex rainbow-delimiters projectile paredit magit js2-mode ido-ubiquitous git-rebase-mode git-commit-mode exec-path-from-shell evil clojure-mode-extra-font-locking cider))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

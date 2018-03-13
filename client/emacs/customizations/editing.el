@@ -30,10 +30,18 @@
 (global-set-key (kbd "C-r") 'isearch-backward-regexp)
 (global-set-key (kbd "C-M-s") 'isearch-forward)
 (global-set-key (kbd "C-M-r") 'isearch-backward)
+
+;; VIM key customizations
 (global-set-key (kbd "C-l") 'evil-window-right)
 (global-set-key (kbd "C-h") 'evil-window-left)
 (global-set-key (kbd "C-k") 'evil-window-up)
 (global-set-key (kbd "C-j") 'evil-window-down)
+(global-set-key (kbd "s-l") 'evil-window-right)
+(global-set-key (kbd "s-h") 'evil-window-left)
+(global-set-key (kbd "s-k") 'evil-window-up)
+(global-set-key (kbd "s-j") 'evil-window-down)
+
+;; Indent customizations
 (global-set-key (kbd "RET") 'newline-and-indent)
 
 ;; Don't use hard tabs
@@ -42,8 +50,7 @@
 ;; When you visit a file, point goes to the last place where it
 ;; was when you previously visited the same file.
 ;; http://www.emacswiki.org/emacs/SavePlace
-(require 'saveplace)
-(setq-default save-place t)
+(save-place-mode 1) 
 ;; keep track of saved places in ~/.emacs.d/places
 (setq save-place-file (concat user-emacs-directory "places"))
 
@@ -77,5 +84,8 @@
       (ns-get-selection-internal 'CLIPBOARD)
     (quit nil)))
 
+;; Custom settings
+
 (setq electric-indent-mode nil)
 
+(setq custom-file "custom.el")

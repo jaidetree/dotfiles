@@ -72,3 +72,7 @@
 ;; no bell
 (setq ring-bell-function 'ignore)
 
+(setq highlight-indent-guides-method 'character)
+(add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+
+(add-hook 'prog-mode-hook 'fci-mode)
