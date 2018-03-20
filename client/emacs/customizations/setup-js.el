@@ -1,15 +1,19 @@
 ;; javascript / html
-(setq js2-auto-indent-flag 0)
-
-(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-(add-hook 'js2-mode-hook 'electric-indent-mode)
-(add-hook 'js2-mode-hook 'subword-mode)
-(add-hook 'html-mode-hook 'subword-mode)
+(add-to-list 'auto-mode-alist '("\\.js[x]?\\'" . web-mode))
+;; (add-hook 'web-mode-hook 'electric-indent-mode)
+;; (add-hook 'web-mode-hook 'subword-mode)
+;; (add-hook 'html-mode-hook 'subword-mode)
 (eval-after-load "sgml-mode"
   '(progn
      (require 'tagedit)
      (tagedit-add-paredit-like-keybindings)
      (add-hook 'html-mode-hook (lambda () (tagedit-mode 1)))))
+
+(setq web-mode-code-indent-offset 2)
+(add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
+(add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
+;; (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
+;; (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
 
 
 ;; coffeescript
