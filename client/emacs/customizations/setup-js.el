@@ -9,11 +9,17 @@
      (tagedit-add-paredit-like-keybindings)
      (add-hook 'html-mode-hook (lambda () (tagedit-mode 1)))))
 
-(setq web-mode-code-indent-offset 2)
-(add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
-(add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
 ;; (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
 ;; (add-to-list 'web-mode-indentation-params '("lineup-ternary" . nil))
+
+(defun custom-web-mode-hook ()
+  "Customizations for Web mode"
+  (whitespace-mode t)
+  (setq web-mode-code-indent-offset 2)
+  (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
+  (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil)))
+
+(add-hook 'web-mode-hook 'custom-web-mode-hook)
 
 
 ;; coffeescript
