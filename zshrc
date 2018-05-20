@@ -1,5 +1,5 @@
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
 export ZSH=/Users/jay/.oh-my-zsh
@@ -66,14 +66,36 @@ export EDITOR="subl -w"
 export ATOM_REPOS_HOME=/Users/jay/Projects/Atom/
 export FZF_DEFAULT_COMMAND='ag -g ""'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export ZSH_TMUX_AUTOCONNECT=false
 
 source ~/dotfiles/zsh/shellvars.zsh
 source ~/.bin/tmuxinator.zsh
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+if [ -n "$BASH_VERSION" ] || [ -n "$ZSH_VERSION" ]; then
+  source /usr/local/opt/chruby/share/chruby/chruby.sh
+  chruby 2.3.3
+fi
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export LC_NUMERIC=en_US.UTF-8
+export LC_TIME=en_US.UTF-8
+export LC_COLLATE=en_US.UTF-8
+export LC_MONETARY=en_US.UTF-8
+export LC_MESSAGES=en_US.UTF-8
+export LC_PAPER=en_US.UTF-8
+export LC_NAME=en_US.UTF-8
+export LC_ADDRESS=en_US.UTF-8
+export LC_TELEPHONE=en_US.UTF-8
+export LC_MEASUREMENT=en_US.UTF-8
+export LC_IDENTIFICATION=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -97,21 +119,17 @@ source ~/.bin/tmuxinator.zsh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-if [ -n "$BASH_VERSION" ] || [ -n "$ZSH_VERSION" ]; then
-  source /usr/local/opt/chruby/share/chruby/chruby.sh
-  chruby 2.1.3
-fi
-
 alias rb="bundle exec ruby"
-alias tmux="unset TMUX && tmux"
 alias fuck='$(thefuck $(fc -ln -1))'
 alias build="gulp build:js -p -f"
 alias watchify="gulp build:js -w -f"
 alias bundle="gulp build:js -f"
-alias vb="cd ~/Projects/venuebook/venuebook.com"
+alias vb=$vb
 alias vbjs="cd ~/Projects/venuebook/venuebook.com/instevent/app/main/js/app && cd "
 alias prune-local-branches="git branch --list --no-color | sed 's/\*/ /g' | xargs -n1 -p git branch -D"
 alias prune-remote-branches="git branch --list --no-color -r | grep origin/ | tail +2 | sed 's/\// :/g' | xargs -n2 -p git push"
 alias prune-branches="prune-local-branches && prune-remote-branches"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+searchjs() {
+  ack $* -- ~/Projects/venuebook/venuebook.com/instevent/app/main/js
+}

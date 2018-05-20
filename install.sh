@@ -14,20 +14,20 @@ printf "\e[92mInstalling dotfiles!\e[0m\n\n"
 printf "\e[96m->\e[0m Creating symlinks ...\n"
 
 # Create our dotfile symlinks
-ln -s $src/vim $target/.vim
+ln -sf $src/vim $target/.vim
 printf "\e[96m->\e[0m Symlinked \e[95mvim \e[93m->\e[0m \e[95m$target/.vim \e[0m \n"
-ln -s $src/vimrc $target/.vimrc
+ln -sf $src/vimrc $target/.vimrc
 printf "\e[96m->\e[0m Symlinked \e[95mvimrc \e[93m->\e[0m \e[95m$target/.vimrc \e[0m \n"
-ln -s $src/zshrc $target/.zshrc
+ln -sf $src/zshrc $target/.zshrc
 printf "\e[96m->\e[0m Symlinked \e[95mzshrc \e[93m->\e[0m \e[95m$target/.zshrc \e[0m \n"
-ln -s $src/oh-my-zsh/themes/jay.zsh-theme $target/.oh-my-zsh/themes/jay.zsh-theme
+ln -sf $src/zsh/themes/jay.zsh-theme $target/.oh-my-zsh/themes/jay.zsh-theme
 printf "\e[96m->\e[0m Symlinked \e[95mjay.zsh-theme \e[93m->\e[0m \e[95m$target/.oh-my-zsh/themes/jay.zsh-theme \e[0m \n"
 
 # Create backup of git zsh file
 mv $target/.oh-my-zsh/lib/git.zsh $target/.oh-my-zsh/lib/git.zsh.bak
 
 # Create symlink to modified git plugin
-ln -s $src/oh-my-zsh/lib/git.zsh $target/.oh-my-zsh/lib/git.zsh
+ln -sf $src/zsh/lib/git.zsh $target/.oh-my-zsh/lib/git.zsh
 printf "\e[96m->\e[0m Symlinked \e[95mgit.zsh \e[93m->\e[0m \e[95m$target/.oh-my-zsh/lib/git.zsh \e[0m \n"
 
 printf "\e[96m->\e[0m \e[92mDone.\e[0m\n\n"
@@ -37,7 +37,7 @@ printf "\e[93mInstall settings for OSX? \e[0m"
 read -e -p "(y/n [n]) > " answer
 
 # Set the answer
-if [ trim $answer == "y" ]; then 
+if [ trim $answer == "y" ]; then
   os="osx"
 else
   os="unix"
