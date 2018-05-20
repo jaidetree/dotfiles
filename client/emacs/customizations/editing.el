@@ -24,12 +24,6 @@
 ;; Editor Config
 (editorconfig-mode 1)
 
-;; Unset cmd-p print key binding
-(global-unset-key (kbd "s-p"))
-
-;; Unset global cmd-k
-(global-unset-key (kbd "s-k"))
-
 ;; Interactive search key bindings. By default, C-s runs
 ;; isearch-forward, so this swaps the bindings.
 (global-set-key (kbd "C-s") 'isearch-forward-regexp)
@@ -42,18 +36,13 @@
 (global-set-key (kbd "C-h") 'evil-window-left)
 (global-set-key (kbd "C-k") 'evil-window-up)
 (global-set-key (kbd "C-j") 'evil-window-down)
+(global-set-key (kbd "s-l") 'evil-window-right)
+(global-set-key (kbd "s-h") 'evil-window-left)
+(global-set-key (kbd "s-k") 'evil-window-up)
+(global-set-key (kbd "s-j") 'evil-window-down)
 
 ;; Indent customizations
 (global-set-key (kbd "RET") 'newline-and-indent)
-
-;; Show file explorer
-(global-set-key (kbd "s-k b") 'neotree-toggle)
-
-;; Frame navigation
-(evil-global-set-key 'normal "gt" 'other-frame)
-(evil-global-set-key 'normal "gT" 'ns-prev-frame)
-(global-set-key (kbd "s-{") 'ns-prev-frame)
-(global-set-key (kbd "s-}") 'other-frame)
 
 ;; Don't use hard tabs
 (setq-default indent-tabs-mode nil)
@@ -61,7 +50,7 @@
 ;; When you visit a file, point goes to the last place where it
 ;; was when you previously visited the same file.
 ;; http://www.emacswiki.org/emacs/SavePlace
-(save-place-mode 1)
+(save-place-mode 1) 
 ;; keep track of saved places in ~/.emacs.d/places
 (setq save-place-file (concat user-emacs-directory "places"))
 
@@ -99,35 +88,4 @@
 
 (setq electric-indent-mode nil)
 
-;; parinfer customizations
-(setq parinfer-extensions
-      '(defaults
-         paredit
-         smart-tab
-         smart-yank))
-
-(defun enable-parinfer-mode ()
-  "Enables parinfer on indent mode + rainbow parens"
-  (setq parinfer-auto-switch-indent-mode t)
-  (parinfer-mode t)
-  (rainbow-delimiters-mode t))
-
-;; visualize whitespace and long-lines
-(require 'whitespace)
-(setq whitespace-style
-      '(face
-        tabs
-        spaces
-        trailing
-        space-before-tab
-        indentation
-        space-after-tab
-        space-mark
-        tab-mark
-        lines-tail))
-(setq whitespace-line-column 78)
-(global-whitespace-mode t)
-
-;; delete trailling white space before save
-(add-hook 'before-save-hook 'whitespace-cleanup)
-
+(setq custom-file "custom.el")

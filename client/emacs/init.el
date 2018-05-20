@@ -1,5 +1,5 @@
 ;;;;
-;; PACKAGES
+;; Packages
 ;;;;
 
 ;; Define package repositories
@@ -79,21 +79,20 @@
     ;; git integration
     magit
 
+    ;; ES6 javascript mode
+    js2-mode
+
     ;; use .editorconfig files
     editorconfig
+
+    ;; highlight indentation
+    highlight-indent-guides
 
     ;; vertical ruler
     fill-column-indicator
 
-    ;; project tree
-    neotree
-
-    ;; automatic parenthesis for lispy languages
-    parinfer
-
-    ;; jsx & js syntax
-    web-mode
-    ))
+    ;; for good grammer
+    writegood-mode))
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
@@ -108,7 +107,6 @@
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
-    (package-refresh-contents)
     (package-install p)))
 
 
@@ -161,8 +159,4 @@
 (load "setup-clojure.el")
 (load "setup-js.el")
 
-;; Load emacs customizations
-(load "custom.el")
-
 ;; Other stuff
-(setq custom-file "~/.emacs.d/customizations/custom.el")
