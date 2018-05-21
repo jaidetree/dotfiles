@@ -1,5 +1,5 @@
 ;;;;
-;; Packages
+;; PACKAGES
 ;;;;
 
 ;; Define package repositories
@@ -72,27 +72,28 @@
 
     ;; edit html tags like sexps
     tagedit
-
+    
     ;; vim-mode emulation
     evil
 
     ;; git integration
     magit
-
-    ;; ES6 javascript mode
-    js2-mode
-
+    
     ;; use .editorconfig files
     editorconfig
-
-    ;; highlight indentation
-    highlight-indent-guides
-
+    
     ;; vertical ruler
     fill-column-indicator
 
-    ;; for good grammer
-    writegood-mode))
+    ;; project tree
+    neotree
+
+    ;; automatic parenthesis for lispy languages
+    parinfer
+
+    ;; jsx & js syntax
+    web-mode
+    ))
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
@@ -107,6 +108,7 @@
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
+    (package-refresh-contents)
     (package-install p)))
 
 
@@ -118,7 +120,7 @@
 ;;
 ;; (require 'yaml-mode)
 ;; (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
-;;
+;; 
 ;; Adding this code will make Emacs enter yaml mode whenever you open
 ;; a .yml file
 (add-to-list 'load-path "~/.emacs.d/vendor")
