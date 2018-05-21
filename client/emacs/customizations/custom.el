@@ -15,7 +15,7 @@
  '(linum ((t (:background "#222" :foreground "#666" :slant normal))))
  '(linum-relative-current-face ((t (:inherit linum :background "#444" :foreground "Cyan"))))
  '(whitespace-hspace ((t (:foreground "darkgray"))))
- '(whitespace-line ((t (:background "#343746"))))
+ '(whitespace-line ((t (:background "#444759"))))
  '(whitespace-newline ((t (:foreground "#555" :weight normal))))
  '(whitespace-space ((t (:foreground "#555"))))
  '(whitespace-trailing ((t (:background "#777" :foreground "#777")))))

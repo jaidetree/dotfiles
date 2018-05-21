@@ -8,7 +8,7 @@ export ZSH=/Users/jay/.oh-my-zsh
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 # ZSH_THEME="robbyrussell"
-ZSH_THEME="jay-light"
+ZSH_THEME="jay"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -27,7 +27,7 @@ HYPHEN_INSENSITIVE="true"
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
@@ -59,13 +59,15 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-export PATH=/usr/local/share/npm/bin/:/usr/local:/usr/local/bin:/Users/jay/Scripts:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/share/npm/bin/:/Users/jay/Scripts:$PATH
+export PATH=/usr/local/share/python/:/usr/local/share/npm/bin/:/usr/local:/usr/local/bin:/Users/jay/Scripts:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/share/npm/bin/:/Users/jay/Scripts:$PATH
 export NODE_PATH=/usr/local/lib/node_modules
-# export EDITOR=vim
-export EDITOR="subl -w"
+export EDITOR=vim
+# export EDITOR="subl -w"
+# export EDITOR="atom -w"
 export ATOM_REPOS_HOME=/Users/jay/Projects/Atom/
 export FZF_DEFAULT_COMMAND='ag -g ""'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export ZSH_TMUX_AUTOCONNECT=false
 
 source ~/dotfiles/client/zsh/shellvars.zsh
 source ~/dotfiles/venuebook-vagrant/bin/tmuxinator.zsh
@@ -112,9 +114,21 @@ alias bundle="gulp build:js -f"
 alias vb=$vb
 alias vbjs="cd ~/Projects/venuebook/venuebook.com/instevent/app/main/js/app && cd "
 alias prune-local-branches="git branch --list --no-color | sed 's/\*/ /g' | xargs -n1 -p git branch -D"
-alias prune-remote-branches="git branch --list --no-color -r | grep origin/ | tail +2 | sed 's/\// :/g' | xargs -n2 -p git push"
-alias prune-branches="prune-local-branches && prune-remote-branches"
+alias prune-origin-branches="git branch --list --no-color -r | grep origin/ | tail +2 | sed 's/\// :/g' | xargs -n2 -p git push"
+alias prune-root-branches="git branch --list --no-color -r | grep root/ | tail +2 | sed 's/\// :/g' | xargs -n2 -p git push"
+alias prune-branches="prune-local-branches && prune-origin-branches && prune-root-branches"
 
 searchjs() {
   ack $* -- ~/Projects/venuebook/venuebook.com/instevent/app/main/js
 }
+
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+source ~/.fonts/devicons-regular.sh
+source ~/.fonts/fontawesome-regular.sh
+source ~/.fonts/octicons-regular.sh
+source ~/.fonts/pomicons-regular.sh
+
+powerline-daemon -q
+. /usr/local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh
