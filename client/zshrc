@@ -140,3 +140,6 @@ alias prune-branches="prune-local-branches && prune-remote-branches"
 searchjs() {
   ack $* -- ~/Projects/venuebook/venuebook.com/instevent/app/main/js
 }
+
+# heroku autocomplete setup
+HEROKU_AC_ZSH_SETUP_PATH=/Users/jay/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;export PATH="/usr/local/opt/icu4c/bin:$PATH"
