@@ -1,7 +1,10 @@
 " Needed on some linux distros.
-filetype off
-set rtp+=~/.vim/bundle/Vundle.vim/
-call vundle#rc()
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
 
 " let Vundle manage Vundle, required! 
 Plugin 'VundleVim/Vundle.vim'
@@ -32,6 +35,10 @@ Plugin 'briancollins/vim-jst'
 Plugin 'kchmck/vim-coffee-script'
 Plugin 'tpope/vim-surround'
 Plugin 'digitaltoad/vim-jade'
+Plugin 'tpope/vim-fireplace'
+Plugin 'guns/vim-sexp'
+Plugin 'tpope/vim-sexp-mappings-for-regular-people'
+Plugin 'bhurlow/vim-parinfer'
 call vundle#end()
 
 set t_Co=256

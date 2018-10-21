@@ -14,7 +14,8 @@
 #       'stdout' or 'stderr' can be used instead of an actual filepath.
 #
 
-chunkc core::log_file stdout
+# chunkc core::log_file stdout
+chunkc core::log_file /Users/jay/chunkwm.log
 
 #
 # NOTE: specify the desired level of logging.
@@ -115,7 +116,7 @@ chunkc set ffm_bypass_modifier           fn
 
 chunkc core::load border.so
 chunkc core::load tiling.so
-chunkc core::load ffm.so
+# chunkc core::load ffm.so
 
 #
 # NOTE: sample rules for the tiling plugin
@@ -123,4 +124,5 @@ chunkc core::load ffm.so
 
 chunkc tiling::rule --owner Finder --name Copy --state float &
 chunkc tiling::rule --owner \"App Store\" --state float &
+# chunkc tiling::rule --owner \"Notion\" --state float &
 chunkc tiling::rule --owner Emacs --except "^$" --state tile &

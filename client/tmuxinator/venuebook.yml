@@ -6,12 +6,14 @@
 project_name: venuebook
 project_root: ~/Projects/Vagrant/venuebook/workspace/venuebook
 windows:
-    - editor:
-        layout: main-horizontal
-        panes:
-          -
-          -
-          - gulp watch
-    - gulp:
-        panes:
-          - cd gulp
+  - editor:
+      layout: even-horizontal
+      panes:
+        -
+        - gulp watch
+  - src:
+      panes:
+        - cd ~/Projects/venuebook/src
+  - gulp:
+      panes:
+        - cd gulp
