@@ -30,43 +30,47 @@ values."
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(python
-     (auto-completion :variables
-                      auto-completion-enable-help-tooltip t
-                      auto-completion-enable-snippets-in-popup t
-                      auto-completion-enable-sort-by-usage t)
-     ;; better-defaults
-     (clojure :variables
-              clojure-enable-sayid t
-              clojure-enable-clj-refactor t)
-     emacs-lisp
-     (git :variables
-          git-magit-status-fullscreen t
-          git-enable-github-support t
-          git-gutter-use-fringe t)
-     helm
-     (javascript :variables
-                 ;; https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/javascript
-                 js2-basic-offset 2
-                 js-indent-level 2
-                 ;; https://github.com/mooz/js2-mode/issues/162#issuecomment-316206592
-                 js-expr-indent-offset -4)
-     markdown
-     org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
-     spell-checking
-     syntax-checking
-     (version-control :variables
-                      version-control-diff-tool 'diff-hl
-                      version-control-global-margin t)
+    '(sql
+      python
+      (auto-completion :variables
+                       auto-completion-enable-help-tooltip t
+                       auto-completion-enable-snippets-in-popup t
+                       auto-completion-enable-sort-by-usage t)
+      ;; better-defaults
+      (clojure :variables
+               clojure-enable-sayid t
+               clojure-enable-clj-refactor t)
+      emacs-lisp
+      (git :variables
+           git-magit-status-fullscreen t
+           git-enable-github-support t
+           git-gutter-use-fringe t)
+       helm
+       html
+       (javascript :variables
+         ;; https://github.com/syl20bnr/spacemacs/tree/master/layers/%2Blang/javascript
+         js2-basic-offset 2
+         js-indent-level 2
+         ;; https://github.com/mooz/js2-mode/issues/162#issuecomment-316206592
+         js-expr-indent-offset -4)
+       markdown
+       org
+       osx
+       parinfer
+       ;; (shell :variables
+       ;;        shell-default-height 30
+       ;;        shell-default-position 'bottom)
+       spell-checking
+       syntax-checking
+       (version-control :variables
+         version-control-diff-tool 'diff-hl
+         version-control-global-margin t)
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(editorconfig)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -311,6 +315,10 @@ values."
    ;; delete only whitespace for changed lines or `nil' to disable cleanup.
    ;; (default nil)
    dotspacemacs-whitespace-cleanup nil
+   ;; Reset meta and command keys changed from emacs-mac
+   ;; https://gist.github.com/railwaycat/3498096
+   mac-option-modifier 'meta
+	 mac-command-modifier 'super
    ))
 
 (defun dotspacemacs/user-init ()
@@ -329,10 +337,13 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+  ;; Enable editor config mode
+  ;; https://stackoverflow.com/a/36666098/5614103
+  (editorconfig-mode 1)
   (spacemacs/toggle-evil-safe-lisp-structural-editing-on-register-hooks)
   ;; GUI Toggles
   ;; http://spacemacs.org/doc/DOCUMENTATION.html#gui-toggles
-  (spacemacs/toggle-highlight-long-lines-on)
+  (spacemacs/toggle-highlight-long-lines-globally-on)
   (spacemacs/toggle-indent-guide-globally-on)
   ;; (setq-default
   ;;  )
@@ -340,15 +351,15 @@ you should place your code here."
   ;; Make TAB behave more like VIM so it doesn't rely on smart indentation
   ;; which is often very off in js2-mode.
   ;; https://emacs.stackexchange.com/questions/27869/how-to-make-evil-mode-tab-key-indent-not-re-indent-based-on-context
-  (define-key evil-insert-state-map (kbd "TAB") 'indent-relative)
-  (define-key evil-normal-state-map (kbd "o") (lambda ()
-                                                (interactive)
-                                                (evil-open-below 0)
-                                                (indent-relative)))
-  (define-key evil-insert-state-map (kbd "RET") (lambda ()
-                                                  (interactive)
-                                                  (newline)
-                                                  (indent-relative)))
+  ;; (define-key evil-insert-state-map (kbd "TAB") 'indent-relative)
+  ;; (define-key evil-normal-state-map (kbd "o") (lambda ()
+  ;;                                               (interactive)
+  ;;                                               (evil-open-below 0)
+  ;;                                               (indent-relative)))
+  ;; (define-key evil-insert-state-map (kbd "RET") (lambda ()
+  ;;                                                 (interactive)
+  ;;                                                 (newline)
+  ;;                                                 (indent-relative)))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -372,18 +383,18 @@ you should place your code here."
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(package-selected-packages
-     (quote
-      (yapfify stickyfunc-enhance pyvenv pytest pyenv-mode py-isort pippel pipenv pip-requirements lsp-python lsp-mode live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-gtags helm-cscope xcscope ggtags cython-mode counsel-gtags company-anaconda anaconda-mode pythonic evil-cleverparens web-beautify smeargle orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode magit-gitflow livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck evil-magit magit magit-popup git-commit ghub treepy let-alist graphql with-editor diff-hl company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu cider sesman seq queue clojure-mode auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   )
-  )
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (parinfer evil-cleverparens web-beautify smeargle orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode magit-gitflow livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck evil-magit magit magit-popup git-commit ghub treepy let-alist graphql with-editor diff-hl company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu cider sesman seq queue clojure-mode auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
