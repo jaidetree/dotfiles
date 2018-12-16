@@ -10,15 +10,15 @@ function fish_prompt
       or contains "D" $status_list
       or contains "M" $status_list
       or contains "R" $status_list
-      echo (set_color yellow)"changes"(set_color normal)
+      echo (set_color yellow)"changed"(set_color normal)
     end
 
     if contains "??" $status_list
-      echo (set_color ff5faf)"untracked"(set_color normal)
+      echo (set_color ff5faf)"new"(set_color normal)
     end
 
     if contains "U" $status_list
-      echo (set_color red)"conflicts"(set_color normal)
+      echo (set_color red)"conflict"(set_color normal)
     end
   end
 
@@ -47,6 +47,7 @@ function fish_prompt
     if test -n "$_is_git_dirty"
       printf ' with '
       echo -n (__git_status | string join ", " | string trim -r -c ", ")
+      printf ' files'
     end
   end
 
