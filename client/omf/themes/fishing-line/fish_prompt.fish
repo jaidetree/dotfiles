@@ -9,6 +9,10 @@ function fish_prompt
     if contains "??" $status_list
       echo (set_color ff5faf)"new"(set_color normal)
     end
+    
+    if contains "A" $status_list
+      echo (set_color brgreen)"staged"(set_color normal)
+    end
 
     if contains "." $status_list
       or contains "D" $status_list
@@ -35,7 +39,7 @@ function fish_prompt
   set -l prompt "$prompt in "(set_color brgreen)$pwd(set_color normal)
   
   echo -n $prompt
-  if test (string length $prompt) -gt $COLUMNS
+  if test (string length (strip_escapes $prompt)) -gt $COLUMNS
     echo 
     printf '   '
   end
