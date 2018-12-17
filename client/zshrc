@@ -143,17 +143,5 @@ searchjs() {
   ack $* -- ~/Projects/venuebook/venuebook.com/instevent/app/main/js
 }
 
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-
-source ~/.fonts/devicons-regular.sh
-source ~/.fonts/fontawesome-regular.sh
-source ~/.fonts/octicons-regular.sh
-source ~/.fonts/pomicons-regular.sh
-
-powerline-daemon -q
-. /usr/local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh
-
 # heroku autocomplete setup
-HEROKU_AC_ZSH_SETUP_PATH=/Users/jay/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+HEROKU_AC_ZSH_SETUP_PATH=/Users/jay/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;export PATH="/usr/local/opt/icu4c/bin:$PATH"

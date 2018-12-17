@@ -71,7 +71,7 @@ values."
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(editorconfig)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -316,8 +316,10 @@ values."
    ;; delete only whitespace for changed lines or `nil' to disable cleanup.
    ;; (default nil)
    dotspacemacs-whitespace-cleanup nil
+   ;; Reset meta and command keys changed from emacs-mac
+   ;; https://gist.github.com/railwaycat/3498096
    mac-option-modifier 'meta
-   mac-command-modifier 'super
+	 mac-command-modifier 'super
    ))
 
 (defun dotspacemacs/user-init ()
@@ -336,10 +338,13 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+  ;; Enable editor config mode
+  ;; https://stackoverflow.com/a/36666098/5614103
+  (editorconfig-mode 1)
   (spacemacs/toggle-evil-safe-lisp-structural-editing-on-register-hooks)
   ;; GUI Toggles
   ;; http://spacemacs.org/doc/DOCUMENTATION.html#gui-toggles
-  (spacemacs/toggle-highlight-long-lines-on)
+  (spacemacs/toggle-highlight-long-lines-globally-on)
   (spacemacs/toggle-indent-guide-globally-on)
   ;; (setq-default
   ;;  )
