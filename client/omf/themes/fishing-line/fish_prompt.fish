@@ -6,15 +6,15 @@ function fish_prompt
   function __git_status
     set status_list (git status --porcelain | cut -c 1-2 | string trim | uniq)
 
+    if contains "??" $status_list
+      echo (set_color ff5faf)"new"(set_color normal)
+    end
+
     if contains "." $status_list
       or contains "D" $status_list
       or contains "M" $status_list
       or contains "R" $status_list
       echo (set_color yellow)"changed"(set_color normal)
-    end
-
-    if contains "??" $status_list
-      echo (set_color ff5faf)"new"(set_color normal)
     end
 
     if contains "U" $status_list
@@ -24,29 +24,53 @@ function fish_prompt
 
   set -l pink ff00ff
 
+  set -l user (whoami)
   set_color yellow
-  printf '%s' (whoami)
+  echo -n $user
   set_color normal
+  
+  set -l host (prompt_hostname)
   printf ' at '
-
   set_color magenta
-  echo -n (prompt_hostname)
+  # if test "$host" = "kamikaze-cabaret"
+  #   printf "work"
+  # else if test "$host" = "jay"
+  #   printf "home"
+  # else 
+    printf $host
+  # end
   set_color normal
   printf ' in '
 
   set_color brgreen
-  printf '%s' (prompt_pwd)
+  # if echo "$PWD" | grep "/workspace/venuebook" >/dev/null
+  set -l pwd (prompt_pwd)
+  # if test (string length "$PWD") -gt 30
+    # echo -n (basename $pwd)
+  # else
+    printf $pwd
+  # end
   set_color normal
 
-  if test -n $branch
-    printf ' on '
+  if test -n "$branch"
+    echo 
+    printf '    on '
+    # printf ' on '
 
     set_color cyan
     printf '%s' $branch
     set_color normal
     if test -n "$_is_git_dirty"
+      set -l git_status (__git_status)
       printf ' with '
-      echo -n (__git_status | string join ", " | string trim -r -c ", ")
+      echo -n  (string join ", " $git_status[1..-2] | string trim -r -c ", ")
+      if test (count $git_status) -gt 2
+        printf ','
+      end
+      if test (count $git_status) -gt 1
+        printf ' & '
+        echo -n $git_status[-1]
+      end
       printf ' files'
     end
   end

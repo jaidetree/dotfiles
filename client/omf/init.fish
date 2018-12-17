@@ -1,4 +1,11 @@
-# behavior changes
+# BEHAVIOR CHANGES
+##############################################################################
 fish_vi_key_bindings
 
-# config
+# PATH
+##############################################################################
+set -x PATH $HOME/bin $HOME/.yarn/bin $HOME/.config/yarn/global/node_modules/.bin $PATH 
+
+
+# CONFIG
+##############################################################################
