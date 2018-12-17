@@ -39,7 +39,9 @@ function fish_prompt
   set -l prompt "$prompt in "(set_color brgreen)$pwd(set_color normal)
   
   echo -n $prompt
-  if test (string length (strip_escapes $prompt)) -gt $COLUMNS
+  # Test to make sure the length of prompt chars is less than total columns
+  # minus the VI mode indicator which is 4 chars long
+  if test (string length (strip_escapes $prompt)) -gt (math $COLUMNS - 4)
     echo 
     printf '   '
   end
