@@ -23,39 +23,25 @@ function fish_prompt
   end
 
   set -l pink ff00ff
+  set -l prompt ""
 
   set -l user (whoami)
-  set_color yellow
-  echo -n $user
-  set_color normal
+  set -l prompt (set_color yellow)"$prompt$user"(set_color normal)
   
   set -l host (prompt_hostname)
-  printf ' at '
-  set_color magenta
-  # if test "$host" = "kamikaze-cabaret"
-  #   printf "work"
-  # else if test "$host" = "jay"
-  #   printf "home"
-  # else 
-    printf $host
-  # end
-  set_color normal
-  printf ' in '
+  set -l prompt "$prompt at "(set_color magenta)$host(set_color normal)
 
-  set_color brgreen
-  # if echo "$PWD" | grep "/workspace/venuebook" >/dev/null
   set -l pwd (prompt_pwd)
-  # if test (string length "$PWD") -gt 30
-    # echo -n (basename $pwd)
-  # else
-    printf $pwd
-  # end
-  set_color normal
+  set -l prompt "$prompt in "(set_color brgreen)$pwd(set_color normal)
+  
+  echo -n $prompt
+  if test (string length $prompt) -gt $COLUMNS
+    echo 
+    printf '   '
+  end
 
   if test -n "$branch"
-    echo 
-    printf '    on '
-    # printf ' on '
+    printf ' on '
 
     set_color cyan
     printf '%s' $branch
