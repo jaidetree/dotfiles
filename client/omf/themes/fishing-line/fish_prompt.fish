@@ -67,10 +67,10 @@ function fish_prompt
   # Uses the __theme_strip_escapes so that the color escape sequences are not
   # counted against the length.
   # If it passes it puts the git status on a separate line.
-  if test (string length (__theme_strip_escapes $prompt)) -gt $COLUMNS
+  if test -n "$branch" -a (string length (__theme_strip_escapes $prompt)) -gt $COLUMNS
     echo 
     printf ' %s%s%s' (set_color a8a8a8) $sub_glyph (set_color normal)
-  else
+  else if test -n "$branch"
     printf ' '
   end
   
