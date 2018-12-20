@@ -46,11 +46,10 @@ function fish_prompt
   # Going forward we first start out by appending to a mutable prompt string
 
   set -l pink ff00ff
-  set -l prompt ""
 
   # Add current user to prompt
   set -l user (whoami)
-  set -l prompt (set_color yellow)"$prompt$user"(set_color normal)
+  set -l prompt (set_color yellow)"$user"(set_color normal)
   
   # Add hostname to prompt
   set -l host (prompt_hostname)
@@ -60,6 +59,19 @@ function fish_prompt
   set -l pwd (prompt_pwd)
   set -l prompt "$prompt in "(set_color brgreen)"$folder_glyph $pwd"(set_color normal)
   
+  
+  # Calculate the length of the plain text chars of the prompt
+  set -l prompt_length (string length (__theme_strip_escapes $prompt))
+  # Set some mutable vars we can conditionally update if within a git repo
+  set -l git_prompt_length 0
+  set -l git_status_prompt ""
+  
+  # Update the mutable vars with git status info
+  if test -n "$branch"
+    set git_status_prompt (__theme_git_prompt)
+    set git_prompt_length (string length (__theme_strip_escapes $git_status_prompt))
+  end
+  
   # Display the first part of the prompt with the general info
   echo -n $prompt
   
@@ -67,18 +79,18 @@ function fish_prompt
   # Uses the __theme_strip_escapes so that the color escape sequences are not
   # counted against the length.
   # If it passes it puts the git status on a separate line.
-  if test -n "$branch" -a (string length (__theme_strip_escapes $prompt)) -gt $COLUMNS
+  if test -n "$branch" -a (math $prompt_length + $git_prompt_length + 1) -gt $COLUMNS
     echo 
     printf ' %s%s%s' (set_color a8a8a8) $sub_glyph (set_color normal)
   else if test -n "$branch"
     printf ' '
   end
   
-  # If a git branch was found in cwd then check its status
+  # Display the git prompt
   if test -n "$branch"
-    __theme_git_prompt
+    echo -n $git_status_prompt
   end
-
+  
   # Line 2
   # Use the fish_right_block fn to display the prompt char in one of those
   # trendy triangle blocky things.
