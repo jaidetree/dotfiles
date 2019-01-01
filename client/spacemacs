@@ -404,6 +404,9 @@ This function is called at the very end of Spacemacs initialization."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (sayid pyvenv org-brain editorconfig doom-modeline eldoc-eval counsel-projectile counsel ivy evil-cleverparens web-beautify smeargle orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode magit-gitflow livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck evil-magit magit magit-popup git-commit ghub treepy let-alist graphql with-editor diff-hl company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu cider sesman seq queue clojure-mode auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
  '(cider-auto-jump-to-error nil)
  '(cider-auto-select-error-buffer nil)
  '(cider-auto-select-test-report-buffer nil)
@@ -414,32 +417,28 @@ This function is called at the very end of Spacemacs initialization."
  '(clojure-toplevel-inside-comment-form t)
  '(evil-cleverparens-complete-parens-in-yanked-region t)
  '(fci-rule-use-dashes t)
-  '(package-selected-packages
-     (quote
-       (evil-cleverparens web-beautify smeargle orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode magit-gitflow livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck evil-magit magit magit-popup git-commit ghub treepy let-alist graphql with-editor diff-hl company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu cider sesman seq queue clojure-mode auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
  '(popwin:popup-window-position (quote right))
-  '(popwin:special-display-config
-     (quote
-       (("^\\*Flycheck.+\\*$" :regexp t :position bottom :noselect t :dedicated t :stick t)
-         ("\\*cider-\\(?:error\\|repl\\|test\\).*\\*" :regexp t :width 0.4 :position right :noselect nil :dedicated nil :stick t :tail nil)
-         ("*cider-doc*" :height 0.4 :position bottom :noselect nil :dedicated t :stick t)
-         ("*Google Translate*" :height 0.4 :position bottom :noselect t :dedicated t :stick t)
-         ("^*WoMan.+*$" :regexp t :position bottom)
-         ("*nosetests*" :position bottom :noselect nil :dedicated t :stick t)
-         ("*grep*" :position bottom :noselect nil :dedicated t :stick t)
-         ("*ert*" :position bottom :noselect nil :dedicated t :stick t)
-         ("*undo-tree Diff*" :height 0.3 :position bottom :noselect nil :dedicated t :stick t)
-         ("*undo-tree*" :width 60 :position right :noselect nil :dedicated t :stick t)
-         ("*Async Shell Command*" :position bottom :noselect nil :dedicated t :stick t)
-         ("*Shell Command Output*" :position bottom :noselect nil :dedicated t :stick t)
-         ("*compilation*" :height 0.4 :position bottom :noselect t :dedicated t :stick t)
-         ("*Process List*" :height 0.4 :position bottom :noselect nil :dedicated t :stick t)
-         ("*Help*" :height 0.4 :position bottom :noselect t :dedicated t :stick t))))
- '(purpose-mode t)
-  '(purpose-user-mode-purposes
-     (quote
-       ((cider-repl-mode . cider-repl)
-         (cider-stacktrace-mode . cider-repl))))
+ '(popwin:special-display-config
+    (quote
+      (("^\\*Flycheck.+\\*$" :regexp t :position bottom :noselect t :dedicated t :stick t)
+        ("\\*cider-\\(?:error\\|repl\\|test\\).*\\*" :regexp t :width 0.4 :position right :noselect nil :dedicated nil :stick t :tail nil)
+        ("*cider-doc*" :height 0.4 :position bottom :noselect nil :dedicated t :stick t)
+        ("*Google Translate*" :height 0.4 :position bottom :noselect t :dedicated t :stick t)
+        ("^*WoMan.+*$" :regexp t :position bottom)
+        ("*nosetests*" :position bottom :noselect nil :dedicated t :stick t)
+        ("*grep*" :position bottom :noselect nil :dedicated t :stick t)
+        ("*ert*" :position bottom :noselect nil :dedicated t :stick t)
+        ("*undo-tree Diff*" :height 0.3 :position bottom :noselect nil :dedicated t :stick t)
+        ("*undo-tree*" :width 60 :position right :noselect nil :dedicated t :stick t)
+        ("*Async Shell Command*" :position bottom :noselect nil :dedicated t :stick t)
+        ("*Shell Command Output*" :position bottom :noselect nil :dedicated t :stick t)
+        ("*compilation*" :height 0.4 :position bottom :noselect t :dedicated t :stick t)
+        ("*Process List*" :height 0.4 :position bottom :noselect nil :dedicated t :stick t)
+        ("*Help*" :height 0.4 :position bottom :noselect t :dedicated t :stick t))))
+ '(purpose-user-mode-purposes
+    (quote
+      ((cider-repl-mode . cider-repl)
+        (cider-stacktrace-mode . cider-repl))))
  '(purpose-user-regexp-purposes (quote (("\\*cider-(error|repl|test).*\\*" . cider-repl))))
  '(web-mode-code-indent-offset 2))
 (custom-set-faces
