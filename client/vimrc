@@ -13,16 +13,16 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'othree/html5.vim'
 Plugin 'vim-scripts/Colour-Sampler-Pack'
 Plugin 'vim-scripts/ScrollColors'
-Plugin 'https://github.com/kien/ctrlp.vim.git'
-Plugin 'https://github.com/ddollar/nerdcommenter.git'
-Plugin 'https://github.com/majutsushi/tagbar.git'
-Plugin 'https://github.com/vim-scripts/ZoomWin.git'
-Plugin 'https://github.com/jeetsukumaran/vim-buffergator.git'
-" Plugin 'https://github.com/scrooloose/syntastic.git'
-Plugin 'https://github.com/msanders/snipmate.vim.git'
-Plugin 'https://github.com/hail2u/vim-css3-syntax.git'
-Plugin 'https://github.com/cakebaker/scss-syntax.vim.git'
-Plugin 'https://github.com/pangloss/vim-javascript.git'
+Plugin 'kien/ctrlp.vim'
+Plugin 'ddollar/nerdcommenter'
+Plugin 'majutsushi/tagbar'
+Plugin 'vim-scripts/ZoomWin'
+Plugin 'jeetsukumaran/vim-buffergator'
+" Plugin 'https://github.com/scrooloose/syntastic'
+Plugin 'msanders/snipmate.vim'
+Plugin 'hail2u/vim-css3-syntax'
+Plugin 'cakebaker/scss-syntax.vim'
+Plugin 'pangloss/vim-javascript'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'bakpakin/fennel.vim'
 Plugin 'mustache/vim-mustache-handlebars'
@@ -41,6 +41,7 @@ Plugin 'guns/vim-sexp'
 Plugin 'tpope/vim-sexp-mappings-for-regular-people'
 Plugin 'bhurlow/vim-parinfer'
 Plugin 'w0rp/ale'
+Plugin 'ajh17/VimCompletesMe'
 call vundle#end()
 
 set t_Co=256
@@ -122,6 +123,9 @@ set lazyredraw
 set ttyfast
 set shell=/bin/bash\ -i
 
+" JavaScript Settings
+let g:javascript_plugin_jsdoc = 1
+
 " Mac settings
 " set clipboard=unnamed
 
@@ -151,6 +155,7 @@ nnoremap <silent> <C-j><S-l> :Vexplore!<CR>
 nnoremap <silent> <C-j><S-h> :Vexplore<CR>
 nnoremap <silent> <C-j><S-j> :Hexplore<CR>
 nnoremap <silent> <C-j><S-k> :Hexplore!<CR>
+nnoremap <silent> <C-c><C-c> :<C-U>call <SID>printop(v:count)<CR>
 
 noremap <Leader>c "+y
 noremap <silent> ,s :syntax sync fromstart<CR>
@@ -188,4 +193,9 @@ cd %:p:h
 " color made-of-code
 " color blacksea
 color gentooish
+" color lucius
+color moss
 
+" Ruler settings
+highlight OverLength ctermbg=black guibg=#892929
+match OverLength /\%79v.\+/
