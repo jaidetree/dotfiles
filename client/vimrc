@@ -24,6 +24,7 @@ Plugin 'https://github.com/hail2u/vim-css3-syntax.git'
 Plugin 'https://github.com/cakebaker/scss-syntax.vim.git'
 Plugin 'https://github.com/pangloss/vim-javascript.git'
 Plugin 'christoomey/vim-tmux-navigator'
+Plugin 'bakpakin/fennel.vim'
 Plugin 'mustache/vim-mustache-handlebars'
 Plugin 'editorconfig/editorconfig-vim'
 Plugin 'johnallen3d/made-of-code.vim'
@@ -174,7 +175,7 @@ cd %:p:h
 " colo earendel
 " colo kellys
 " colo mustang
-colo lucius
+" colo lucius
 " colo slate2
 " colo tir_black
 " colo summerfruit256
@@ -186,4 +187,5 @@ colo lucius
 " color railscasts
 " color made-of-code
 " color blacksea
+color gentooish
 
