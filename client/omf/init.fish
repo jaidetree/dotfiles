@@ -11,7 +11,7 @@ set -x PATH $HOME/.npm-global/bin $HOME/bin $HOME/.yarn/bin $HOME/.config/yarn/g
 
 # CONFIG
 ##############################################################################
-set -gx JAVA_TOOL_OPTIONS "--add-modules=java.xml.bind"
+# set -gx JAVA_TOOL_OPTIONS "--add-modules=java.xml.bind"
 
 # Conditional Configs
 ##############################################################################
