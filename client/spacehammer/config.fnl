@@ -177,7 +177,7 @@
          :action "windows:move-east"
          :repeatable true}])
 
-(local window-bindings
+(local window-items
        (concat
         [return
          {:key :w
@@ -206,7 +206,7 @@
 ;; Apps Menu
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(local app-bindings
+(local app-items
        [return
         {:key :e
          :title "Emacs"
@@ -222,7 +222,7 @@
          :action (activator "iTerm2")}
         {:key :s
          :title "Slack"
-         :action (activator "Slack")}
+         :action "slack:quick-switcher"}
         {:key :b
          :title "Brave"
          :action (activator "Brave")}
@@ -230,17 +230,17 @@
          :title music-app
          :action (activator music-app)}])
 
-(local media-bindings
+(local media-items
        [return
         {:key :s
          :title "Play or Pause"
-         :action "multimedia:play-or-pause"}
+         :action hs.spotify.playpause}
         {:key :h
          :title "Prev Track"
-         :action "multimedia:prev-track"}
+         :action hs.spotify.previous}
         {:key :l
          :title "Next Track"
-         :action "multimedia:next-track"}
+         :action hs.spotify.next}
         {:key :j
          :title "Volume Down"
          :action "multimedia:volume-down"
@@ -253,8 +253,11 @@
          :title (.. "Launch " music-app)
          :action (activator music-app)}])
 
-(local zoom-bindings
+(local zoom-items
        [return
+        {:key :m
+         :title "Start meeting"
+         :action "zoom:start-meeting"}
         {:key :a
          :title "Mute or Unmute Audio"
          :action "zoom:mute-or-unmute-audio"}
@@ -276,7 +279,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Main Menu & Config
+;; Main Menu & Global Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (local menu-items
@@ -285,10 +288,10 @@
          :action (activator "Alfred 4")}
         {:key :w
          :title "Window"
-         :items window-bindings}
+         :items window-items}
         {:key :a
          :title "Apps"
-         :items app-bindings}
+         :items app-items}
         {:key :j
          :title "Jump"
          :action jump}
@@ -298,10 +301,10 @@
          ;;          (print "Entering menu: " (hs.inspect menu)))
          ;; :exit (fn [menu]
          ;;         (print "Exiting menu: " (hs.inspect menu)))
-         :items media-bindings}
+         :items media-items}
         {:key :z
          :title "Zoom"
-         :items zoom-bindings}])
+         :items zoom-items}])
 
 (local common-keys
        [{:mods [:cmd]
@@ -328,6 +331,13 @@
         {:mods [:hyper]
          :key :v
          :action "vim:enable"}
+        {:mods [:hyper]
+         :key :r
+         :action hs.reload}
+        {:mods [:hyper]
+         :key :c
+         :action (fn []
+                   (hs.eventtap.keyStroke [:cmd :ctrl :shift :alt] :c))}
         {:mods [:cmd]
          :key :i
          :action (fn []
@@ -343,52 +353,126 @@
 ;; App Specific Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(local browser-keys
+       [{:mods [:cmd :shift]
+         :key :l
+         :action "chrome:open-location"}
+        {:mods [:cmd]
+         :key :k
+         :action "chrome:prev-tab"
+         :repeat true}
+        {:mods [:cmd]
+         :key :j
+         :action "chrome:next-tab"
+         :repeat true}])
+
+(local brave-config
+       {:key "Brave Browser"
+        :keys browser-keys})
+
+(local chrome-config
+       {:key "Google Chrome"
+        :keys browser-keys})
+
+(local emacs-config
+       {:key "Emacs"
+        ;; :activate (fn []
+        ;;             (print "Activating Emacs"))
+        ;; :deactivate (fn []
+        ;;               (print "Deactivating Emacs"))
+        :activate "vim:disable"
+        :deactivate "vim:enable"
+        :items []
+        :keys [{:key :y
+                :mods [:cmd]
+                :action (fn []
+                          (alert "Hi Emacs"))}]})
+
+(local grammarly-config
+       {:key "Grammarly"
+        :launch (fn [])
+        :items [{:mods [:ctrl]
+                 :key :c
+                 :title "Return to Emacs"
+                 :action "grammarly:back-to-emacs"}]
+        :keys ""})
+
+(local hammerspoon-config
+       {:key "Hammerspoon"
+        ;; :enter (fn []
+        ;;          (print "Entering Hammerspoon :D"))
+        ;; :exit (fn []
+        ;;         (print "Exiting Hammerspoon T_T"))
+        ;; :activate (fn []
+        ;;             (print "Activating Hammerspoon"))
+        ;; :deactivate (fn []
+        ;;             (print "Deactivating Hammerspoon"))
+        :items [{:key :r
+                 :title "Reload Console"
+                 :action hs.reload}
+                {:key :c
+                 :title "Clear Console"
+                 :action hs.console.clearConsole}]
+        :keys [{:mods [:cmd]
+                :key :y
+                :action (fn []
+                          (alert "Hi Hammerspoon"))}]})
+
+(local slack-config
+       {:key "Slack"
+        :keys [{:mods [:cmd]
+                :key  :g
+                :action "slack:scroll-to-bottom"}
+               {:mods [:ctrl]
+                :key :r
+                :action "slack:add-reaction"}
+               {:mods [:ctrl]
+                :key :h
+                :action "slack:prev-element"}
+               {:mods [:ctrl]
+                :key :l
+                :action "slack:next-element"}
+               {:mods [:ctrl]
+                :key :t
+                :action "slack:thread"}
+               {:mods [:ctrl]
+                :key :p
+                :action "slack:prev-day"}
+               {:mods [:ctrl]
+                :key :n
+                :action "slack:next-day"}
+               {:mods [:ctrl]
+                :key :i
+                :action "slack:next-history"
+                :repeat true}
+               {:mods [:ctrl]
+                :key :o
+                :action "slack:prev-history"
+                :repeat true}
+               {:mods [:ctrl]
+                :key :j
+                :action "slack:down"
+                :repeat true}
+               {:mods [:ctrl]
+                :key :k
+                :action "slack:up"
+                :repeat true}]})
+
 (local apps
-       [{:key "Hammerspoon"
-         ;; :enter (fn []
-         ;;          (print "Entering Hammerspoon :D"))
-         ;; :exit (fn []
-         ;;         (print "Exiting Hammerspoon T_T"))
-         ;; :activate (fn []
-         ;;             (print "Activating Hammerspoon"))
-         ;; :deactivate (fn []
-         ;;             (print "Deactivating Hammerspoon"))
-         :items [{:key :r
-                  :title "Reload Console"
-                  :action hs.reload}
-                 {:key :c
-                  :title "Clear Console"
-                  :action hs.console.clearConsole}]
-         :keys [{:mods [:cmd]
-                 :key :y
-                 :action (fn []
-                           (alert "Hi Hammerspoon"))}]}
-        {:key "Emacs"
-         ;; :activate (fn []
-         ;;             (print "Activating Emacs"))
-         ;; :deactivate (fn []
-         ;;               (print "Deactivating Emacs"))
-         :activate "vim:disable"
-         :deactivate "vim:enable"
-         :items []
-         :keys [{:key :y
-                 :mods [:cmd]
-                 :action (fn []
-                           (alert "Hi Emacs"))}]}
-        {:key "Transmit"
-         :launch (fn []
-                   (print "Launched Transmit"))
-         :close (fn []
-                  (print "Closed Transmit"))
-         :items []
-         :keys []}])
+       [brave-config
+        chrome-config
+        emacs-config
+        grammarly-config
+        hammerspoon-config
+        slack-config])
 
 (local config
        {:title "Main Menu"
         :items menu-items
         :keys common-keys
         :apps apps
-        :hyper {:key :F18}})
+        :hyper {:key :F18}
+        :vim {:enabled false}})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
