@@ -10,12 +10,15 @@
   []
   (let [current (hs.screen.mainScreen)
         screens (hs.screen.allScreens)
-        idx     (fu.indexOf screens current)]
-    (if (= idx 0)
-        (fu.cycle screens)
-        (fu.cycle (concat
-                   (slice idx screens)
-                   (slice 0 idx screens))))))
+        idx     (fu.indexOf screens current)
+        sorted (if (= idx 0)
+                   screens
+                   (concat
+                    (slice idx screens)
+                    (slice 0 (- idx 1) screens)))]
+    (print "Screens: ")
+    (print (hs.inspect sorted))
+    (fu.cycle sorted)))
 
 (fn update-cycle
   [cell]

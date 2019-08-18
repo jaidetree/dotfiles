@@ -67,6 +67,10 @@
             (let [win  (: zoom :findWindow "Zoom Meeting ID: .*")]
               (: win :close))))
 
+(fn start-meeting
+  []
+  (when-let [zoom (get-zoom)]
+            (: zoom :selectMenuItem ["zoom.us" "Start meeting"])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Exports
@@ -79,4 +83,5 @@
  :start-or-stop-sharing start-or-stop-sharing
  :pause-or-resume-sharing pause-or-resume-sharing
  :invite invite
- :end-meeting end-meeting}
+ :end-meeting end-meeting
+ :start-meeting start-meeting}
