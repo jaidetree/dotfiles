@@ -2,7 +2,6 @@
 (local {:concat concat
         :filter filter
         :logf logf} (require :lib.functional))
-(local mosaic (require :mosaic))
 (local vim (require :vim))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -73,115 +72,28 @@
          :action "windows:jump-window-right"
          :repeatable true}])
 
-(local window-mosaic
-       {:key :l
-        :title "Mosaic Layouts"
-        :items [{:key :f
-                 :title "Full-screen"
-                 :action "mosaic:full-size"
-                 :repeatable true}
-                {:key :h
-                 :title "Left Half"
-                 :action "mosaic:left-half"
-                 :repeatable true}
-                {:key :l
-                 :title "Right Half"
-                 :action "mosaic:right-half"
-                 :repeatable true}
-                {:mods [:shift]
-                 :key :h
-                 :title "Left Big"
-                 :action "mosaic:left-big"
-                 :repeatable true}
-                {:mods [:shift]
-                 :key :l
-                 :title "Right Small"
-                 :action "mosaic:right-small"
-                 :repeatable true}]})
-
-(local window-grids
-       {:key :l
-        :title "Layouts"
-        :items [{:key :f
-                 :title "Full-screen"
-                 :action (mosaic.grid-resize "0, 0 8x3")
-                 :repeatable true}
-                {:key :h
-                 :title "Left Half"
-                 :action (mosaic.grid-resize "0, 0 4x3")
-                 :repeatable true}
-                {:key :l
-                 :title "Right Half"
-                 :action (mosaic.grid-resize "4,0 4x3")
-                 :repeatable true}
-                {:mods [:shift]
-                 :key :h
-                 :title "Left Big"
-                 :action (mosaic.grid-resize "0,0 5x3")
-                 :repeatable true}
-                {:mods [:shift]
-                 :key :l
-                 :title "Right Small"
-                 :action (mosaic.grid-resize "5,0 3x3")
-                 :repeatable true}]})
-
-
-(local window-halves
-       [{:key "hjkl"
-         :title "Halves"}
+(local window-layouts
+       [{:key :f
+         :title "Full-screen"
+         :action "layouts:full-size"
+         :repeatable true}
         {:key :h
-         :action "windows:resize-half-left"
-         :repeatable true}
-        {:key :j
-         :action "windows:resize-half-bottom"
-         :repeatable true}
-        {:key :k
-         :action "windows:resize-half-top"
+         :title "Left Half"
+         :action "layouts:left-half"
          :repeatable true}
         {:key :l
-         :action "windows:resize-half-right"
-         :repeatable true}])
-
-(local window-increments
-       [{:mods [:alt]
-         :key "hjkl"
-         :title "Increments"}
-        {:mods [:alt]
-         :key :h
-         :action "windows:resize-inc-left"
+         :title "Right Half"
+         :action "layouts:right-half"
          :repeatable true}
-        {:mods [:alt]
-         :key :j
-         :action "windows:resize-inc-bottom"
-         :repeatable true}
-        {:mods [:alt]
-         :key :k
-         :action "windows:resize-inc-top"
-         :repeatable true}
-        {:mods [:alt]
-         :key :l
-         :action "windows:resize-inc-right"
-         :repeatable true}])
-
-(local window-resize
-       [{:mods [:shift]
-         :key "hjkl"
-         :title "Resize"}
         {:mods [:shift]
          :key :h
-         :action "windows:resize-left"
-         :repeatable true}
-        {:mods [:shift]
-         :key :j
-         :action "windows:resize-down"
-         :repeatable true}
-        {:mods [:shift]
-         :key :k
-         :action "windows:resize-up"
+         :title "Left Big"
+         :action "layouts:left-big"
          :repeatable true}
         {:mods [:shift]
          :key :l
-         :action "windows:resize-right"
+         :title "Right Small"
+         :action "layouts:right-small"
          :repeatable true}])
 
 (local window-move-screens
@@ -210,11 +122,9 @@
         [return
          {:key :w
           :title "Last Window"
-          :action "windows:jump-to-last-window"}
-         window-grids]
+          :action "windows:jump-to-last-window"}]
+        window-layouts
         window-jumps
-        window-increments
-        window-resize
         window-move-screens
         [{:key :m
           :title "Maximize"
@@ -503,8 +413,8 @@
         :items menu-items
         :keys common-keys
         :apps apps
-        :grid {:margins [0 0]
-               :size "8x3"}
+        :grid {:margins [5 5]
+               :size "8x2"}
         :hyper {:key :F18}
         :vim {:enabled false}})
 

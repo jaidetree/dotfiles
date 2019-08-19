@@ -16,8 +16,6 @@
                    (concat
                     (slice idx screens)
                     (slice 0 (- idx 1) screens)))]
-    (print "Screens: ")
-    (print (hs.inspect sorted))
     (fu.cycle sorted)))
 
 (fn update-cycle
@@ -37,31 +35,30 @@
 
 (fn grid-resize
   [cell]
-  (fn resizer []
-    (let [w (hs.window.frontmostWindow)
-          get-screen (get-cycler cell)
-          screen (get-screen)]
-      (hs.grid.set w cell screen))))
+  (let [w (hs.window.frontmostWindow)
+        get-screen (get-cycler cell)
+        screen (get-screen)]
+    (hs.grid.set w cell screen)))
 
 (fn full-size
   []
-  (hs.eventtap.keyStroke [:alt :cmd :ctrl :shift] :1))
+  (grid-resize "0, 0 8x2"))
 
 (fn left-half
   []
-  (hs.eventtap.keyStroke [:alt :cmd :ctrl :shift] :2))
+  (grid-resize "0, 0 4x2"))
 
 (fn right-half
   []
-  (hs.eventtap.keyStroke [:alt :cmd :ctrl :shift] :3))
+  (grid-resize "4,0 4x2"))
 
 (fn left-big
   []
-  (hs.eventtap.keyStroke [:alt :cmd :ctrl :shift] :4))
+  (grid-resize "0,0 6x2"))
 
 (fn right-small
   []
-  (hs.eventtap.keyStroke [:alt :cmd :ctrl :shift] :5))
+  (grid-resize "6,0 2x2"))
 
 {:grid-resize grid-resize
  :full-size   full-size
