@@ -2,6 +2,7 @@
 (local {:concat concat
         :filter filter
         :logf logf} (require :lib.functional))
+(local mosaic (require :mosaic))
 (local vim (require :vim))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -98,6 +99,33 @@
                  :action "mosaic:right-small"
                  :repeatable true}]})
 
+(local window-grids
+       {:key :l
+        :title "Layouts"
+        :items [{:key :f
+                 :title "Full-screen"
+                 :action (mosaic.grid-resize "0, 0 8x3")
+                 :repeatable true}
+                {:key :h
+                 :title "Left Half"
+                 :action (mosaic.grid-resize "0, 0 4x3")
+                 :repeatable true}
+                {:key :l
+                 :title "Right Half"
+                 :action (mosaic.grid-resize "4,0 4x3")
+                 :repeatable true}
+                {:mods [:shift]
+                 :key :h
+                 :title "Left Big"
+                 :action (mosaic.grid-resize "0,0 5x3")
+                 :repeatable true}
+                {:mods [:shift]
+                 :key :l
+                 :title "Right Small"
+                 :action (mosaic.grid-resize "5,0 3x3")
+                 :repeatable true}]})
+
+
 (local window-halves
        [{:key "hjkl"
          :title "Halves"}
@@ -183,7 +211,7 @@
          {:key :w
           :title "Last Window"
           :action "windows:jump-to-last-window"}
-         window-mosaic]
+         window-grids]
         window-jumps
         window-increments
         window-resize
@@ -475,6 +503,8 @@
         :items menu-items
         :keys common-keys
         :apps apps
+        :grid {:margins [0 0]
+               :size "8x3"}
         :hyper {:key :F18}
         :vim {:enabled false}})
 
