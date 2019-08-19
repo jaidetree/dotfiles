@@ -391,10 +391,12 @@
 (local grammarly-config
        {:key "Grammarly"
         :launch (fn [])
-        :items [{:mods [:ctrl]
-                 :key :c
-                 :title "Return to Emacs"
-                 :action "grammarly:back-to-emacs"}]
+        :items (concat
+                menu-items
+                [{:mods [:ctrl]
+                  :key :c
+                  :title "Return to Emacs"
+                  :action "grammarly:back-to-emacs"}])
         :keys ""})
 
 (local hammerspoon-config
@@ -407,12 +409,14 @@
         ;;             (print "Activating Hammerspoon"))
         ;; :deactivate (fn []
         ;;             (print "Deactivating Hammerspoon"))
-        :items [{:key :r
-                 :title "Reload Console"
-                 :action hs.reload}
-                {:key :c
-                 :title "Clear Console"
-                 :action hs.console.clearConsole}]
+        :items (concat
+                menu-items
+                [{:key :r
+                  :title "Reload Console"
+                  :action hs.reload}
+                 {:key :c
+                  :title "Clear Console"
+                  :action hs.console.clearConsole}])
         :keys [{:mods [:cmd]
                 :key :y
                 :action (fn []
