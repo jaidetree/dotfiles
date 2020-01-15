@@ -253,19 +253,19 @@
          :action "zoom:mute-or-unmute-audio"}
         {:mods [:hyper]
          :key :1
-         :action "mosaic:full-size"}
+         :action "layouts:full-size"}
         {:mods [:hyper]
          :key :2
-         :action "mosaic:left-half"}
+         :action "layouts:left-half"}
         {:mods [:hyper]
          :key :3
-         :action "mosaic:right-half"}
+         :action "layouts:right-half"}
         {:mods [:hyper]
          :key :4
-         :action "mosaic:left-big"}
+         :action "layouts:left-big"}
         {:mods [:hyper]
          :key :5
-         :action "mosaic:right-small"}
+         :action "layouts:right-small"}
         {:mods [:hyper]
          :key :v
          :action "vim:enable"}
@@ -276,6 +276,10 @@
          :key :c
          :action (fn []
                    (hs.eventtap.keyStroke [:cmd :ctrl :shift :alt] :c))}
+        {:mods [:ctrl]
+         :key "["
+         :action (fn []
+                   (hs.eventtap.keyStroke nil :escape))}
         {:mods [:cmd]
          :key :i
          :action (fn []
