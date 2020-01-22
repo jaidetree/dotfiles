@@ -1,3 +1,4 @@
+(require-macros :lib.macros)
 (local windows (require :windows))
 (local {:concat concat
         :filter filter
@@ -25,8 +26,28 @@
 
 (fn activator
   [app-name]
+  "
+  A higher order function to activate a target app. It's useful for quickly
+  binding a modal menu action or hotkey action to launch or focus on an app.
+  Takes a string application name
+  Returns a function to activate that app.
+
+  Example:
+  (local launch-emacs (activator \"Emacs\"))
+  (launch-emacs)
+  "
   (fn activate []
     (windows.activate-app app-name)))
+
+(fn toggle-console
+  []
+  "
+  A simple action function to toggle the hammer spoon console.
+  Change the keybinding in the common keys section of this config file.
+  "
+  (if-let [console (hs.console.hswindow)]
+          (hs.closeConsole)
+          (hs.openConsole)))
 
 (fn jump []
   (let [wns (->> (hs.window.allWindows)
@@ -288,7 +309,10 @@
                          title (when (and el el.title) (: el :title))]
                      (print (hs.inspect {:element el
                                          :role role
-                                         :title title}))))}])
+                                         :title title}))))}
+        {:mods [:cmd :ctrl]
+         :key "`"
+         :action toggle-console}])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -419,7 +443,9 @@
         :apps apps
         :grid {:margins [5 5]
                :size "8x2"}
-        :hyper {:key :F18}
+        ;; :hyper {:key :F18}
+        :hyper {:mods []
+                :key :F18}
         :vim {:enabled false}})
 
 

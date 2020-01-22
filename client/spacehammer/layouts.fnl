@@ -3,41 +3,39 @@
         :slice slice} (require :lib.functional))
 (local fu hs.fnutils)
 
-(local state (atom.new {:cell ""
-                        :cycle (fn [] nil)}))
+(var idx 0)
+(var cell "")
+(var last-window {})
+(var screens [])
 
-(fn create-cycle
-  []
-  (let [current (hs.screen.mainScreen)
-        screens (hs.screen.allScreens)
-        idx     (fu.indexOf screens current)
-        sorted (if (= idx 0)
-                   screens
-                   (concat
-                    (slice idx screens)
-                    (slice 0 (- idx 1) screens)))]
-    (fu.cycle sorted)))
+(fn next-idx
+  [idx]
+  (let [idx (+ idx 1)
+        count (length screens)]
+    (if (< idx count)
+        idx
+        1)))
 
-(fn update-cycle
-  [cell]
-  (let [cycle (create-cycle)]
-    (atom.reset! state {:cell cell
-                        :cycle cycle})
-    cycle))
-
-(fn get-cycler
-  [cell]
-  (let [{:cell current
-         :cycle cycle} (atom.deref state)]
-    (if (= current cell)
-        cycle
-        (update-cycle cell))))
+(fn cycle-screens
+  [win target-cell]
+  (set screens (hs.screen.allScreens))
+  (let [next-idx (if (and (= target-cell cell)
+                          (= win last-window))
+                     (next-idx idx)
+                     1)
+        screen (. screens next-idx)]
+    (set last-window win)
+    (set cell target-cell)
+    (set idx next-idx)
+    (print (hs.inspect {:win win
+                        :cell target-cell
+                        :idx next-idx}))
+    screen))
 
 (fn grid-resize
   [cell]
   (let [w (hs.window.frontmostWindow)
-        get-screen (get-cycler cell)
-        screen (get-screen)]
+        screen (cycle-screens w cell)]
     (hs.grid.set w cell screen)))
 
 (fn full-size
