@@ -384,7 +384,8 @@ you should place your code here."
   (add-to-list 'spacemacs-indent-sensitive-modes
                'rjsx-mode
                'js2-mode)
-  (setq select-enable-clipboard nil))
+  (setq select-enable-clipboard nil)
+  (server-start))
 
 
 ;; Do not write anything past this comment. This is where Emacs will
