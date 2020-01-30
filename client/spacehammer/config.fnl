@@ -54,6 +54,14 @@
                  (filter allowed-app?))]
     (hs.hints.windowHints wns nil true)))
 
+(fn center-mouse
+  []
+  (let [screen (hs.screen.primaryScreen)
+        frame (: screen :frame)
+        w (/ frame._w 2)
+        h (/ frame._h 2)]
+    (hs.mouse.setAbsolutePosition {:x w :y h})))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General
@@ -312,7 +320,10 @@
                                          :title title}))))}
         {:mods [:cmd :ctrl]
          :key "`"
-         :action toggle-console}])
+         :action toggle-console}
+        {:mods [:hyper]
+         :key :e
+         :action center-mouse}])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
