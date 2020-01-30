@@ -355,30 +355,12 @@ you should place your code here."
   ;; https://www.emacswiki.org/emacs/FillColumnIndicator
   ;; (add-hook 'after-change-major-mode-hook 'fci-mode)
 
-  ;; Key bindings
-  ;; Make TAB behave more like VIM so it doesn't rely on smart indentation
-  ;; which is often very off in js2-mode.
-  ;; https://emacs.stackexchange.com/questions/27869/how-to-make-evil-mode-tab-key-indent-not-re-indent-based-on-context
-  ;; (define-key evil-insert-state-map (kbd "TAB") 'indent-relative)
-  ;; (define-key evil-normal-state-map (kbd "o") (lambda ()
-  ;;                                               (interactive)
-  ;;                                               (evil-open-below 0)
-  ;;                                               (indent-relative)))
-  ;; (define-key evil-insert-state-map (kbd "RET") (lambda ()
-  ;;                                                 (interactive)
-  ;;                                                 (newline)
-  ;;                                                 (indent-relative)))
-  ;; Revert emacs-mac cmd<=>meta swap
-  ;; https://gist.github.com/railwaycat/3498096
-
   ;; Keybinds
   (global-set-key [(hyper v)] (lambda ()
                                 (interactive)
                                 (evil-paste-from-register ?+)))
   (global-set-key [(hyper c)] 'clipboard-kill-ring-save)
   (global-set-key [(hyper l)] 'goto-line)
-  (evil-leader/set-key
-    "q q" 'spacemacs/frame-killer)
 
   (add-to-list 'spacemacs-indent-sensitive-modes
                'rjsx-mode
@@ -386,10 +368,11 @@ you should place your code here."
   (setq select-enable-clipboard nil
         tab-always-indent t)
   (server-start)
-  (add-hook 'js2-mode-hook (lambda ()
-                             (electric-indent-local-mode -1)
-                             (electric-layout-mode -1))))
-
+  (add-hook 'js2-mode-hook
+    (lambda ()
+      (electric-layout-mode -1)
+      (electric-indent-mode -1)
+      (setq tab-always-indent t))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
