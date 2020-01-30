@@ -22,3 +22,7 @@ if test "$TERM" = "dumb"
 else
     fish_hybrid_key_bindings
 end
+
+# DIR ENV
+##############################################################################
+direnv hook fish | source

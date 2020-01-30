@@ -99,6 +99,11 @@ Window Layouts
        (= prev.window current.window)
        (= prev.frame current.frame)))
 
+(fn get-cell
+  [cell screen]
+  (let [rect (hs.grid.getCell cell screen)]
+    rect))
+
 (fn grid-resize
   [cell]
   "
@@ -113,17 +118,21 @@ Window Layouts
   "
   (let [prev (atom.deref state)
         current (current-state cell)
-        {:screens screens
-         :screen current-screen} current
         index (if (repeated-update? prev current)
-                  (next-screen-index prev.index (length screens))
-                  (current-screen-index current-screen screens))
-        next-screen (. screens index)]
+                  (next-screen-index prev.index (length current.screens))
+                  (current-screen-index current.screen current.screens))
+        next-screen (. current.screens index)]
+    (print "Updating layout to " index)
+    (print "Current window cell" (hs.inspect (hs.grid.get current.window)))
+    (print "Current cell dimensions" (hs.inspect (get-cell cell current.screen)))
+    (print "Current frame" (hs.inspect (: current.window :frame)))
     (hs.grid.set current.window cell next-screen)
     (update {:index index
              :cell cell
              :window current.window
-             :frame (win->frame-str current.window)})))
+             :frame (win->frame-str current.window)})
+    (hs.timer.doAfter 0.5 (fn []
+                            (update {:frame (win->frame-str current.window)})))))
 
 (fn full-size
   []

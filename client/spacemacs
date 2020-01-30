@@ -70,7 +70,8 @@ values."
                       version-control-global-margin t)
      fennel
      spacehammer
-     )
+     tabbar
+     (spacemacs-layouts :variables spacemacs-layouts-restrict-spc-tab t))
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
@@ -371,21 +372,23 @@ you should place your code here."
   ;; https://gist.github.com/railwaycat/3498096
 
   ;; Keybinds
-  (global-set-key [(super a)] 'mark-whole-buffer)
-  (global-set-key [(super v)] 'yank)
-  (global-set-key [(super c)] 'kill-ring-save)
-  (global-set-key [(super s)] 'save-buffer)
-  (global-set-key [(super l)] 'goto-line)
-  (global-set-key [(super w)]
-    (lambda () (interactive) (delete-window)))
-  (global-set-key [(super z)] 'undo)
+  (global-set-key [(hyper v)] (lambda ()
+                                (interactive)
+                                (evil-paste-from-register ?+)))
+  (global-set-key [(hyper c)] 'clipboard-kill-ring-save)
+  (global-set-key [(hyper l)] 'goto-line)
+  (evil-leader/set-key
+    "q q" 'spacemacs/frame-killer)
 
-  (bind-key "s-s" #'save-buffer)
   (add-to-list 'spacemacs-indent-sensitive-modes
                'rjsx-mode
                'js2-mode)
-  (setq select-enable-clipboard nil)
-  (server-start))
+  (setq select-enable-clipboard nil
+        tab-always-indent t)
+  (server-start)
+  (add-hook 'js2-mode-hook (lambda ()
+                             (electric-indent-local-mode -1)
+                             (electric-layout-mode -1))))
 
 
 ;; Do not write anything past this comment. This is where Emacs will
