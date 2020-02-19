@@ -335,7 +335,10 @@
          :action center-mouse}
         {:mods [:hyper]
          :key :t
-         :action "tmux:send-to-tmux"}])
+         :action "tmux:send-to-tmux"}
+        {:mods [:hyper]
+         :key :s
+         :action "tmux:send-to-tmux-new-session"}])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

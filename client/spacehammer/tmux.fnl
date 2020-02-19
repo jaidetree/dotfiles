@@ -7,6 +7,7 @@
 (local atom (require :lib.atom))
 
 (local session (atom.new nil))
+(local prev-window (atom.new nil))
 
 (fn selected-text
   []
@@ -26,46 +27,52 @@
        (split "\n")
        (map #(. (split ":" $1) 1))))
 
-(fn select-session
-  [choice]
-  (atom.reset! session choice.text))
+(fn session-selector
+  [f]
+  (fn [choice]
+    (when-let [session-name choice.text]
+      (atom.reset! session session-name)
+      (f session-name))))
 
 (fn choose-session
-  [sessions]
+  [sessions f]
   (let [choices (->> sessions
                      (map (fn [session i]
                             {:text session
                              :uuid i})))
-        chooser (hs.chooser.new #(when $ (select-session $)))]
-    (print (hs.inspect choices))
+        chooser (hs.chooser.new (session-selector f))]
     (chooser:choices choices)
     (chooser:show)))
 
 (fn tmux-sessions
-  []
+  [f]
   (cmd "/usr/local/bin/tmux"
        #(-> (parse-sessions $1 $2 $3)
-            (choose-session))
+            (choose-session f))
        ["list-sessions"]))
 
-(tmux-sessions)
+(fn select-tmux-session
+  [continue]
+  (fn [msg]
+    (if msg.session
+        (continue msg)
+        (tmux-sessions #(continue (merge msg {:session $}))))))
 
 (fn load-tmux-buffer
   [f msg]
   (let [{:path path
          :session session} msg]
     (cmd "/usr/local/bin/tmux"
-     #(do (print $1 $2 $3)
-          (f))
-     ["load-buffer" path ";"
-      "paste-buffer" "-t" session])))
+         #(f)
+         ["load-buffer" path ";"
+          "paste-buffer" "-dpr" "-t" session ";"])))
 
 (fn save-tmp-file
   [continue]
   (fn [msg]
     (let [{:text text} msg
           path (os.tmpname)
-          file (io.open path "w")]
+          file (io.open path "w+")]
       (print "Writing text to " path)
       (file:write text)
       (file:close)
@@ -80,27 +87,48 @@
 (fn delete-tmp-file
   [continue]
   (fn [msg]
-    (let [{:file file} msg]
+    (let [{:path path} msg]
+      (os.remove path)
       (continue msg))))
 
+(fn activate-terminal
+  [continue]
+  (fn [msg]
+    (let [screens (length (hs.screen.allScreens))
+          front-window (hs.window.frontmostWindow)
+          term-window (-> "iTerm"
+                          (hs.application.find)
+                          (: :focusedWindow))]
+        (if (and (= screens 1) term-window)
+            (do
+              (atom.reset! prev-window front-window)
+              (term-window:focus))
+            (> screens 1)
+            (do
+              (alert "Send selected text to tmux"))))
+    msg))
+
 (local pipeline ((compose
+                  select-tmux-session
                   save-tmp-file
                   send-file-to-tmux
-                  delete-tmp-file)
+                  delete-tmp-file
+                  activate-terminal)
                  print))
 
 (fn send-to-tmux
-  []
-  (let [msg {:text (selected-text)
-             :session (atom.deref session)}]
-    (print "Sending text to terminal\n" msg.text)
-    (when msg.text
-      (pipeline msg))))
+  [custom-msg]
+  (let [window (atom.deref prev-window)
+        msg (merge
+             {:text (selected-text)
+              :session (atom.deref session)}
+             custom-msg)]
+    (if (and (not msg.text) window)
+        (do
+          (window:focus)
+          (atom.reset! prev-window nil))
+        (when msg.text
+          (pipeline msg)))))
 
-(fn log-selected-text
-  []
-  (let [text (selected-text)]
-    (print "Selected text:\n" text)))
-
-{:log-selected-text log-selected-text
- :send-to-tmux send-to-tmux}
+{:send-to-tmux send-to-tmux
+ :send-to-tmux-new-session #(send-to-tmux {:session false})}
