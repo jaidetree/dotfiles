@@ -1,5 +1,8 @@
+(hs.console.clearConsole)
+
 (local hyper (require :lib.hyper))
 (local zoom (require :zoom))
+(local tmux (require :tmux))
 
 (var timer nil)
 

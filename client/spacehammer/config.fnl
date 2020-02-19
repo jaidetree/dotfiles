@@ -166,7 +166,16 @@
           :action "windows:show-grid"}
          {:key :u
           :title "Undo"
-          :action "windows:undo-action"}]))
+          :action "windows:undo-action"}
+         {:key :s
+          :title "Move to Screen"
+          :enter (fn [] (print "Entered move to screen"))
+          :exit (fn [] (print "Exited move to screen"))
+          :items [return
+                  {:key :s
+                   :title "Whatever"
+                   :action (fn [] nil)}]}]))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -318,12 +327,15 @@
                      (print (hs.inspect {:element el
                                          :role role
                                          :title title}))))}
-        {:mods [:cmd :ctrl]
+        {:mods [:ctrl :shift]
          :key "`"
          :action toggle-console}
         {:mods [:hyper]
          :key :e
-         :action center-mouse}])
+         :action center-mouse}
+        {:mods [:hyper]
+         :key :t
+         :action "tmux:send-to-tmux"}])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

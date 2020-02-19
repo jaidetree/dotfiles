@@ -122,10 +122,6 @@ Window Layouts
                   (next-screen-index prev.index (length current.screens))
                   (current-screen-index current.screen current.screens))
         next-screen (. current.screens index)]
-    (print "Updating layout to " index)
-    (print "Current window cell" (hs.inspect (hs.grid.get current.window)))
-    (print "Current cell dimensions" (hs.inspect (get-cell cell current.screen)))
-    (print "Current frame" (hs.inspect (: current.window :frame)))
     (hs.grid.set current.window cell next-screen)
     (update {:index index
              :cell cell
