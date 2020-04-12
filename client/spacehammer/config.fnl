@@ -253,6 +253,11 @@
          :title "End Meeting"
          :action "zoom:end-meeting"}])
 
+(local shadow-items
+       [return
+        {:key :s
+         :title "Toggle shadow shutdown blocker"
+         :action "shadow:keep-awake"}])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main Menu & Global Key Bindings
@@ -278,6 +283,9 @@
          ;; :exit (fn [menu]
          ;;         (print "Exiting menu: " (hs.inspect menu)))
          :items media-items}
+        {:key :s
+         :title "Shadow"
+         :items shadow-items}
         {:key :z
          :title "Zoom"
          :items zoom-items}])
