@@ -9,12 +9,23 @@
 (fn center
   []
   (let [app (hs.application.get "com.blade.shadow-macos")
-        window (app.focusedWindow)
+        window (app:focusedWindow)
         frame (: window :frame)
         w (/ frame._w 2)
         h (/ frame._h 2)]
     (window.focus)
     {:x w :y h}))
+
+(fn rand
+  []
+  (let [app (hs.application.get "com.blade.shadow-macos")
+        window (app:focusedWindow)
+        frame (: window :frame)
+        w frame._w
+        h frame._h]
+    (app:activate)
+    {:x (math.random 1 w)
+     :y (math.random 1 h)}))
 
 (fn update-state
   [new-state]
@@ -22,8 +33,8 @@
     (atom.reset! state (merge old-state new-state))))
 
 (fn click
-  []
-  (hs.eventtap.leftClick (center)))
+  [coords]
+  (hs.eventtap.leftClick coords))
 
 (fn loop-clicks
   [count]
@@ -31,8 +42,10 @@
     (hs.timer.doAfter
      1
      (fn []
-       (click)
-       (loop-clicks (- count 1))))))
+       (let [coords (rand)]
+         (hs.mouse.setAbsolutePosition coords)
+         (click coords)
+         (loop-clicks (- count 1)))))))
 
 (fn caffiene
   []
@@ -42,7 +55,7 @@
     (loop-clicks 3)
     (fn cleanup
       []
-      (timer.stop))))
+      (timer:stop))))
 
 (fn keep-awake-on
   []
@@ -55,6 +68,7 @@
     (: rect :show)
     {:active true
      :rect rect
+     :cleanup-caffiene (caffiene)
      :alert-id (alert "  Keeping shadow awake  "
                       {:textFont "Menlo"
                        :textSize 16}
@@ -67,6 +81,7 @@
 
   (hs.dockicon.show)
   (: data.rect :delete)
+  (data.cleanup-caffiene)
   {:active false
    :alert-id ""
    :rect ""})
