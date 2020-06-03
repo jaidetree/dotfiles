@@ -149,41 +149,41 @@
   js-expr-indent-offset -2
   js-chain-indent nil)
 
-
-(defun js--multi-line-declaration-indentation ()
-  "Helper function for `js--proper-indentation'.
+(after! js2-mode
+  (defun js--multi-line-declaration-indentation ()
+    "Helper function for `js--proper-indentation'.
 Return the proper indentation of the current line if it belongs to a declaration
 statement spanning multiple lines; otherwise, return nil."
-  (let (forward-sexp-function ; Use Lisp version.
-        at-opening-bracket)
-    (save-excursion
-      (back-to-indentation)
-      (when (not (looking-at js--declaration-keyword-re))
-        (let ((pt (point)))
-          (when (looking-at js--indent-operator-re)
-            (goto-char (match-end 0)))
-          ;; The "operator" is probably a regexp literal opener.
-          (when (nth 3 (syntax-ppss))
-            (goto-char pt)))
-        (while (and (not at-opening-bracket)
-                    (not (bobp))
-                    (let ((pos (point)))
-                      (save-excursion
-                        (js--backward-syntactic-ws)
-                        (or (eq (char-before) ?,)
-                            (and (not (eq (char-before) ?\;))
-                                 (prog2
-                                     (skip-syntax-backward ".")
-                                     (looking-at js--indent-operator-re)
-                                   (js--backward-syntactic-ws))
-                                 (not (eq (char-before) ?\;)))
-                            (js--same-line pos)))))
-          (condition-case nil
+    (let (forward-sexp-function         ; Use Lisp version.
+           at-opening-bracket)
+      (save-excursion
+        (back-to-indentation)
+        (when (not (looking-at js--declaration-keyword-re))
+          (let ((pt (point)))
+            (when (looking-at js--indent-operator-re)
+              (goto-char (match-end 0)))
+            ;; The "operator" is probably a regexp literal opener.
+            (when (nth 3 (syntax-ppss))
+              (goto-char pt)))
+          (while (and (not at-opening-bracket)
+                   (not (bobp))
+                   (let ((pos (point)))
+                     (save-excursion
+                       (js--backward-syntactic-ws)
+                       (or (eq (char-before) ?,)
+                         (and (not (eq (char-before) ?\;))
+                           (prog2
+                             (skip-syntax-backward ".")
+                             (looking-at js--indent-operator-re)
+                             (js--backward-syntactic-ws))
+                           (not (eq (char-before) ?\;)))
+                         (js--same-line pos)))))
+            (condition-case nil
               (backward-sexp)
-            (scan-error (setq at-opening-bracket t))))
-        (when (looking-at js--declaration-keyword-re)
-          (goto-char (match-beginning 0))
-          (+ js-indent-level (current-column)))))))
+              (scan-error (setq at-opening-bracket t))))
+          (when (looking-at js--declaration-keyword-re)
+            (goto-char (match-beginning 0))
+            (+ js-indent-level (current-column))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
