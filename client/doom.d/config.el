@@ -56,7 +56,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Comment macro
+;; Custom Fonts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq doom-font (font-spec :family "operator mono" :size 14 :weight 'medium))
@@ -146,45 +146,22 @@
 ;; JavaScript
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq-hook! 'js2-mode-hook
-  js-expr-indent-offset -2
-  js-chain-indent nil)
+(defun j/fix-js-multi-line-indent ()
+  "Indent expression declarations by 2 just like the rest of the code"
+  (let ((beg (match-beginning 0)))
+    (when beg
+      (goto-char beg)
+      (+ js-indent-level (current-column)))))
 
-(after! js2-mode
-  (defun js--multi-line-declaration-indentation ()
-    "Helper function for `js--proper-indentation'.
-Return the proper indentation of the current line if it belongs to a declaration
-statement spanning multiple lines; otherwise, return nil."
-    (let (forward-sexp-function         ; Use Lisp version.
-           at-opening-bracket)
-      (save-excursion
-        (back-to-indentation)
-        (when (not (looking-at js--declaration-keyword-re))
-          (let ((pt (point)))
-            (when (looking-at js--indent-operator-re)
-              (goto-char (match-end 0)))
-            ;; The "operator" is probably a regexp literal opener.
-            (when (nth 3 (syntax-ppss))
-              (goto-char pt)))
-          (while (and (not at-opening-bracket)
-                   (not (bobp))
-                   (let ((pos (point)))
-                     (save-excursion
-                       (js--backward-syntactic-ws)
-                       (or (eq (char-before) ?,)
-                         (and (not (eq (char-before) ?\;))
-                           (prog2
-                             (skip-syntax-backward ".")
-                             (looking-at js--indent-operator-re)
-                             (js--backward-syntactic-ws))
-                           (not (eq (char-before) ?\;)))
-                         (js--same-line pos)))))
-            (condition-case nil
-              (backward-sexp)
-              (scan-error (setq at-opening-bracket t))))
-          (when (looking-at js--declaration-keyword-re)
-            (goto-char (match-beginning 0))
-            (+ js-indent-level (current-column))))))))
+(use-package! js2-mode
+  :config
+  (setq
+   js-expr-indent-offset -2
+   js-chain-indent nil)
+  (advice-add
+   #'js--multi-line-declaration-indentation
+   ;; :override 'j/js--multi-line-declaration-indentation
+   :after-while #'j/fix-js-multi-line-indent))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -205,3 +182,38 @@ statement spanning multiple lines; otherwise, return nil."
                 (projectile-project-p))
           (call-interactively #'projectile-invalidate-cache))
         (message "File '%s' successfully removed" filename)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Zoom
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(map! :leader "z" #'+hydra/text-zoom/body)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Flycheck Popup Tip Formatting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(custom-set-faces!
+  '(popup-tip-face :background "#fd6d6e" :foreground "black"
+                   :weight normal :slant oblique))
+
+(defun j/format-flycheck-popup (errors)
+  "Formats ERRORS messages for display. Pads left and right of message with a space"
+  (let* ((messages-and-id (mapcar #'flycheck-error-format-message-and-id
+                                  (delete-dups errors)))
+         (messages (sort
+                    (mapcar
+                     (lambda (m) (concat " " flycheck-popup-tip-error-prefix m " "))
+                     messages-and-id)
+                    'string-lessp)))
+    (propertize (mapconcat 'identity messages "\n")
+                'face
+                'popup-tip-face)))
+
+(use-package! flycheck
+  :config
+  (advice-add
+   #'flycheck-popup-tip-format-errors
+   :override #'j/format-flycheck-popup))
