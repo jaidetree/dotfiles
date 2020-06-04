@@ -199,15 +199,17 @@
   '(popup-tip-face :background "#fd6d6e" :foreground "black"
                    :weight normal :slant oblique))
 
+(defun j/format-flycheck-messages (errors)
+  (->> errors
+       (delete-dups)
+       (mapcar #'flycheck-error-format-message-and-id)
+       (mapcar (lambda (m) (concat " " flycheck-popup-tip-error-prefix m " ")))))
+
 (defun j/format-flycheck-popup (errors)
   "Formats ERRORS messages for display. Pads left and right of message with a space"
-  (let* ((messages-and-id (mapcar #'flycheck-error-format-message-and-id
-                                  (delete-dups errors)))
-         (messages (sort
-                    (mapcar
-                     (lambda (m) (concat " " flycheck-popup-tip-error-prefix m " "))
-                     messages-and-id)
-                    'string-lessp)))
+  (let* ((messages (-> errors
+                       (j/format-flycheck-messages)
+                       (sort 'string-lessp))))
     (propertize (mapconcat 'identity messages "\n")
                 'face
                 'popup-tip-face)))
@@ -217,3 +219,10 @@
   (advice-add
    #'flycheck-popup-tip-format-errors
    :override #'j/format-flycheck-popup))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Evil Lisp State
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+()
