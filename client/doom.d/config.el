@@ -188,7 +188,9 @@
 ;; Zoom
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(map! :leader "z" #'+hydra/text-zoom/body)
+(map!
+  :leader
+  :desc "Font zoom" "z" #'+hydra/text-zoom/body)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -300,7 +302,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package! evil-lisp-state
-  :config
-  (map! :map evil-lisp-state-map
-    :leader "k"))
+(map!
+  :leader
+  :map evil-lisp-state-map
+  :prefix ("k" "Lisp")
+  :desc "Slurp forward" "s" #'sp-forward-slurp-sexp)
