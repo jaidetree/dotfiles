@@ -222,7 +222,85 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Evil Insert Newline and continue comments
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun j/comment-indent (&optional continue)
+  "Indent this line's comment to `comment-column', or insert an empty comment.
+If CONTINUE is non-nil, use the `comment-continue' markers if any."
+  (interactive "*")
+  (comment-normalize-vars)
+  (let* ((empty (save-excursion (beginning-of-line)
+                  (looking-at "[ \t]*$")))
+          (starter (or (and continue comment-continue)
+                     (and empty block-comment-start) comment-start))
+          (ender (or (and continue comment-continue "")
+                   (and empty block-comment-end) comment-end)))
+    (unless starter (error "No comment syntax defined"))
+    (beginning-of-line)
+    (let* ((eolpos (line-end-position))
+            (begpos (comment-search-forward eolpos t))
+            (first-three (substring starter 0 3))
+            (fst (substring starter 0 1))
+            (test-str (concat fst fst fst))
+            cpos indent)
+      (if (and comment-insert-comment-function (not begpos))
+        ;; If no comment and c-i-c-f is set, let it do everything.
+        (funcall comment-insert-comment-function)
+        ;; An existing comment?
+        (if begpos
+          (progn
+            (if (and (not (looking-at "[\t\n ]"))
+                  (looking-at comment-end-skip))
+              ;; The comment is empty and we have skipped all its space
+              ;; and landed right before the comment-ender:
+              ;; Go back to the middle of the space.
+              (forward-char (/ (skip-chars-backward " \t") -2)))
+            (setq cpos (point-marker)))
+          ;; If none, insert one.
+          (save-excursion
+              ;; Some `comment-indent-function's insist on not moving
+              ;; comments that are in column 0, so we first go to the
+              ;; likely target column.
+              (indent-to comment-column)
+              ;; Ensure there's a space before the comment for things
+              ;; like sh where it matters (as well as being neater).
+              (unless (memq (char-before) '(nil ?\n ?\t ?\s))
+                (insert ?\s))
+              (setq begpos (point))
+            (unless (equal first-three test-str)
+                (insert starter))
+            (setq cpos (point-marker))
+            (unless (equal first-three test-str)
+              (insert ender))))
+        (goto-char begpos)
+        ;; Compute desired indent.
+        (setq indent (save-excursion (funcall comment-indent-function)))
+        ;; If `indent' is nil and there's code before the comment, we can't
+        ;; use `indent-according-to-mode', so we default to comment-column.
+        (unless (or indent (save-excursion (skip-chars-backward " \t") (bolp)))
+          (setq indent comment-column))
+        ;; (if (not indent)
+        ;;   ;; comment-indent-function refuses: delegate to line-indent.
+        ;;   (indent-according-to-mode)
+        ;;   ;; If the comment is at the right of code, adjust the indentation.
+        ;;   (unless (save-excursion (skip-chars-backward " \t") (bolp))
+        ;;     (setq indent (comment-choose-indent indent)))
+	      ;;   ;; If that's different from comment's current position, change it.
+	      ;;   (unless (= (current-column) indent)
+	      ;;     (delete-region (point) (progn (skip-chars-backward " \t") (point)))
+	      ;;     (indent-to indent)))
+	      (goto-char cpos)
+	      (set-marker cpos nil)))))
+
+(advice-add #'comment-indent :override #'j/comment-indent)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-()
+(use-package! evil-lisp-state
+  :config
+  (map! :map evil-lisp-state-map
+    :leader "k"))
