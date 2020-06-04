@@ -51,3 +51,4 @@
 
 
 (package! anakondo)
+(package! evil-lisp-state)

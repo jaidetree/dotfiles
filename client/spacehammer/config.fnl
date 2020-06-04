@@ -2,7 +2,9 @@
 (local windows (require :windows))
 (local {:concat concat
         :filter filter
-        :logf logf} (require :lib.functional))
+        :logf logf
+        :map map
+        :range range} (require :lib.functional))
 (local vim (require :vim))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,7 +76,6 @@
        {:key :space
         :title "Back"
         :action :previous})
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows
@@ -176,8 +177,6 @@
                    :title "Whatever"
                    :action (fn [] nil)}]}]))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Apps Menu
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,6 +268,8 @@
          :action (activator "Alfred 4")}
         {:key :w
          :title "Window"
+         :enter "windows:enter-window-menu"
+         :exit "windows:exit-window-menu"
          :items window-items}
         {:key :a
          :title "Apps"
