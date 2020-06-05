@@ -198,8 +198,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (custom-set-faces!
-  '(popup-tip-face :background "#fd6d6e" :foreground "black"
-                   :weight normal :slant oblique))
+  '(popup-tip-face
+     :background "#fd6d6e" :foreground "black"
+     :weight normal :slant oblique
+     :height 120))
 
 (defun j/format-flycheck-messages (errors)
   (->> errors
