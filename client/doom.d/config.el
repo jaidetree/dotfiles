@@ -302,8 +302,10 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(map!
-  :leader
-  :map evil-lisp-state-map
-  :prefix ("k" "Lisp")
-  :desc "Slurp forward" "s" #'sp-forward-slurp-sexp)
+(use-package! evil-lisp-state
+  :init (setq evil-lisp-state-global t)
+  :config
+  (map! :leader :desc "Lisp" "k" evil-lisp-state-map)
+  (add-to-list
+    'which-key-replacement-alist
+    '(("evil-lisp-state-\\(.+\\)" . "\\1"))))
