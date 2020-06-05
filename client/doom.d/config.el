@@ -200,7 +200,9 @@
 ;; - Use the hydra module's zoom example
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(map! :leader "z" #'+hydra/text-zoom/body)
+(map!
+  :leader
+  :desc "Font zoom" "z" #'+hydra/text-zoom/body)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -316,9 +318,42 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(map!
+  :prefix ("k" . "Lisp")
+  ;; :desc "Evil jump"     "%" #'evil-jump-item
+  ;; :desc "Evil ex"       ":" #'evil-ex
+  ;; :desc "Insert ("      "(" #'lisp-state-insert-sexp-before
+  ;; :desc "Insert )"      ")" #'lisp-state-insert-sexp-after
+  ;; :desc "End of sexp"   "$" #'sp-end-of-sexp
+  ;; :desc "Slurp forward" "s" #'sp-forward-slurp-sexp
+  )
+
+(defun bind-lisp-state-map (bindings)
+  (while key
+    (map! :prefix ("k" . "Lisp")
+          key def)
+    (setq key (pop bindings)
+          def (pop bindings))))
+
 (use-package! evil-lisp-state
   :config
-  (map! :map evil-lisp-state-map
-    :leader "k"))
+  (bind-lisp-state-map evil-lisp-state-map))
 
-(cons 1  2)
+(comment
+ (defun spacemacs/set-leader-keys (key def &rest bindings)
+   "Add KEY and DEF as key bindings under
+`dotspacemacs-leader-key' and `dotspacemacs-emacs-leader-key'.
+KEY should be a string suitable for passing to `kbd', and it
+should not include the leaders. DEF is most likely a quoted
+command. See `define-key' for more information about the possible
+choices for DEF. This function simply uses `define-key' to add
+the bindings.
+For convenience, this function will accept additional KEY DEF
+pairs. For example,
+\(spacemacs/set-leader-keys
+   \"a\" 'command1
+   \"C-c\" 'command2
+   \"bb\" 'command3\)"
+   (while key
+     (define-key spacemacs-default-map (kbd key) def)
+     (setq key (pop bindings) def (pop bindings)))))
