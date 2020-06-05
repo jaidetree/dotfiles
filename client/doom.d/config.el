@@ -211,8 +211,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (custom-set-faces!
-  '(popup-tip-face :background "#fd6d6e" :foreground "black"
-                   :weight normal :slant oblique))
+  '(popup-tip-face
+     :background "#fd6d6e" :foreground "black"
+     :weight normal :slant oblique
+     :height 120))
 
 (defun j/format-flycheck-messages (errors)
   (->> errors
@@ -318,42 +320,46 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(map!
-  :prefix ("k" . "Lisp")
-  ;; :desc "Evil jump"     "%" #'evil-jump-item
-  ;; :desc "Evil ex"       ":" #'evil-ex
-  ;; :desc "Insert ("      "(" #'lisp-state-insert-sexp-before
-  ;; :desc "Insert )"      ")" #'lisp-state-insert-sexp-after
-  ;; :desc "End of sexp"   "$" #'sp-end-of-sexp
-  ;; :desc "Slurp forward" "s" #'sp-forward-slurp-sexp
-  )
-
-(defun bind-lisp-state-map (bindings)
-  (while key
-    (map! :prefix ("k" . "Lisp")
-          key def)
-    (setq key (pop bindings)
-          def (pop bindings))))
-
 (use-package! evil-lisp-state
+  :init (setq evil-lisp-state-global t)
   :config
-  (bind-lisp-state-map evil-lisp-state-map))
+   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
 
-(comment
- (defun spacemacs/set-leader-keys (key def &rest bindings)
-   "Add KEY and DEF as key bindings under
-`dotspacemacs-leader-key' and `dotspacemacs-emacs-leader-key'.
-KEY should be a string suitable for passing to `kbd', and it
-should not include the leaders. DEF is most likely a quoted
-command. See `define-key' for more information about the possible
-choices for DEF. This function simply uses `define-key' to add
-the bindings.
-For convenience, this function will accept additional KEY DEF
-pairs. For example,
-\(spacemacs/set-leader-keys
-   \"a\" 'command1
-   \"C-c\" 'command2
-   \"bb\" 'command3\)"
-   (while key
-     (define-key spacemacs-default-map (kbd key) def)
-     (setq key (pop bindings) def (pop bindings)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Rename Prefixes
+;; - The which-key menu can sometimes display too long of names which causes
+;;   them to be truncated.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(after! which-key
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "evil-lisp-state-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "evil-mc-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "+multiple-cursors/") . (nil . ""))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Prompt Workspace Rename
+;; - After creating a workspace prompt to rename. Anon workspaces are not a
+;;   fun surprise.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun j/+workspace/new (&optional name clone-p)
+  "Prompt for a workspace name before creating the workspace"
+  (interactive "iP")
+  (let ((name (read-string "Workspace name: "
+                (or name
+                  (format "#%s" (+workspace--generate-id))))))
+    (when name
+      (+workspace/new name clone-p))))
+
+(after! persp-mode
+  (map! :leader
+    "TAB n" #'j/+workspace/new
+    "TAB N" #'+workspace/new))
