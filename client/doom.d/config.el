@@ -305,7 +305,43 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (use-package! evil-lisp-state
   :init (setq evil-lisp-state-global t)
   :config
-  (map! :leader :desc "Lisp" "k" evil-lisp-state-map)
+   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Rename Prefixes
+;; - The which-key menu can sometimes display too long of names which causes
+;;   them to be truncated.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(after! which-key
   (add-to-list
     'which-key-replacement-alist
-    '(("evil-lisp-state-\\(.+\\)" . "\\1"))))
+    '((nil . "evil-lisp-state-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "evil-mc-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "+multiple-cursors/") . (nil . ""))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Prompt Workspace Rename
+;; - After creating a workspace prompt to rename. Anon workspaces are not a
+;;   fun surprise.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun j/+workspace/new (&optional name clone-p)
+  "Prompt for a workspace name before creating the workspace"
+  (interactive "iP")
+  (let ((name (read-string "Workspace name: "
+                (or name
+                  (format "#%s" (+workspace--generate-id))))))
+    (when name
+      (+workspace/new name clone-p))))
+
+(after! persp-mode
+  (map! :leader
+    "TAB n" #'j/+workspace/new
+    "TAB N" #'+workspace/new))
