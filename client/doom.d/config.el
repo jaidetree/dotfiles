@@ -360,6 +360,18 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       (+workspace/new name clone-p))))
 
 (after! persp-mode
+  (+workspace-current-name)
   (map! :leader
     "TAB n" #'j/+workspace/new
     "TAB N" #'+workspace/new))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Make line numbers brighter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(custom-set-faces!
+  '(line-number
+    :foreground "#888")
+  '(line-number-current-line
+    :foreground "#ebbd80"))
