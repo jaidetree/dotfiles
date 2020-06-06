@@ -6,7 +6,7 @@ function __theme_git_prompt -S
 
   # Print the branch name
   set_color cyan
-  printf '%s %s' $branch_glyph $branch
+  printf '%s' $branch
   set_color normal
 
   # Turn the list of statuses like "new" "changed"
@@ -63,7 +63,7 @@ function fish_prompt
 
   # Add shortened pwd to prompt
   set -l pwd (prompt_pwd)
-  set -l prompt "$prompt in "(set_color brgreen)"$folder_glyph $pwd"(set_color normal)
+  set -l prompt "$prompt in "(set_color brgreen)"$pwd"(set_color normal)
 
 
   # Calculate the length of the plain text chars of the prompt
@@ -105,6 +105,6 @@ function fish_prompt
   # https://github.com/powerline/fonts
   echo
   __theme_mode_prompt
-  __theme_right_segment black $pink normal " ➜ "
+  printf (set_color $pink)" >"(set_color normal)
   printf " "
 end

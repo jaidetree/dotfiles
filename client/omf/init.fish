@@ -17,11 +17,8 @@ set -x LUA_CPATH '$HOME/.luarocks/lib/lua/5.3/?.so;/usr/local/lib/lua/5.3/?.so;/
 
 # Conditional Configs
 ##############################################################################
-if test "$TERM" = "dumb"
-    fish_default_key_bindings
-else
-    fish_hybrid_key_bindings
-end
+
+fish_default_key_bindings
 
 # DIR ENV
 ##############################################################################
