@@ -212,30 +212,59 @@
 
 (custom-set-faces!
   '(popup-tip-face
-     :background "#fd6d6e" :foreground "black"
+     :background "#FD6D6E" :foreground "black"
      :weight normal :slant oblique
-     :height 120))
+     :height 120)
+  '(flycheck-posframe-face
+     :weight normal :slant oblique)
+  '(flycheck-posframe-warning-face
+     :background "#ECBE7B" :foreground "black")
+  '(flycheck-posframe-info-face
+     :background "#7EAF54" :foreground "black")
+  '(flycheck-posframe-error-face
+     :background "#FD6D6E" :foreground "black"))
 
-(defun j/format-flycheck-messages (errors)
-  (->> errors
-       (delete-dups)
-       (mapcar #'flycheck-error-format-message-and-id)
-       (mapcar (lambda (m) (concat " " flycheck-popup-tip-error-prefix m " ")))))
+(defun j/format-flycheck-messages (msg)
+  (concat
+    " "
+    flycheck-popup-tip-error-prefix
+    (flycheck-error-format-message-and-id msg)
+    " "))
+
+(defun j/sort (pred errors)
+  (sort errors pred))
+
+(defun j/flycheck-errors->string (errors)
+  "Formats ERRORS messages for display. Pads left and right of message with a space"
+  (let ((messages (->> errors
+                    (delete-dups)
+                    (mapcar #'j/format-flycheck-message)
+                    (j/sort))))
+    (mapconcat 'identity messages "\n")))
 
 (defun j/format-flycheck-popup (errors)
-  "Formats ERRORS messages for display. Pads left and right of message with a space"
-  (let* ((messages (-> errors
-                       (j/format-flycheck-messages)
-                       (sort 'string-lessp))))
-    (propertize (mapconcat 'identity messages "\n")
-                'face
-                'popup-tip-face)))
+  (-> errors
+    (j/flycheck-errors->string)
+    (propertize 'face 'popup-tip-face)))
+
+(defun j/flycheck-posframe-format-error (err)
+  "Formats ERR for display."
+  (propertize (concat
+                " "
+                (flycheck-posframe-get-prefix-for-error err)
+                (flycheck-error-format-message-and-id err)
+                " ")
+    'face
+    `(:inherit ,(flycheck-posframe-get-face-for-error err))) )
 
 (use-package! flycheck
   :config
   (advice-add
-   #'flycheck-popup-tip-format-errors
-   :override #'j/format-flycheck-popup))
+    #'flycheck-popup-tip-format-errors
+    :override #'j/format-flycheck-popup)
+  (advice-add
+    #'flycheck-posframe-format-error
+    :override #'j/flycheck-posframe-format-error))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
