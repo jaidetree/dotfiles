@@ -125,28 +125,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Restore window size and placement
-;; - Doom recipe from docs/api.org
+;; Maximize window size
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(when-let (dims (doom-store-get 'last-frame-size))
-  (cl-destructuring-bind ((left . top) width height fullscreen) dims
-    (setq initial-frame-alist
-          (append initial-frame-alist
-                  `((left . ,left)
-                    (top . ,top)
-                    (width . ,width)
-                    (height . ,height)
-                    (fullscreen . ,fullscreen))))))
-
-(defun save-frame-dimensions ()
-  (doom-store-put 'last-frame-size
-                  (list (frame-position)
-                        (frame-width)
-                        (frame-height)
-                        (frame-parameter nil 'fullscreen))))
-
-(add-hook 'kill-emacs-hook #'save-frame-dimensions)
+(setq initial-frame-alist
+  '((fullscreen . maximized)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,7 +153,6 @@
    js-chain-indent nil)
   (advice-add
    #'js--multi-line-declaration-indentation
-   ;; :override 'j/js--multi-line-declaration-indentation
    :after-while #'j/fix-js-multi-line-indent))
 
 
@@ -262,9 +244,10 @@
   (advice-add
     #'flycheck-popup-tip-format-errors
     :override #'j/format-flycheck-popup)
-  (advice-add
-    #'flycheck-posframe-format-error
-    :override #'j/flycheck-posframe-format-error))
+  (comment
+    (advice-add
+      #'flycheck-posframe-format-error
+      :override #'j/flycheck-posframe-format-error)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -404,6 +387,33 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     :foreground "#888")
   '(line-number-current-line
     :foreground "#ebbd80"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Indent guides
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun j/active-guide (level responsive display)
+  (when (eq responsive 'top)
+    (highlight-indent-guides--highlighter-default
+      level responsive display)))
+
+(after! highlight-indent-guides
+  (setq
+    highlight-indent-guides-auto-enabled         nil
+    highlight-indent-guides-responsive           'top
+    highlight-indent-guides-delay                0
+    highlight-indent-guides-highlighter-function 'j/active-guide)
+  (custom-set-faces!
+    '(highlight-indent-guides-top-character-face
+       :foreground "#DE5356")))
+
+;; Uncomment this if you don't like indent guides in lisp languages
+(comment
+  (add-hook! '(lisp-mode-hook emacs-lisp-mode-hook clojure-mode-hook)
+    (defun +disable-indent-guides-in-lisp ()
+      (message "Disable indent-guides")
+      (highlight-indent-guides-mode -1))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
