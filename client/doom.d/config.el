@@ -351,13 +351,13 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun j/+workspace/new (&optional name clone-p)
-  "Prompt for a workspace name before creating the workspace"
+  "Prompt for a workspace name after creating the workspace"
   (interactive "iP")
-  (let ((name (read-string "Workspace name: "
-                (or name
-                  (format "#%s" (+workspace--generate-id))))))
-    (when name
-      (+workspace/new name clone-p))))
+  (+workspace/new nil clone-p)
+  (when-let (newname (read-string
+                      "Workspace name (%s): "
+                      (+workspace-current-name)))
+    (+workspace/rename newname)))
 
 (after! persp-mode
   (+workspace-current-name)
@@ -375,3 +375,10 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     :foreground "#888")
   '(line-number-current-line
     :foreground "#ebbd80"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Load an optional local file
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load! "local.el" nil t)
