@@ -332,6 +332,20 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(comment
+  (defun j/evil-state-modeline-face (args)
+    (cl-destructuring-bind (text face help-echo) args
+      (list
+        text
+        (cond
+          ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
+          (t                   face))
+        help-echo))))
+
+(after! (evil-lisp-state)
+  (advice-add #'doom-modeline--modal-icon
+      :filter-args #'j/evil-state-modeline-face))
+
 (defun wrap-comment (&rest args)
   "Wrap sexp in (comment ...) and indent it"
   (interactive "P")
@@ -339,23 +353,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (insert "comment\n")
   (indent-for-tab-command)
   (evil-first-non-blank))
-
-(defun j/evil-state-modeline-face (args)
-  (cl-destructuring-bind (text face help-echo) args
-    (list
-      text
-      (cond
-        ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
-        (t                   face))
-      help-echo)))
-
-(defun j/evil-state-fg (state)
-  (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
-    (face-foreground sym nil t)))
-
-(after! (evil-lisp-state)
-  (advice-add #'doom-modeline--modal-icon
-      :filter-args #'j/evil-state-modeline-face))
 
 (use-package! evil-lisp-state
   :init
@@ -365,6 +362,11 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     :map evil-lisp-state-map
     ";" (evil-lisp-state-enter-command wrap-comment))
   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
+
+
+(defun j/evil-state-fg (state)
+  (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
+    (face-foreground sym nil t)))
 
 (add-hook! 'doom-load-theme-hook
     (defun j/theme-evil-cursors ()
