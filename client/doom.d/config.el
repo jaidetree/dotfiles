@@ -352,7 +352,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun wrap-comment (&rest args)
+(defun wrap-comment (&rest _)
   "Wrap sexp in (comment ...) and indent it"
   (interactive "P")
   (sp-wrap-with-pair "(")
@@ -437,7 +437,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;   fun surprise.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun j/+workspace/new (&optional name clone-p)
+(defun j/+workspace/new (&optional _ clone-p)
   "Prompt for a workspace name after creating the workspace"
   (interactive "iP")
   (+workspace/new nil clone-p)
@@ -466,6 +466,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Indent guides
+;;  - Show only the active guide
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun j/active-guide (level responsive display)
@@ -478,8 +479,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     highlight-indent-guides-auto-enabled         nil
     highlight-indent-guides-responsive           'top
     highlight-indent-guides-delay                0
-    highlight-indent-guides-highlighter-function 'j/active-guide
-    highlight-indent-guides-character ?\x2502)
+    highlight-indent-guides-highlighter-function 'j/active-guide)
   (custom-set-faces!
     '(highlight-indent-guides-top-character-face
        :foreground "#DE5356")))
