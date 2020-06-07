@@ -332,6 +332,14 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun wrap-comment (&rest args)
+  "Wrap sexp in (comment ...) and indent it"
+  (interactive "P")
+  (sp-wrap-with-pair "(")
+  (insert "comment\n")
+  (indent-for-tab-command)
+  (evil-first-non-blank))
+
 (defun j/evil-state-modeline-face (args)
   (cl-destructuring-bind (text face help-echo) args
     (list
@@ -341,24 +349,29 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
         (t                   face))
       help-echo)))
 
-(use-package! evil-lisp-state
-  :init (setq evil-lisp-state-global t)
-  :config
-  (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
-
 (defun j/evil-state-fg (state)
   (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
     (face-foreground sym nil t)))
 
-(after!  (evil-lisp-state doom-modeline)
-  (setq
-    evil-insert-state-cursor (list 'bar (j/evil-state-fg "insert"))
-
-    evil-normal-state-cursor (list 'box (j/evil-state-fg "normal"))
-
-    evil-lisp-state-cursor   (list 'box (j/evil-state-fg "emacs")))
+(after! (evil-lisp-state)
   (advice-add #'doom-modeline--modal-icon
-    :filter-args #'j/evil-state-modeline-face))
+      :filter-args #'j/evil-state-modeline-face))
+
+(use-package! evil-lisp-state
+  :init
+  (setq evil-lisp-state-global t)
+  :config
+  (map!
+    :map evil-lisp-state-map
+    ";" (evil-lisp-state-enter-command wrap-comment))
+  (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
+
+(add-hook! 'doom-load-theme-hook
+    (defun j/theme-evil-cursors ()
+      (setq
+        evil-insert-state-cursor (list 'bar (j/evil-state-fg "insert"))
+        evil-normal-state-cursor (list 'box (j/evil-state-fg "normal"))
+        evil-lisp-state-cursor   (list 'box (j/evil-state-fg "emacs")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -426,7 +439,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     highlight-indent-guides-auto-enabled         nil
     highlight-indent-guides-responsive           'top
     highlight-indent-guides-delay                0
-    highlight-indent-guides-highlighter-function 'j/active-guide)
+    highlight-indent-guides-highlighter-function 'j/active-guide
+    highlight-indent-guides-character ?\x2502)
   (custom-set-faces!
     '(highlight-indent-guides-top-character-face
        :foreground "#DE5356")))
