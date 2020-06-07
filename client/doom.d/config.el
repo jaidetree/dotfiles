@@ -332,10 +332,33 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun j/evil-state-modeline-face (args)
+  (cl-destructuring-bind (text face help-echo) args
+    (list
+      text
+      (cond
+        ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
+        (t                   face))
+      help-echo)))
+
 (use-package! evil-lisp-state
   :init (setq evil-lisp-state-global t)
   :config
-   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
+  (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
+
+(defun j/evil-state-fg (state)
+  (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
+    (face-foreground sym nil t)))
+
+(after!  (evil-lisp-state doom-modeline)
+  (setq
+    evil-insert-state-cursor (list 'bar (j/evil-state-fg "insert"))
+
+    evil-normal-state-cursor (list 'box (j/evil-state-fg "normal"))
+
+    evil-lisp-state-cursor   (list 'box (j/evil-state-fg "emacs")))
+  (advice-add #'doom-modeline--modal-icon
+    :filter-args #'j/evil-state-modeline-face))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -367,7 +390,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (interactive "iP")
   (+workspace/new nil clone-p)
   (when-let (newname (read-string
-                      "Workspace name (%s): "
+                      "Workspace name: "
                       (+workspace-current-name)))
     (+workspace/rename newname)))
 
