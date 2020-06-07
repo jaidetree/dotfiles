@@ -352,20 +352,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(comment
-  (defun j/evil-state-modeline-face (args)
-    (cl-destructuring-bind (text face help-echo) args
-      (list
-        text
-        (cond
-          ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
-          (t                   face))
-        help-echo))))
-
-(after! (evil-lisp-state)
-  (advice-add #'doom-modeline--modal-icon
-      :filter-args #'j/evil-state-modeline-face))
-
 (defun wrap-comment (&rest args)
   "Wrap sexp in (comment ...) and indent it"
   (interactive "P")
@@ -383,6 +369,37 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     ";" (evil-lisp-state-enter-command wrap-comment))
   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
 
+
+(defsubst j/doom-modeline--evil ()
+  "The current evil state. Requires `evil-mode' to be enabled."
+  (when (bound-and-true-p evil-local-mode)
+    (doom-modeline--modal-icon
+      (let ((tag (evil-state-property evil-state :tag t)))
+        (if (stringp tag) tag (funcall tag)))
+      (cond
+      ((evil-normal-state-p) 'doom-modeline-evil-normal-state)
+      ((evil-emacs-state-p) 'doom-modeline-evil-emacs-state)
+      ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
+      ((evil-insert-state-p) 'doom-modeline-evil-insert-state)
+      ((evil-motion-state-p) 'doom-modeline-evil-motion-state)
+      ((evil-visual-state-p) 'doom-modeline-evil-visual-state)
+      ((evil-operator-state-p) 'doom-modeline-evil-operator-state)
+      ((evil-replace-state-p) 'doom-modeline-evil-replace-state)
+      (t 'doom-modeline-evil-normal-state))
+      (evil-state-property evil-state :name t))))
+
+
+(after! (evil-lisp-state doom-modeline)
+  (doom-modeline-def-segment modals
+    "Displays modal editing states, including `evil', `overwrite', ... etc."
+    (let* ((evil (j/doom-modeline--evil))
+           (ow (doom-modeline--overwrite))
+           (vsep (doom-modeline-vspc))
+           (sep (and (or evil ow) (doom-modeline-spc))))
+      (concat sep
+              (and evil (concat evil (and ow vsep)))
+              (and ow (concat ow))
+              sep))))
 
 (defun j/evil-state-fg (state)
   (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
