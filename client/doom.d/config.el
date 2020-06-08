@@ -516,19 +516,27 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (defun +tmux/send-paragraph ()
   "Send current paragraph to the most recent tmux pane"
   (interactive)
-   (let ((standard-output t)
-         beg end)
-        (save-excursion
-          (evil-backward-paragraph 1)
-          (setq beg (point))
-          (evil-forward-paragraph 1)
-          (setq end (point)))
-        (+tmux/send-region beg end)))
+  (cl-destructuring-bind (beg . end)
+      (bounds-of-thing-at-point 'paragraph)
+    (+tmux/send-region beg end t)))
+
+(defun j/tmux-run (command &optional append-return)
+  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
+but do not execute them."
+  (interactive
+    (list (read-string "tmux $ ")
+      current-prefix-arg))
+  (let* ((cmd (concat command (when append-return "\n")))
+          (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
+    (+tmux (concat "load-buffer " tmp))
+    (+tmux (concat "paste-buffer -dpr"))))
+
+(advice-add #'+tmux/run :override #'j/tmux-run)
 
 (map! :leader
-      (:prefix ("e" . "tmux")
-       :desc "send-tmux" "o" #'+tmux/send-region
-       :desc "send-defun-tmux" "e" #'+tmux/send-top-form))
+  (:prefix ("e" . "tmux")
+    :desc "send-tmux" "o" #'+tmux/send-region
+    :desc "send-defun-tmux" "e" #'+tmux/send-paragraph))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -553,11 +561,17 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (interactive)
   (evil-vterm-state))
 
+(defun vterm-quit ()
+  (interactive)
+  (evil-window-mru)
+  (vterm-exit))
+
 (after! vterm
   (map! "C-c t" #'+vterm/toggle)
   (map!
     :map vterm-mode-map
     "C-c <escape>" #'vterm-exit
+    "C-c q"        #'vterm-quit
     "C-c x"        #'vterm-send-C-x
     "C-c :"        #'vterm-send-colon))
 
