@@ -123,6 +123,9 @@
   :hook ((clojure-mode . anakondo-minor-mode))
   :commands anakondo-minor-mode)
 
+(use-package! inf-clojure
+  :hook ((clojure-mode . inf-clojure-minor-mode)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Maximize window size
