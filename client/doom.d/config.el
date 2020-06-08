@@ -526,7 +526,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
         (+tmux/send-region beg end)))
 
 (map! :leader
-      (:prefix ("e" . "Tmux")
+      (:prefix ("e" . "tmux")
        :desc "send-tmux" "o" #'+tmux/send-region
        :desc "send-defun-tmux" "e" #'+tmux/send-top-form))
 
@@ -547,12 +547,10 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 (defun vterm-exit ()
   (interactive)
-  (message "exited vterm mode")
   (evil-normal-state))
 
 (defun vterm-enter (&rest _)
   (interactive)
-  (message "entered vterm mode %s" evil-state)
   (evil-vterm-state))
 
 (after! vterm
@@ -578,6 +576,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     vterm-mode-map)
   (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
+  (remove-hook! 'evil-insert-state-entry-hook #'vterm-enter)
   (evil-set-initial-state 'vterm-mode 'vterm))
 
 
