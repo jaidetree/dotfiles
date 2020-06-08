@@ -53,3 +53,4 @@
 (package! anakondo)
 (package! evil-lisp-state)
 (package! fish-mode)
+(package! inf-clojure)
