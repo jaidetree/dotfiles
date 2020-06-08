@@ -383,16 +383,16 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
      (let ((tag (evil-state-property evil-state :tag t)))
        (if (stringp tag) tag (funcall tag)))
      (cond
-      ((evil-normal-state-p) 'doom-modeline-evil-normal-state)
-      ((evil-emacs-state-p) 'doom-modeline-evil-emacs-state)
-      ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
-      ((evil-insert-state-p) 'doom-modeline-evil-insert-state)
-      ((evil-motion-state-p) 'doom-modeline-evil-motion-state)
-      ((evil-visual-state-p) 'doom-modeline-evil-visual-state)
+      ((evil-normal-state-p)   'doom-modeline-evil-normal-state)
+      ((evil-emacs-state-p)    'doom-modeline-evil-emacs-state)
+      ((evil-lisp-state-p)     'doom-modeline-evil-emacs-state)
+      ((evil-insert-state-p)   'doom-modeline-evil-insert-state)
+      ((evil-motion-state-p)   'doom-modeline-evil-motion-state)
+      ((evil-visual-state-p)   'doom-modeline-evil-visual-state)
       ((evil-operator-state-p) 'doom-modeline-evil-operator-state)
-      ((evil-vterm-state-p) 'error)
-      ((evil-replace-state-p) 'doom-modeline-evil-replace-state)
-      (t 'doom-modeline-evil-normal-state))
+      ((evil-vterm-state-p)    'error)
+      ((evil-replace-state-p)  'doom-modeline-evil-replace-state)
+      (t                       'doom-modeline-evil-normal-state))
      (evil-state-property evil-state :name t))))
 
 
@@ -415,11 +415,12 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (add-hook! 'doom-load-theme-hook
     (defun j/theme-evil-cursors ()
       (setq
-        evil-insert-state-cursor   (list 'bar (j/evil-state-fg "insert"))
-        evil-normal-state-cursor   (list 'box (j/evil-state-fg "normal"))
-        evil-visual-state-cursor   (list 'box (j/evil-state-fg "visual"))
-        evil-operator-state-cursor (list 'box (j/evil-state-fg "operator"))
-        evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs")))))
+       evil-insert-state-cursor   (list 'bar (j/evil-state-fg "insert"))
+       evil-normal-state-cursor   (list 'box (j/evil-state-fg "normal"))
+       evil-visual-state-cursor   (list 'box (j/evil-state-fg "visual"))
+       evil-operator-state-cursor (list 'box (j/evil-state-fg "operator"))
+       evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs"))
+       evil-vterm-state-cursor    (list 'box (face-foreground 'error nil t)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
