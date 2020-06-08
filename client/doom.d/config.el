@@ -511,8 +511,25 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Load an optional local file
+;;  Send region to tmux
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun +tmux/send-paragraph (&rest _)
+  "Send current paragraph to the most recent tmux pane"
+  (interactive "P")
+   (let ((standard-output t)
+         beg end)
+        (save-excursion
+          (evil-backward-paragraph 1)
+          (setq beg (point))
+          (evil-forward-paragraph 1)
+          (setq end (point)))
+        (+tmux/send-region beg end)))
+
+(map! :leader
+      (:prefix ("e" . "Tmux")
+       :desc "send-tmux" "o" #'+tmux/send-region
+       :desc "send-defun-tmux" "e" #'+tmux/send-top-form))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
