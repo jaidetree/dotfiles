@@ -120,8 +120,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package! anakondo
-  :hook ((clojure-mode . anakondo-minor-mode))
-  :commands anakondo-minor-mode)
+  :hook ((clojure-mode . anakondo-minor-mode)))
 
 (use-package! inf-clojure
   :hook ((clojure-mode . inf-clojure-minor-mode)))
@@ -131,19 +130,17 @@
 ;; Maximize window size
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq initial-frame-alist
-  '((fullscreen . maximized)))
-
 ;; add to ~/.doom.d/config.el
 (when-let (dims (doom-store-get 'last-frame-size))
-  (cl-destructuring-bind ((left . top) width height fullscreen) dims
-    (setq initial-frame-alist
-          (append initial-frame-alist
-                  `((left . ,left)
-                    (top . ,top)
-                    (width . ,width)
-                    (height . ,height)
-                    (fullscreen . ,fullscreen))))))
+  (when (eq (length dims) 4)
+    (cl-destructuring-bind ((left . top) width height fullscreen) dims
+      (setq initial-frame-alist
+        (append initial-frame-alist
+          `((left . ,left)
+             (top . ,top)
+             (width . ,width)
+             (height . ,height)
+             (fullscreen . ,fullscreen)))))))
 
 (defun save-frame-dimensions ()
   (doom-store-put 'last-frame-size
@@ -548,44 +545,40 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (interactive)
   (vterm-send ":"))
 
-(defun vterm-normal ()
+(defun vterm-exit ()
   (interactive)
-  (evil-normal-state)
-  (evil-window-mru))
+  (message "exited vterm mode")
+  (evil-normal-state))
 
-(after! vterm
-  (map!
-   :map vterm-mode-map
-   "C-c <escape>" #'vterm-normal
-   "C-c x"        #'vterm-send-C-x
-   "C-c :"        #'vterm-send-colon))
-
-(defun enter-vterm ()
-  (message "entered vterm mode")
+(defun vterm-enter (&rest _)
+  (interactive)
+  (message "entered vterm mode %s" evil-state)
   (evil-vterm-state))
 
-(defun exit-vterm ()
-  (message "Major mode %s" major-mode)
-  (when (eq major-mode 'vterm-mode)
-    (evil-normal-state)
-    (message "Exited vterm mode")))
+(after! vterm
+  (map! "C-c t" #'+vterm/toggle)
+  (map!
+    :map vterm-mode-map
+    "C-c <escape>" #'vterm-exit
+    "C-c x"        #'vterm-send-C-x
+    "C-c :"        #'vterm-send-colon))
 
 (defun vterm-buffer-change ()
-  (let ((buffers (buffer-list)))
-    (if (eq major-mode 'vterm-mode)
-      (enter-vterm)
-      (exit-vterm))))
+  (when (derived-mode-p 'vterm-mode)
+    (vterm-enter)))
 
-(after! (vterm evil)
+(after! (evil vterm evil-collection)
   (evil-define-state vterm
     "Evil vterm state.
     Used to signify when in vterm mode"
     :tag " <T> "
     :suppress-keymap t)
   (map-keymap
-   (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
-   vterm-mode-map)
-  (add-hook! 'buffer-list-update-hook vterm-buffer-change))
+    (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
+    vterm-mode-map)
+  (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
+  (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
+  (evil-set-initial-state 'vterm-mode 'vterm))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
