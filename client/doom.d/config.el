@@ -69,8 +69,6 @@
 (defmacro comment (&rest _)
   `nil)
 
-(comment
- (message "Sup"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General Settings
@@ -542,7 +540,8 @@ but do not execute them."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  VTerm
 ;;  - Create evil vterm state
-;;  - Map C-ESC to escape
+;;  - Map extra C-c * keys
+;;  - Create evil-vterm-state to make sure I'm always in the right mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun vterm-send-esc ()
@@ -573,6 +572,7 @@ but do not execute them."
     "C-c <escape>" #'vterm-exit
     "C-c q"        #'vterm-quit
     "C-c x"        #'vterm-send-C-x
+    "C-c C-d"      #'vterm-send-C-d
     "C-c :"        #'vterm-send-colon))
 
 (defun vterm-buffer-change ()
@@ -586,8 +586,8 @@ but do not execute them."
     :tag " <T> "
     :suppress-keymap t)
   (map-keymap
-    (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
-    vterm-mode-map)
+   (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
+   vterm-mode-map)
   (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
   (remove-hook! 'evil-insert-state-entry-hook #'vterm-enter)
