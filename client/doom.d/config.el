@@ -372,14 +372,17 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     ";" (evil-lisp-state-enter-command wrap-comment))
   (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
 
+(after! doom-modeline
+  (custom-set-faces!
+    '(doom-modeline-evil-operator-state :foreground "#FF9F9E")))
 
 (defsubst j/doom-modeline--evil ()
   "The current evil state. Requires `evil-mode' to be enabled."
   (when (bound-and-true-p evil-local-mode)
     (doom-modeline--modal-icon
-      (let ((tag (evil-state-property evil-state :tag t)))
-        (if (stringp tag) tag (funcall tag)))
-      (cond
+     (let ((tag (evil-state-property evil-state :tag t)))
+       (if (stringp tag) tag (funcall tag)))
+     (cond
       ((evil-normal-state-p) 'doom-modeline-evil-normal-state)
       ((evil-emacs-state-p) 'doom-modeline-evil-emacs-state)
       ((evil-lisp-state-p) 'doom-modeline-evil-emacs-state)
@@ -389,7 +392,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       ((evil-operator-state-p) 'doom-modeline-evil-operator-state)
       ((evil-replace-state-p) 'doom-modeline-evil-replace-state)
       (t 'doom-modeline-evil-normal-state))
-      (evil-state-property evil-state :name t))))
+     (evil-state-property evil-state :name t))))
 
 
 (after! (evil-lisp-state doom-modeline)
@@ -411,9 +414,11 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (add-hook! 'doom-load-theme-hook
     (defun j/theme-evil-cursors ()
       (setq
-        evil-insert-state-cursor (list 'bar (j/evil-state-fg "insert"))
-        evil-normal-state-cursor (list 'box (j/evil-state-fg "normal"))
-        evil-lisp-state-cursor   (list 'box (j/evil-state-fg "emacs")))))
+        evil-insert-state-cursor   (list 'bar (j/evil-state-fg "insert"))
+        evil-normal-state-cursor   (list 'box (j/evil-state-fg "normal"))
+        evil-visual-state-cursor   (list 'box (j/evil-state-fg "visual"))
+        evil-operator-state-cursor (list 'box (j/evil-state-fg "operator"))
+        evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
