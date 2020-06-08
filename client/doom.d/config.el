@@ -78,7 +78,8 @@
 (setq
  tab-always-indent t
  make-backup-files nil
- create-lockfiles nil)
+ create-lockfiles nil
+ uniquify-buffer-name-style 'post-forward-angle-brackets)
 
 
 
