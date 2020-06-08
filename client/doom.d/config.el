@@ -355,9 +355,9 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun wrap-comment (&rest _)
+(defun wrap-comment ()
   "Wrap sexp in (comment ...) and indent it"
-  (interactive "P")
+  (interactive)
   (sp-wrap-with-pair "(")
   (insert "comment\n")
   (indent-for-tab-command)
@@ -390,6 +390,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       ((evil-motion-state-p) 'doom-modeline-evil-motion-state)
       ((evil-visual-state-p) 'doom-modeline-evil-visual-state)
       ((evil-operator-state-p) 'doom-modeline-evil-operator-state)
+      ((evil-vterm-state-p) 'error)
       ((evil-replace-state-p) 'doom-modeline-evil-replace-state)
       (t 'doom-modeline-evil-normal-state))
      (evil-state-property evil-state :name t))))
@@ -514,9 +515,9 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;  Send region to tmux
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun +tmux/send-paragraph (&rest _)
+(defun +tmux/send-paragraph ()
   "Send current paragraph to the most recent tmux pane"
-  (interactive "P")
+  (interactive)
    (let ((standard-output t)
          beg end)
         (save-excursion
@@ -530,6 +531,60 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       (:prefix ("e" . "Tmux")
        :desc "send-tmux" "o" #'+tmux/send-region
        :desc "send-defun-tmux" "e" #'+tmux/send-top-form))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  VTerm
+;;  - Create evil vterm state
+;;  - Map C-ESC to escape
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun vterm-send-esc ()
+  (interactive)
+  (vterm-send "ESC"))
+
+(defun vterm-send-colon ()
+  (interactive)
+  (vterm-send ":"))
+
+(defun vterm-normal ()
+  (interactive)
+  (evil-normal-state)
+  (evil-window-mru))
+
+(after! vterm
+  (map!
+   :map vterm-mode-map
+   "C-c <escape>" #'vterm-normal
+   "C-c x"        #'vterm-send-C-x
+   "C-c :"        #'vterm-send-colon))
+
+(defun enter-vterm ()
+  (message "entered vterm mode")
+  (evil-vterm-state))
+
+(defun exit-vterm ()
+  (message "Major mode %s" major-mode)
+  (when (eq major-mode 'vterm-mode)
+    (evil-normal-state)
+    (message "Exited vterm mode")))
+
+(defun vterm-buffer-change ()
+  (let ((buffers (buffer-list)))
+    (if (eq major-mode 'vterm-mode)
+      (enter-vterm)
+      (exit-vterm))))
+
+(after! (vterm evil)
+  (evil-define-state vterm
+    "Evil vterm state.
+    Used to signify when in vterm mode"
+    :tag " <T> "
+    :suppress-keymap t)
+  (map-keymap
+   (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
+   vterm-mode-map)
+  (add-hook! 'buffer-list-update-hook vterm-buffer-change))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
