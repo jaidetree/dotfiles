@@ -110,8 +110,9 @@
   ("p"   evil-paste-after)
   ("P"   evil-paste-before))
 
-(map! :nv "p" #'hydra-paste/evil-paste-after
-      :nv "P" #'hydra-paste/evil-paste-before)
+(map!
+  :nv [remap evil-paste-after] #'hydra-paste/evil-paste-after
+  :nv [remap evil-paste-before] #'hydra-paste/evil-paste-before)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -460,7 +461,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;   fun surprise.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun j/+workspace/new (&optional _ clone-p)
+(defun j/workspace-new (&optional _ clone-p)
   "Prompt for a workspace name after creating the workspace"
   (interactive "iP")
   (+workspace/new nil clone-p)
@@ -470,9 +471,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     (+workspace/rename newname)))
 
 (after! persp-mode
-  (+workspace-current-name)
   (map! :leader
-    "TAB n" #'j/+workspace/new
+    [remap +workspace/new] #'j/workspace-new
     "TAB N" #'+workspace/new))
 
 
@@ -644,7 +644,7 @@ but do not execute them."
   (vterm-exit))
 
 (after! evil
-  (map! "C-c t" #'+vterm/toggle))
+  (map! "C-`" #'+vterm/toggle))
 
 (after! vterm
   (map!
