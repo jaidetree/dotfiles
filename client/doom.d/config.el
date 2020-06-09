@@ -262,11 +262,7 @@
   :config
   (advice-add
     #'flycheck-popup-tip-format-errors
-    :override #'j/format-flycheck-popup)
-  (comment
-    (advice-add
-      #'flycheck-posframe-format-error
-      :override #'j/flycheck-posframe-format-error)))
+    :override #'j/format-flycheck-popup))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -351,13 +347,34 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;; Evil Lisp State
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun unwrap-comment ()
+  "Unwrap sexp (comment ...)"
+  (interactive)
+  (save-excursion
+    (forward-char)
+    (beginning-of-sexp)
+    (let ((line (string-trim (thing-at-point 'line))))
+      (if (equal line "(comment")
+        (cl-destructuring-bind (beg . end) (bounds-of-thing-at-point 'line)
+          (lispyville-join beg end)
+          (sp-backward-sexp)
+          (sp-backward-sexp)))
+      (sp-unwrap-sexp)
+      (sp-kill-sexp)
+      (indent-sexp))))
+
 (defun wrap-comment ()
   "Wrap sexp in (comment ...) and indent it"
   (interactive)
-  (sp-wrap-with-pair "(")
-  (insert "comment\n")
-  (indent-for-tab-command)
-  (evil-first-non-blank))
+  (let ((sexp (save-excursion
+                (sexp-at-point))))
+    (if (or (eq sexp 'comment)
+            (eq (first sexp) 'comment))
+      (unwrap-comment)
+      (sp-wrap-with-pair "(")
+      (insert "comment\n")
+      (indent-for-tab-command)
+      (evil-first-non-blank))))
 
 (use-package! evil-lisp-state
   :init
@@ -626,11 +643,8 @@ but do not execute them."
   (evil-window-mru)
   (vterm-exit))
 
-(use-package! evil
-  :commands (+vterm/toggle)
-  :config
-  (map!
-   "C-c t" #'+vterm/toggle))
+(after! evil
+  (map! "C-c t" #'+vterm/toggle))
 
 (after! vterm
   (map!
