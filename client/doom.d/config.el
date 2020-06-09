@@ -512,9 +512,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;  Send region to tmux
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq j/tmux-sessions '()
-      j/tmux-history '())
-
 (defun j/persp-name ()
   (or (safe-persp-name (get-current-persp))
       "main"))
@@ -544,7 +541,9 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (-> (j/cmd "tmux list-sessions %s %s" "-F" "#S")
       (split-string nil nil)))
 
-(defun j/select-tmux-session ()
+(defun j/tmux-select-session ()
+  "Select and update a tmux session associated with the persp"
+  (interactive)
   (let* ((sessions (j/tmux-sessions))
          (persp-key (intern (j/persp-name))))
     (ivy-read "Select tmux session: " sessions
@@ -554,20 +553,20 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
                         (setq j/tmux-sessions
                               (plist-put j/tmux-sessions persp-key session))))))
 
-(defun j/get-select-tmux-session ()
+(defun j/tmux-select-get-session ()
   "Get the tmux session for the given persp or select a new one"
   (interactive)
   (let* ((persp-key (intern (j/persp-name)))
          (session   (plist-get j/tmux-sessions persp-key)))
     (if session
         session
-        (j/select-tmux-session))))
+        (j/tmux-select-session))))
 
-(defun j/tmux-send-region (beg end &optional noreturn)
+(defun j/tmux-send-region (beg end &optional append-return)
   "Send region to tmux."
   (interactive "rP")
-  (+tmux/run (buffer-substring-no-properties beg end)
-             noreturn))
+  (j/tmux-run (buffer-substring-no-properties beg end)
+             append-return))
 
 (defun j/tmux-send-paragraph ()
   "Send current paragraph to the most recent tmux pane"
@@ -576,44 +575,27 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       (bounds-of-thing-at-point 'paragraph)
     (j/tmux-send-region beg end t)))
 
-(comment
- (defun j/activate-term ()
-   "Send return to the project vterm popup if there is one.
-This ensures it will be the active session at time of eval."
-   (interactive)
-   (let* ((proj (or (safe-persp-name (get-current-persp)) "main"))
-          (buffer-name (format "*doom:vterm-popup:%s*" proj))
-          (buffer (get-buffer buffer-name)))
-     (when (buffer-live-p buffer)
-       (with-current-buffer buffer
-         (vterm-send-return))))))
-
-
 (defun j/tmux-run (command &optional append-return)
   "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
 but do not execute them."
   (interactive "P")
   (let* ((cmd (concat command (when append-return "\n")))
-         (session (j/get-select-tmux-session))
+         (session (j/tmux-select-get-session))
          (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
-    ;; (message "tmux-run: text %s" cmd)
     (unwind-protect
         (progn
-          (message "tmux-run")
-          (message "%s" cmd)
-          (message "---")
           (+tmux "load-buffer %s" tmp)
-          (+tmux "paste-buffer -dpr -t %s" session)
-          )
+          (+tmux "paste-buffer -dpr -t %s" session))
       (delete-file tmp))))
 
-(comment
- (j/tmux-run "what is this?"))
-
-(map! :leader
-      (:prefix ("e" . "tmux")
-       :desc "send-region-tmux" "o" #'j/tmux-send-region
-       :desc "send-paragraph-tmux" "e" #'j/tmux-send-paragram))
+(after! persp-mode
+  (setq j/tmux-sessions '()
+        j/tmux-history '())
+  (map! :leader
+        (:prefix ("e" . "tmux")
+         :desc "select-session"      "s" #'j/tmux-select-session
+         :desc "send-region-tmux"    "o" #'j/tmux-send-region
+         :desc "send-paragraph-tmux" "e" #'j/tmux-send-paragraph)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -644,15 +626,20 @@ but do not execute them."
   (evil-window-mru)
   (vterm-exit))
 
-(after! vterm
-  (map! "C-c t" #'+vterm/toggle)
+(use-package! evil
+  :commands (+vterm/toggle)
+  :config
   (map!
-    :map vterm-mode-map
-    "C-c <escape>" #'vterm-exit
-    "C-c q"        #'vterm-quit
-    "C-c x"        #'vterm-send-C-x
-    "C-c C-d"      #'vterm-send-C-d
-    "C-c :"        #'vterm-send-colon))
+   "C-c t" #'+vterm/toggle))
+
+(after! vterm
+  (map!
+   :map vterm-mode-map
+   "C-c <escape>" #'vterm-exit
+   "C-c q"        #'vterm-quit
+   "C-c x"        #'vterm-send-C-x
+   "C-c C-d"      #'vterm-send-C-d
+   "C-c :"        #'vterm-send-colon))
 
 (defun vterm-buffer-change ()
   (when (derived-mode-p 'vterm-mode)
