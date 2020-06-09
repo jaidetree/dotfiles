@@ -659,6 +659,13 @@ but do not execute them."
   (when (derived-mode-p 'vterm-mode)
     (vterm-enter)))
 
+(defun vterm-project-root (toggle-vterm arg)
+  "Change vterm directory project root"
+  (interactive)
+  (let* ((default-directory (or (doom-project-root)
+                              default-directory)))
+    (funcall toggle-vterm arg)))
+
 (after! (evil vterm evil-collection)
   (evil-define-state vterm
     "Evil vterm state.
@@ -666,11 +673,12 @@ but do not execute them."
     :tag " <T> "
     :suppress-keymap t)
   (map-keymap
-   (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
-   vterm-mode-map)
+    (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
+    vterm-mode-map)
   (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
   (remove-hook! 'evil-insert-state-entry-hook #'vterm-enter)
+  (advice-add #'+vterm/toggle :around #'vterm-project-root)
   (evil-set-initial-state 'vterm-mode 'vterm))
 
 
