@@ -512,30 +512,108 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;  Send region to tmux
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun +tmux/send-paragraph ()
+(setq j/tmux-sessions '()
+      j/tmux-history '())
+
+(defun j/persp-name ()
+  (or (safe-persp-name (get-current-persp))
+      "main"))
+
+(defun j/cmd (command &rest args)
+  "Run a command and return output"
+  (let* ((args (mapcar #'shell-quote-argument (delq nil args)))
+         (cmdstr (if args (apply #'format command args) command))
+         (output (get-buffer-create " *cmd stdout*"))
+         (errors (get-buffer-create " *cmd stderr*"))
+         code)
+    (unwind-protect
+        (if (= 0 (setq code (quiet! (shell-command cmdstr output errors))))
+            (with-current-buffer output
+              (buffer-string))
+          (error "[%d] %s $ %s (%s)"
+                 code
+                 cmdstr
+                 (with-current-buffer errors
+                   (buffer-string))
+                 cmdstr))
+      (and (kill-buffer output)
+           (kill-buffer errors)))))
+
+(defun j/tmux-sessions ()
+  "Returns a lit of active tmux-sessions"
+  (-> (j/cmd "tmux list-sessions %s %s" "-F" "#S")
+      (split-string nil nil)))
+
+(defun j/select-tmux-session ()
+  (let* ((sessions (j/tmux-sessions))
+         (persp-key (intern (j/persp-name))))
+    (ivy-read "Select tmux session: " sessions
+              :history j/tmux-history
+              :initial-input (plist-get j/tmux-sessions persp-key)
+              :action (lambda (session)
+                        (setq j/tmux-sessions
+                              (plist-put j/tmux-sessions persp-key session))))))
+
+(defun j/get-select-tmux-session ()
+  "Get the tmux session for the given persp or select a new one"
+  (interactive)
+  (let* ((persp-key (intern (j/persp-name)))
+         (session   (plist-get j/tmux-sessions persp-key)))
+    (if session
+        session
+        (j/select-tmux-session))))
+
+(defun j/tmux-send-region (beg end &optional noreturn)
+  "Send region to tmux."
+  (interactive "rP")
+  (+tmux/run (buffer-substring-no-properties beg end)
+             noreturn))
+
+(defun j/tmux-send-paragraph ()
   "Send current paragraph to the most recent tmux pane"
   (interactive)
   (cl-destructuring-bind (beg . end)
       (bounds-of-thing-at-point 'paragraph)
-    (+tmux/send-region beg end t)))
+    (j/tmux-send-region beg end t)))
+
+(comment
+ (defun j/activate-term ()
+   "Send return to the project vterm popup if there is one.
+This ensures it will be the active session at time of eval."
+   (interactive)
+   (let* ((proj (or (safe-persp-name (get-current-persp)) "main"))
+          (buffer-name (format "*doom:vterm-popup:%s*" proj))
+          (buffer (get-buffer buffer-name)))
+     (when (buffer-live-p buffer)
+       (with-current-buffer buffer
+         (vterm-send-return))))))
+
 
 (defun j/tmux-run (command &optional append-return)
   "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
 but do not execute them."
-  (interactive
-    (list (read-string "tmux $ ")
-      current-prefix-arg))
+  (interactive "P")
   (let* ((cmd (concat command (when append-return "\n")))
-          (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
-    (+tmux (concat "load-buffer " tmp))
-    (+tmux (concat "paste-buffer -dpr"))))
+         (session (j/get-select-tmux-session))
+         (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
+    ;; (message "tmux-run: text %s" cmd)
+    (unwind-protect
+        (progn
+          (message "tmux-run")
+          (message "%s" cmd)
+          (message "---")
+          (+tmux "load-buffer %s" tmp)
+          (+tmux "paste-buffer -dpr -t %s" session)
+          )
+      (delete-file tmp))))
 
-(advice-add #'+tmux/run :override #'j/tmux-run)
+(comment
+ (j/tmux-run "what is this?"))
 
 (map! :leader
-  (:prefix ("e" . "tmux")
-    :desc "send-tmux" "o" #'+tmux/send-region
-    :desc "send-defun-tmux" "e" #'+tmux/send-paragraph))
+      (:prefix ("e" . "tmux")
+       :desc "send-region-tmux" "o" #'j/tmux-send-region
+       :desc "send-paragraph-tmux" "e" #'j/tmux-send-paragram))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
