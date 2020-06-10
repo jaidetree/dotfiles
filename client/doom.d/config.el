@@ -643,7 +643,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 (defun vterm-project-root (toggle-vterm arg)
   "Change vterm directory project root"
-  (interactive)
+  (interactive "P")
   (let* ((default-directory (or (doom-project-root)
                               default-directory)))
     (funcall toggle-vterm arg)))
