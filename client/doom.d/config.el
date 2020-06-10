@@ -159,8 +159,9 @@
 ;; - Relies on editorconfig for most changes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun j/fix-js-multi-line-indent ()
+(defadvice! j/fix-js-multi-line-indent ()
   "Indent expression declarations by 2 just like the rest of the code"
+  :after-while #'js--multi-line-declaration-indentation
   (let ((beg (match-beginning 0)))
     (when beg
       (goto-char beg)
@@ -169,11 +170,8 @@
 (use-package! js2-mode
   :config
   (setq
-   js-expr-indent-offset -2
-   js-chain-indent nil)
-  (advice-add
-   #'js--multi-line-declaration-indentation
-   :after-while #'j/fix-js-multi-line-indent))
+    js-expr-indent-offset -2
+    js-chain-indent nil))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -244,13 +242,16 @@
                     (j/sort))))
     (mapconcat 'identity messages "\n")))
 
-(defun j/format-flycheck-popup (errors)
+(defadvice! j/format-flycheck-popup (errors)
+  "Add padding to errors"
+  :override #'flycheck-popup-tip-format-errors
   (-> errors
     (j/flycheck-errors->string)
     (propertize 'face 'popup-tip-face)))
 
-(defun j/flycheck-posframe-format-error (err)
-  "Formats ERR for display."
+(defadvice! j/flycheck-posframe-format-error (err)
+  "Pads error message"
+  :override #'flycheck-posframe-format-error
   (propertize (concat
                 " "
                 (flycheck-posframe-get-prefix-for-error err)
@@ -259,11 +260,6 @@
     'face
     `(:inherit ,(flycheck-posframe-get-face-for-error err))) )
 
-(use-package! flycheck
-  :config
-  (advice-add
-    #'flycheck-popup-tip-format-errors
-    :override #'j/format-flycheck-popup))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -408,7 +404,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       ((evil-replace-state-p)  'doom-modeline-evil-replace-state)
       (t                       'doom-modeline-evil-normal-state))
      (evil-state-property evil-state :name t))))
-
 
 (after! (evil-lisp-state doom-modeline)
   (doom-modeline-def-segment modals
@@ -592,19 +587,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
       (bounds-of-thing-at-point 'paragraph)
     (j/tmux-send-region beg end t)))
 
-(defun j/tmux-run (command &optional append-return)
-  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
-but do not execute them."
-  (interactive "P")
-  (let* ((cmd (concat command (when append-return "\n")))
-         (session (j/tmux-select-get-session))
-         (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
-    (unwind-protect
-        (progn
-          (+tmux "load-buffer %s" tmp)
-          (+tmux "paste-buffer -dpr -t %s" session))
-      (delete-file tmp))))
-
 (after! persp-mode
   (setq j/tmux-sessions '()
         j/tmux-history '())
@@ -666,7 +648,14 @@ but do not execute them."
                               default-directory)))
     (funcall toggle-vterm arg)))
 
-(after! (evil vterm evil-collection)
+(defadvice! j/vterm-project-root (toggle-vterm arg)
+  "Change vterm directory project root"
+  :around #'+vterm/toggle
+  (let* ((default-directory (or (doom-project-root)
+                              default-directory)))
+    (funcall toggle-vterm arg)))
+
+(after! vterm
   (evil-define-state vterm
     "Evil vterm state.
     Used to signify when in vterm mode"
@@ -677,8 +666,6 @@ but do not execute them."
     vterm-mode-map)
   (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
-  (remove-hook! 'evil-insert-state-entry-hook #'vterm-enter)
-  (advice-add #'+vterm/toggle :around #'vterm-project-root)
   (evil-set-initial-state 'vterm-mode 'vterm))
 
 
