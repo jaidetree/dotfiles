@@ -661,7 +661,7 @@ but do not execute them."
 
 (defun vterm-project-root (toggle-vterm arg)
   "Change vterm directory project root"
-  (interactive)
+  (interactive "P")
   (let* ((default-directory (or (doom-project-root)
                               default-directory)))
     (funcall toggle-vterm arg)))
