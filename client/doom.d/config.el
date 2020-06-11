@@ -639,10 +639,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (after! evil
   (map! "C-`" #'+vterm/toggle))
 
-(defun j/vterm-send-C-^ ()
-  (interactive)
-  (vterm-send-key "6" t))
-
 (after! vterm
   (map!
     :map vterm-mode-map
