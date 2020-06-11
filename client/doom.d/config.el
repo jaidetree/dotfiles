@@ -111,6 +111,7 @@
   ("P"   evil-paste-before))
 
 (map!
+  :after evil
   :nv [remap evil-paste-after] #'hydra-paste/evil-paste-after
   :nv [remap evil-paste-before] #'hydra-paste/evil-paste-before)
 
@@ -122,9 +123,21 @@
 (use-package! anakondo
   :hook ((clojure-mode . anakondo-minor-mode)))
 
-(use-package! inf-clojure
-  :hook ((clojure-mode . inf-clojure-minor-mode)))
+(comment
+  (use-package! inf-clojure
+    :hook ((clojure-mode . inf-clojure-minor-mode))))
 
+(map!
+  :after lispy
+  :map lispy-mode-map-lispy
+  "[" nil
+  "]" nil)
+
+(map!
+  :after lispy
+  :mode lispy-mode
+  :n "[" #'lispy-backward
+  :n "]" #'lispy-forward)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Maximize window size
@@ -465,10 +478,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     (+workspace/rename newname)))
 
 (after! persp-mode
-  (map!
-    [remap +workspace/new] #'j/workspace-new)
-  (map! :leader
-    "TAB N" #'+workspace/new))
+  (map! [remap +workspace/new] #'j/workspace-new)
+  (map! :leader "TAB N" #'+workspace/new))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
