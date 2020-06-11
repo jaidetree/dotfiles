@@ -269,9 +269,10 @@
 ;; - Consider switching to substring the starter to ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun j/comment-indent (&optional continue)
+(defadvice! j/comment-indent (&optional continue)
   "Indent this line's comment to `comment-column', or insert an empty comment.
 If CONTINUE is non-nil, use the `comment-continue' markers if any."
+  :override #'comment-indent
   (interactive "*")
   (comment-normalize-vars)
   (let* ((empty (save-excursion (beginning-of-line)
@@ -336,8 +337,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 	      ;;     (indent-to indent)))
 	      (goto-char cpos)
 	      (set-marker cpos nil)))))
-
-(advice-add #'comment-indent :override #'j/comment-indent)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -466,8 +465,9 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     (+workspace/rename newname)))
 
 (after! persp-mode
+  (map!
+    [remap +workspace/new] #'j/workspace-new)
   (map! :leader
-    [remap +workspace/new] #'j/workspace-new
     "TAB N" #'+workspace/new))
 
 
@@ -516,7 +516,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (after! tramp
-  (setenv "SHELL" "/bin/bash")
+  ;; (setenv "SHELL" "/usr/local/bin/fish")
   (setq tramp-default-method "sshx"))
 
 
@@ -630,12 +630,14 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 (after! vterm
   (map!
-   :map vterm-mode-map
-   "C-c <escape>" #'vterm-exit
-   "C-c q"        #'vterm-quit
-   "C-c x"        #'vterm-send-C-x
-   "C-c C-d"      #'vterm-send-C-d
-   "C-c :"        #'vterm-send-colon))
+    :map vterm-mode-map
+    "C-c <escape>" #'vterm-exit
+    "C-c q"        #'vterm-quit
+    "C-c x"        #'vterm-send-C-x
+    "C-c C-d"      #'vterm-send-C-d
+    "C-c :"        #'vterm-send-colon
+    "C-h"          #'vterm-send-C-h
+    "C-u"          #'vterm-send-C-u))
 
 (defun vterm-buffer-change ()
   (when (derived-mode-p 'vterm-mode)
@@ -670,12 +672,13 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Org Mode
+;;  Org Mode, Agenda, and notes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package! org-mode
   :init
-  (setq org-directory "~/Dropbox/org"))
+  (setq org-directory "~/Dropbox/org")
+  (setq diary-file (concat org-directory "/diary")))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
