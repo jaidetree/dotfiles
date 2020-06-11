@@ -686,10 +686,30 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;  Org Mode, Agenda, and notes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package! org-mode
+(use-package! org
   :init
   (setq org-directory "~/Dropbox/org")
   (setq diary-file (concat org-directory "/diary")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Append to safe var list for dir-locals
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq! enable-local-variables :all)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Prevent help windows from being so vulnerable to ESC in normal mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(after! helpful
+  (set-popup-rule! "^\\*helpful"
+    :ignore t
+    :side 'right
+    :size 100
+    :vslot 4
+    :ttl  nil
+    :quit nil))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
