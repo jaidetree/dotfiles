@@ -639,6 +639,10 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (after! evil
   (map! "C-`" #'+vterm/toggle))
 
+(defun j/vterm-send-C-^ ()
+  (interactive)
+  (vterm-send-key "6" t))
+
 (after! vterm
   (map!
     :map vterm-mode-map
@@ -648,7 +652,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     "C-c C-d"      #'vterm-send-C-d
     "C-c :"        #'vterm-send-colon
     "C-h"          #'vterm-send-C-h
-    "C-u"          #'vterm-send-C-u))
+    "C-u"          #'vterm-send-C-u
+    "C-^"          (cmd!! #'vterm-send-key "^" t nil t)))
 
 (defun vterm-buffer-change ()
   (when (derived-mode-p 'vterm-mode)
@@ -697,19 +702,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq! enable-local-variables :all)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Prevent help windows from being so vulnerable to ESC in normal mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(after! helpful
-  (set-popup-rule! "^\\*helpful"
-    :ignore t
-    :side 'right
-    :size 100
-    :vslot 4
-    :ttl  nil
-    :quit nil))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
