@@ -687,35 +687,37 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 ;;  Org Mode, Agenda, and notes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package! org
-  :init
+(after! org
   (setq
-   org-directory "~/Dropbox/org"
-   diary-file (concat org-directory "/diary")))
-
-(comment
-  (after! org-journal
-    (debug "journal")
-    (setq
-      org-journal-dir (concat org-directory "/journal")
-      org-journal-enable-agenda-integration t
-      org-journal-file-format               "%Y%m%d.org"
-      org-journal-time-format               "%l:%M %p")))
-
-(use-package! org-agenda
-  :config
-  (setq
-    org-agenda-include-diary              t
+    org-directory                         "~/Dropbox/org"
+    diary-file                            (concat org-directory "/diary")
+    org-agenda-include-diary              nil
     org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
+    org-agenda-timegrid-use-ampm          t
     org-journal-dir                       (concat org-directory "/journal")
     org-journal-enable-agenda-integration t
     org-journal-file-format               "%Y%m%d.org"
-    org-journal-time-format               "%l:%M %p")
+    org-journal-time-format               "%-l:%M%#p")
   (appendq! org-agenda-files (list org-journal-dir)))
 
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
 
+(comment
+  (setq agndfiles org-agenda-files)
+
+  (setq agndfiles (delq nil
+                    (mapcar (lambda (f)
+                              (if (file-directory-p f)
+                                (directory-files
+                                  f t org-agenda-file-regexp)
+                                (list f)))
+                      agndfiles)))
+
+  (setq agndfile (first (first agndfiles)))
+  (org-agenda-get-day-entries
+    agndfile
+    (list 6 11 2020)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Append to safe var list for dir-locals
