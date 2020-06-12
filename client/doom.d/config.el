@@ -689,8 +689,20 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 (use-package! org
   :init
-  (setq org-directory "~/Dropbox/org")
-  (setq diary-file (concat org-directory "/diary")))
+  (setq
+   org-agenda-file-regexp "\\`[^.].*\\.org'\\|[0-9]+$"
+   org-directory "~/Dropbox/org"
+   diary-file (concat org-directory "/diary")))
+
+(after! org-journal
+  (setq
+   org-journal-enable-agenda-integration t
+   org-journal-file-format               "%Y%m%d.org"
+   org-journal-time-format               "%l:%M %p"))
+
+(after! org-agenda
+  (appendq! org-agenda-files (list org-journal-dir)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
