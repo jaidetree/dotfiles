@@ -695,9 +695,10 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
     org-agenda-timegrid-use-ampm          t
     org-journal-dir                       (concat org-directory "/journal")
-    org-journal-enable-agenda-integration t
+    org-journal-enable-agenda-integration nil
     org-journal-file-format               "%Y%m%d.org"
-    org-journal-time-format               "%-l:%M%#p")
+    org-journal-time-format               "%-l:%M%#p"
+    org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
   (appendq! org-agenda-files (list org-journal-dir)))
 
 (after! evil-org
@@ -718,6 +719,26 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (org-agenda-get-day-entries
     agndfile
     (list 6 11 2020)))
+
+(defadvice! j/log-dates (&rest _)
+  "Log journal dates"
+  :after #'org-journal-open-entry
+  (let ((calendar-date (if (org-journal-daily-p)
+                           (org-journal-file-name->calendar-date (file-truename (buffer-file-name)))
+                         (while (org-up-heading-safe))
+                         (org-journal-entry-date->calendar-date)))
+         (dates (org-journal-list-dates)))
+    (setq dates (cl-loop
+                  for date in dates
+                  while (calendar-date-compare (list date) (list calendar-date))
+                  collect date into result and count t into cnt
+                  finally return (if result
+                                        ;; Front
+                                        `(,@result ,calendar-date)
+                                      ;; Somewhere enbetween or end of dates
+                                      `(,calendar-date ,@result ,@(nthcdr cnt dates)))))
+    (message "dates %s" dates)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Append to safe var list for dir-locals
