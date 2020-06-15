@@ -704,21 +704,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
 
-(comment
-  (setq agndfiles org-agenda-files)
-
-  (setq agndfiles (delq nil
-                    (mapcar (lambda (f)
-                              (if (file-directory-p f)
-                                (directory-files
-                                  f t org-agenda-file-regexp)
-                                (list f)))
-                      agndfiles)))
-
-  (setq agndfile (first (first agndfiles)))
-  (org-agenda-get-day-entries
-    agndfile
-    (list 6 11 2020)))
 
 (defadvice! j/log-dates (&rest _)
   "Log journal dates"
