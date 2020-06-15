@@ -699,7 +699,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     org-journal-file-format               "%Y%m%d.org"
     org-journal-time-format               "%-l:%M%#p"
     org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
-  (appendq! org-agenda-files (list org-journal-dir)))
+  (setq org-agenda-files (list org-journal-dir)))
 
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
