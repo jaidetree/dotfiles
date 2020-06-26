@@ -29,7 +29,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
+(setq org-directory "~/Dropxbox/org")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -76,10 +76,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq
- tab-always-indent t
- make-backup-files nil
- create-lockfiles nil
- uniquify-buffer-name-style 'post-forward-angle-brackets)
+ tab-always-indent          t
+ make-backup-files          nil
+ create-lockfiles           nil
+ uniquify-buffer-name-style 'post-forward-angle-brackets
+ +ivy-buffer-preview        t)
 
 
 
@@ -689,7 +690,6 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 (after! org
   (setq
-    org-directory                         "~/Dropbox/org"
     diary-file                            (concat org-directory "/diary")
     org-agenda-include-diary              nil
     org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
@@ -699,7 +699,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
     org-journal-file-format               "%Y%m%d.org"
     org-journal-time-format               "%-l:%M%#p"
     org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
-  (setq org-agenda-files (list org-journal-dir)))
+  (setq! org-agenda-files (list org-journal-dir)))
 
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
