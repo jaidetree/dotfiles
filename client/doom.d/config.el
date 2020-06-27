@@ -29,7 +29,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/Dropxbox/org")
+(setq org-directory "~/Dropbox/org")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -586,6 +586,24 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
         session
         (j/tmux-select-session))))
 
+(defun j/tmux-run (command &optional append-return)
+  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
+but do not execute them."
+  (interactive "P")
+  (let* ((cmd (concat command (when append-return "\n")))
+         (session (j/tmux-select-get-session))
+         (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
+    ;; (message "tmux-run: text %s" cmd)
+    (unwind-protect
+        (progn
+          (message "tmux-run")
+          (message "%s" cmd)
+          (message "---")
+          (j/cmd "tmux load-buffer %s" tmp)
+          (j/cmd "tmux paste-buffer -dpr -t %s" session)
+          )
+      (delete-file tmp))))
+
 (defun j/tmux-send-region (beg end &optional append-return)
   "Send region to tmux."
   (interactive "rP")
@@ -593,11 +611,19 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
              append-return))
 
 (defun j/tmux-send-paragraph ()
-  "Send current paragraph to the most recent tmux pane"
+  "Send current paragraph to the selected tmux session"
   (interactive)
   (cl-destructuring-bind (beg . end)
       (bounds-of-thing-at-point 'paragraph)
     (j/tmux-send-region beg end t)))
+
+(defun j/tmux-send-src-block ()
+  "Send current src block to selected tmux session"
+  (interactive)
+  (org-babel-when-in-src-block
+   (let* ((info (org-babel-get-src-block-info))
+          (body (nth 1 info)))
+     (j/tmux-run body t))))
 
 (after! persp-mode
   (setq j/tmux-sessions '()
@@ -605,8 +631,9 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (map! :leader
         (:prefix ("e" . "tmux")
          :desc "select-session"      "s" #'j/tmux-select-session
-         :desc "send-region-tmux"    "o" #'j/tmux-send-region
-         :desc "send-paragraph-tmux" "e" #'j/tmux-send-paragraph)))
+         :desc "tmux-send-region"    "r" #'j/tmux-send-region
+         :desc "tmux-send-paragraph" "p" #'j/tmux-send-paragraph
+         :desc "tmux-send-src-block" "e" #'j/tmux-send-src-block)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -723,6 +750,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
                                       ;; Somewhere enbetween or end of dates
                                       `(,calendar-date ,@result ,@(nthcdr cnt dates)))))
     (message "dates %s" dates)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
