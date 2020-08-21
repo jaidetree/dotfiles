@@ -91,7 +91,8 @@
 
 (map! :map evil-window-map
       "/" #'evil-window-vsplit
-      "-" #'evil-window-split)
+      "-" #'evil-window-split
+      "x" #'kill-buffer-and-window)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -379,7 +380,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   (let ((sexp (save-excursion
                 (sexp-at-point))))
     (if (or (eq sexp 'comment)
-            (eq (first sexp) 'comment))
+            (eq (car sexp) 'comment))
       (unwrap-comment)
       (sp-wrap-with-pair "(")
       (insert "comment\n")
@@ -590,7 +591,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
   "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
 but do not execute them."
   (interactive "P")
-  (let* ((cmd (concat command (when append-return "\n")))
+  (let* (;; (cmd (concat command (when append-return "\r\n")))
+         (cmd command)
          (session (j/tmux-select-get-session))
          (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
     ;; (message "tmux-run: text %s" cmd)
@@ -600,7 +602,9 @@ but do not execute them."
           (message "%s" cmd)
           (message "---")
           (j/cmd "tmux load-buffer %s" tmp)
-          (j/cmd "tmux paste-buffer -dpr -t %s" session)
+          (j/cmd "tmux paste-buffer -dpr -t %s;" session)
+          (when append-return
+            (j/cmd "tmux send-keys -t %s Enter;" session))
           )
       (delete-file tmp))))
 
@@ -608,7 +612,7 @@ but do not execute them."
   "Send region to tmux."
   (interactive "rP")
   (j/tmux-run (buffer-substring-no-properties beg end)
-             append-return))
+              append-return))
 
 (defun j/tmux-send-paragraph ()
   "Send current paragraph to the selected tmux session"
@@ -710,6 +714,13 @@ but do not execute them."
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
   (evil-set-initial-state 'vterm-mode 'vterm))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  SQL Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+ (add-hook 'sql-mode-hook '(lambda () (sqlind-minor-mode 1))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Org Mode, Agenda, and notes
@@ -717,16 +728,18 @@ but do not execute them."
 
 (after! org
   (setq
-    diary-file                            (concat org-directory "/diary")
-    org-agenda-include-diary              nil
-    org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
-    org-agenda-timegrid-use-ampm          t
-    org-journal-dir                       (concat org-directory "/journal")
-    org-journal-enable-agenda-integration nil
-    org-journal-file-format               "%Y%m%d.org"
-    org-journal-time-format               "%-l:%M%#p"
-    org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
-  (setq! org-agenda-files (list org-journal-dir)))
+   diary-file                            (concat org-directory "/diary")
+   org-agenda-include-diary              nil
+   org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
+   org-agenda-timegrid-use-ampm          t
+   org-journal-dir                       (concat org-directory "/journal")
+   org-journal-enable-agenda-integration nil
+   org-journal-file-format               "%Y%m%d.org"
+   org-journal-time-format               "%-l:%M%#p"
+   org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
+  (setq! org-agenda-files (list org-journal-dir))
+  (comment
+   (advice-remove #'org-src--edit-element #'+org-inhibit-mode-hooks-a)))
 
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
