@@ -96,6 +96,24 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Root bindings
+;; - General bindings for evil modes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defadvice! j/comment-save-cursor-position (comment-fn beg end &optional arg)
+  "Comment or uncomment the region but also restore cursor position"
+  :around #'comment-or-uncomment-region
+  (save-excursion
+    (let ((coords (point)))
+      (message "Args: %s %s %s" beg end arg)
+      (funcall comment-fn beg end arg)
+      (message "Original coords %s new coords %s" coords (point)))))
+
+(comment
+ (advice-remove #'comment-or-uncomment-region #'j/comment-save-cursor-position))
+(map! :nv "s-;" #'comment-or-uncomment-region)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hydra Paste
 ;; - Create a hydra similar to paste-transient-state to allow me to cycle the
 ;;   kill ring
@@ -132,14 +150,19 @@
 (map!
   :after lispy
   :map lispy-mode-map-lispy
-  "[" nil
-  "]" nil)
+  "[" #'lispy-brackets
+  "]" #'lispy-right-nostring)
 
 (map!
   :after lispy
   :mode lispy-mode
   :n "[" #'lispy-backward
   :n "]" #'lispy-forward)
+
+
+(after! clojure
+  (setq! clojure-toplevel-inside-comment-form t))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Maximize window size
@@ -190,7 +213,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Delete Current File
+;; Current File Operations
 ;; - Copies Spacemacs' delete-current-buffer-file to delete the file and buff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -209,6 +232,41 @@
           (call-interactively #'projectile-invalidate-cache))
         (message "File '%s' successfully removed" filename)))))
 
+;; from magnars
+(defun rename-current-buffer-file ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let* ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let* ((dir (file-name-directory filename))
+             (new-name (read-file-name "New name: " dir)))
+        (cond ((get-buffer new-name)
+               (error "A buffer named '%s' already exists!" new-name))
+              (t
+               (let ((dir (file-name-directory new-name)))
+                 (when (and (not (file-exists-p dir)) (yes-or-no-p (format "Create directory '%s'?" dir)))
+                   (make-directory dir t)))
+               (rename-file filename new-name 1)
+               (rename-buffer new-name)
+               (set-visited-file-name new-name)
+               (set-buffer-modified-p nil)
+               (when (fboundp 'recentf-add-file)
+                   (recentf-add-file new-name)
+                   (recentf-remove-if-non-kept filename))
+               (when (and (configuration-layer/package-usedp 'projectile)
+                          (projectile-project-p))
+                 (call-interactively #'projectile-invalidate-cache))
+               (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
+
+(defun copy-project-path ()
+  "Copies the current buffer path from the project root to copy a relative path"
+  (interactive)
+  (let* ((file-path (buffer-file-name))
+         (project-path (or (doom-project-root) ""))
+         (rel-path (replace-regexp-in-string (regexp-quote project-path) "" file-path nil 'literal)))
+    (kill-new rel-path)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Zoom
@@ -496,8 +554,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Indent guides
-;;  - Show only the active guide
+;; Indent guides
+;; - Show only the active guide
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun j/active-guide (level responsive display)
@@ -524,8 +582,8 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Tramp
-;;  - Set shell to bash for simplicity
+;; Tramp
+;; - Set shell to bash for simplicity
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (after! tramp
@@ -534,7 +592,7 @@ If CONTINUE is non-nil, use the `comment-continue' markers if any."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Send region to tmux
+;; Send region to tmux
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun j/persp-name ()
@@ -681,18 +739,12 @@ but do not execute them."
     "C-c :"        #'vterm-send-colon
     "C-h"          #'vterm-send-C-h
     "C-u"          #'vterm-send-C-u
+    "C-]"          (cmd!! #'vterm-send-key "^]" t nil t)
     "C-^"          (cmd!! #'vterm-send-key "^" t nil t)))
 
 (defun vterm-buffer-change ()
   (when (derived-mode-p 'vterm-mode)
     (vterm-enter)))
-
-(defun vterm-project-root (toggle-vterm arg)
-  "Change vterm directory project root"
-  (interactive "P")
-  (let* ((default-directory (or (doom-project-root)
-                              default-directory)))
-    (funcall toggle-vterm arg)))
 
 (defadvice! j/vterm-project-root (toggle-vterm arg)
   "Change vterm directory project root"
@@ -715,7 +767,7 @@ but do not execute them."
   (evil-set-initial-state 'vterm-mode 'vterm))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  SQL Mode
+;; SQL Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (comment
@@ -723,7 +775,7 @@ but do not execute them."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Org Mode, Agenda, and notes
+;; Org Mode, Agenda, and notes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (after! org
@@ -764,24 +816,43 @@ but do not execute them."
                                       `(,calendar-date ,@result ,@(nthcdr cnt dates)))))
     (message "dates %s" dates)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Org Roam
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package! org-roam
+      :hook
+      (after-init . org-roam-mode)
+      :custom
+      (org-roam-directory org-directory)
+      :bind (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph))
+              :map org-mode-map
+              (("C-c n i" . org-roam-insert))
+              (("C-c n I" . org-roam-insert-immediate))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Clipboard behavior
+;; Clipboard behavior
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq save-interprogram-paste-before-kill t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Append to safe var list for dir-locals
+;; Append to safe var list for dir-locals
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq! enable-local-variables :all)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Load an optional local file
+;; Load an optional local file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (load! "local.el" nil t)
+
+(comment
+ (eval-after-load "org"
+  '(require 'ox-gfm nil t)))

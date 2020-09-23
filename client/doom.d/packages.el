@@ -55,3 +55,4 @@
 (package! fish-mode)
 (package! inf-clojure)
 (package! sql-indent)
+(package! ox-gfm)
