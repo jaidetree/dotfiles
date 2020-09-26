@@ -56,3 +56,5 @@
 (package! inf-clojure)
 (package! sql-indent)
 (package! ox-gfm)
+(package! tmux-pane)
+(package! org-roam-server)

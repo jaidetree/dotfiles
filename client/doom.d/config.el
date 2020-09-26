@@ -29,7 +29,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/Dropbox/org")
+(setq org-directory "~/org/roam")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -241,7 +241,7 @@
     (if (not (and filename (file-exists-p filename)))
         (error "Buffer '%s' is not visiting a file!" name)
       (let* ((dir (file-name-directory filename))
-             (new-name (read-file-name "New name: " dir)))
+             (new-name (read-file-name "New name: " dir nil nil filename)))
         (cond ((get-buffer new-name)
                (error "A buffer named '%s' already exists!" new-name))
               (t
@@ -790,6 +790,9 @@ but do not execute them."
    org-journal-time-format               "%-l:%M%#p"
    org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
   (setq! org-agenda-files (list org-journal-dir))
+
+  (require 'ox-gfm nil t)
+
   (comment
    (advice-remove #'org-src--edit-element #'+org-inhibit-mode-hooks-a)))
 
@@ -815,7 +818,6 @@ but do not execute them."
                                       ;; Somewhere enbetween or end of dates
                                       `(,calendar-date ,@result ,@(nthcdr cnt dates)))))
     (message "dates %s" dates)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org Roam
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -824,6 +826,14 @@ but do not execute them."
       (after-init . org-roam-mode)
       :custom
       (org-roam-directory org-directory)
+      (org-roam-tag-sources '(prop all-directories))
+      (org-roam-capture-templates
+       (list
+        '("d" "default" plain (function org-roam--capture-get-point)
+          "%?"
+          :file-name "${dir}%<%Y%m%d%H%M%S>-${slug}"
+          :head "#+title: ${title}\n"
+          :unnarrowed t)))
       :bind (:map org-roam-mode-map
               (("C-c n l" . org-roam)
                ("C-c n f" . org-roam-find-file)
@@ -832,6 +842,70 @@ but do not execute them."
               (("C-c n i" . org-roam-insert))
               (("C-c n I" . org-roam-insert-immediate))))
 
+(defadvice! j/org-roam-capture (&optional goto keys)
+  "Launches an `org-capture` process for a new existing note.
+This uses the templates defined at `org-roam-capture-templates`.
+Arguments GOTO and KEYS see `org-capture`."
+  :override #'org-roam-capture
+  (interactive "P")
+  (unless org-roam-mode (org-roam-mode))
+  (let* ((completions (org-roam--get-title-path-completions))
+         (title-with-keys (org-roam-completion--completing-read "File: "
+                                                                completions))
+         (res (cdr (assoc title-with-keys completions)))
+         (title (or (plist-get res :title) title-with-keys))
+         (tags (split-string title "/"))
+         (title (car (last tags)))
+         (dir (string-join (butlast tags) "/"))
+         (dir (if (string-blank-p dir) "" (concat dir "/")))
+         (file-path (plist-get res :path)))
+    (let ((org-roam-capture--info (list (cons 'title title)
+                                        (cons 'slug (funcall org-roam-title-to-slug-function title))
+                                        (cons 'file file-path)
+                                        (cons 'dir dir)))
+          (org-roam-capture--context 'capture))
+      (condition-case err
+          (org-roam-capture--capture goto keys)
+        (error (user-error "%s.  Please adjust `org-roam-capture-templates'"
+                           (error-message-string err)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Org-Roam Server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package org-roam-server
+  :ensure t
+  :config
+  (setq org-roam-server-host "127.0.0.1"
+        org-roam-server-port 8989
+        org-roam-server-authenticate nil
+        org-roam-server-export-inline-images t
+        org-roam-server-serve-files nil
+        org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
+        org-roam-server-network-poll t
+        org-roam-server-network-arrows nil
+        org-roam-server-network-label-truncate t
+        org-roam-server-network-label-truncate-length 60
+        org-roam-server-network-label-wrap-length 20))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tmux Pane
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package! tmux-pane
+  :config
+  (tmux-pane-mode)
+  (map! :leader
+        (:prefix ("v" . "tmux pane")
+          :desc "Open vpane" :nv "o" #'tmux-pane-open-vertical
+          :desc "Open hpane" :nv "h" #'tmux-pane-open-horizontal
+          :desc "Open hpane" :nv "s" #'tmux-pane-open-horizontal
+          :desc "Open vpane" :nv "v" #'tmux-pane-open-vertical
+          :desc "Close pane" :nv "c" #'tmux-pane-close
+          :desc "Rerun last command" :nv "r" #'tmux-pane-rerun))
+  (map! :leader
+        (:prefix "t"
+          :desc "vpane" :nv "v" #'tmux-pane-toggle-vertical
+          :desc "hpane" :nv "h" #'tmux-pane-toggle-horizontal)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clipboard behavior
@@ -852,7 +926,3 @@ but do not execute them."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (load! "local.el" nil t)
-
-(comment
- (eval-after-load "org"
-  '(require 'ox-gfm nil t)))
