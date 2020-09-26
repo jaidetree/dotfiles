@@ -22,10 +22,13 @@
         window (app:focusedWindow)
         frame (: window :frame)
         w frame._w
-        h frame._h]
+        h frame._h
+        x frame._x
+        y frame._y]
     (app:activate)
-    {:x (math.random 1 w)
-     :y (math.random 1 h)}))
+    (print (hs.inspect frame))
+    {:x (math.random x (+ x w))
+     :y (math.random y (+ y h))}))
 
 (fn update-state
   [new-state]
