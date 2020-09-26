@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: org-mode truncate table box
+# key: trunc-table
+# --
+**** What?
+#+BEGIN_SRC sql
+$0SELECT * FROM $1 LIMIT 0;
+#+END_SRC
+**** How many
+#+BEGIN_SRC sql
+SELECT count(id) FROM $1;
+#+END_SRC
+**** Why?
+**** Truncate?
+***** Remove  all
+#+BEGIN_SRC sql :eval query
+TRUNCATE $1;
+#+END_SRC
