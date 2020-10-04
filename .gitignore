@@ -1,3 +1,4 @@
 **/vim
 *.log
-client/doom.d/local.el
+client/doom.d/local.*
+client/doom.d/config.el
