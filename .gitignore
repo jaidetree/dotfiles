@@ -2,3 +2,5 @@
 *.log
 client/doom.d/local.*
 client/doom.d/config.el
+client/doom.d/custom.el
+client/doom.d/packages.el

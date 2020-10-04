@@ -1,16 +1,19 @@
 #+TITLE: DOOM Config
-#+PROPERTY: header-args :lexical yes
+#+PROPERTY: header-args :lexical yes :results silent
 #+STARTUP: overview
 
 
 * TODOS
-** TODO Move config.el into config.org
+** DONE Move config.el into config.org
 ** TODO Research and fix pressing enter on list items
 ** TODO Research and swap org-mode enter behavior with C-ent
+** TODO Find better config for org-mode pretty symbols
+** TODO Experiment with a command to load a buffer into tmux and copy it to clipboard
 ** DONE Update init.el to stop using childframe
-** TODO [[file:~/org/roam/20201002225634-create_an_org_mode_guide_for_doom_emacs.org][Create an org-mode guide for Doom Emacs]]
-** TODO Update config.el to enter into buffer select-mode when creating a split
-** TODO Look into [[file:~/org/roam/20201002230128-wrap_text_in_org_mode.org][Wrap text in org-mode]]
+** DONE Update config to enter into buffer select-mode when creating a split
+** DONE Look into [[file:~/org/roam/20201002230128-wrap_text_in_org_mode.org][Wrap text in org-mode]]
+
+
 * Usage and tips
 ** Additional functions/macros that could help you configure Doom
 - `load!' for loading external *.el files relative to this one
@@ -32,6 +35,18 @@ You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
 ** Reload config
 #+BEGIN_SRC emacs-lisp :tangle no
 (org-babel-load-file "~/.doom.d/config.org")
+#+END_SRC
+
+** Packages
+
+* Headers
+** Packages
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+;;; $DOOMDIR/packages.el -*- no-byte-compile: t; -*-
+#+END_SRC
+** Config
+#+BEGIN_SRC emacs-lisp :tangle config.el
+;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 #+END_SRC
 * Initialization
 ** Profile Info
@@ -75,6 +90,16 @@ available. You can either set `doom-theme' or manually load a theme with the
 #+BEGIN_SRC emacs-lisp
 (setq doom-theme 'doom-one)
 #+END_SRC
+**** Change a theme at runtime
+It's recommended to use doom-theme so Henrik can update how its used over time,
+but this should work for loading when needed.
+#+BEGIN_SRC emacs-lisp :tangle no
+(load-theme 'doom-one t)
+#+END_SRC
+
+#+RESULTS:
+: t
+
 *** Font
 Set default font
 
@@ -92,26 +117,32 @@ Make line numbers brighter
     :foreground "#ebbd80"))
 #+END_SRC
 
-** Org Directory
-- If you use `org' and don't want your org files in the default location below,
-  change `org-directory'. It must be set before org loads!
-#+BEGIN_SRC emacs-lisp
-(setq org-directory "~/org/roam")
-#+END_SRC
 
 * General var Settings
 - What can I say? I'm fussy.
+#+BEGIN_SRC emacs-lisp
+(setq
+ tab-always-indent                   t
+ make-backup-files                   nil
+ create-lockfiles                    nil
+ uniquify-buffer-name-style          'post-forward-angle-brackets
+ +ivy-buffer-preview                 t
+ save-interprogram-paste-before-kill t
+ enable-local-variables              :all
+ evil-split-window-below             t
+ evil-vsplit-window-right            t)
+#+END_SRC
+
+* Org Initialization
+- If you use `org' and don't want your org files in the default location below,
+  change `org-directory'. It must be set before org loads!
 
 #+BEGIN_SRC emacs-lisp
 (setq
- tab-always-indent                  t
- make-backup-files                  nil
- create-lockfiles                   nil
- uniquify-buffer-name-style         'post-forward-angle-brackets
- +ivy-buffer-preview                 t
- save-interprogram-paste-before-kill t
- enable-local-variables              :all)
+ org-directory "~/org/roam"
+ org-use-property-inheritance t)
 #+END_SRC
+
 
 * Utility Macros
 ** Lisp comment macro
@@ -122,17 +153,19 @@ Make line numbers brighter
   `nil)
 #+END_SRC* Local config
 
-** Sorting collections
+** Sorting collections with reverse arg order for thread macros
 #+BEGIN_SRC emacs-lisp
 (defun j/sort (pred errors)
   (sort errors pred))
 #+END_SRC
+
 ** Get project name
 #+BEGIN_SRC emacs-lisp
 (defun j/persp-name ()
   (or (safe-persp-name (get-current-persp))
       "main"))
 #+END_SRC
+
 ** Run command and return output
 #+BEGIN_SRC emacs-lisp
 (defun j/cmd (command &rest args)
@@ -156,7 +189,16 @@ Make line numbers brighter
            (kill-buffer errors)))))
 #+END_SRC
 
+
 * Customizations
+** Fish syntax support
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! fish-mode)
+#+END_SRC
+** SQL Indentation
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! sql-indent)
+#+END_SRC
 ** Hydra Paste Cycler
 - Cycle through the kill ring on paste - only for p and P in normal mode
 
@@ -190,6 +232,12 @@ Make line numbers brighter
       "x" #'kill-buffer-and-window)
 #+END_SRC
 ** Clojure
+*** Install packages
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! anakondo)
+(package! inf-clojure)
+#+END_SRC
+
 *** General config
 #+BEGIN_SRC emacs-lisp
 (after! clojure
@@ -218,8 +266,12 @@ Make line numbers brighter
 
 
 #+END_SRC
-** Org
-*** Config
+** Install github flavored markdown package for better exports
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! ox-gfm)
+#+END_SRC
+
+** Org Config
 #+BEGIN_SRC emacs-lisp
 (after! org
   (setq
@@ -236,7 +288,7 @@ Make line numbers brighter
 
   (require 'ox-gfm nil t))
 #+END_SRC
-*** Use TAB to cycle through visibility states of current subtree
+** Org Use TAB to cycle through visibility states of current subtree
 #+BEGIN_SRC emacs-lisp
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
@@ -419,6 +471,10 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 #+END_SRC
 
 ** Evil Lisp State
+*** Install package
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! evil-lisp-state)
+#+END_SRC
 *** Wrap\Unwrap Comment Command
 **** Unwrap
 #+BEGIN_SRC emacs-lisp
@@ -453,6 +509,17 @@ Make the flycheck messages easier to read\distinguish from surrounding code
       (indent-for-tab-command)
       (evil-first-non-blank))))
 
+#+END_SRC
+*** Use package
+#+BEGIN_SRC emacs-lisp
+(use-package! evil-lisp-state
+  :init
+  (setq evil-lisp-state-global t)
+  :config
+  (map!
+    :map evil-lisp-state-map
+    ";" (evil-lisp-state-enter-command wrap-comment))
+  (map! :leader :desc "Lisp" "k" evil-lisp-state-map))
 #+END_SRC
 *** Modeline
 Create a purple state color for the modeline when in lisp-state
@@ -578,9 +645,8 @@ Set shell to bash for simplicity
   ;; (setenv "SHELL" "/usr/local/bin/fish")
   (setq tramp-default-method "sshx"))
 #+END_SRC
-** Tmux
-*** Shared utils
-**** Send command to tmux
+** Send to Tmux Session
+*** Send text to tmux
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-run (command &optional append-return)
   "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
@@ -635,8 +701,7 @@ but do not execute them."
         session
         (j/tmux-select-session))))
 #+END_SRC
-*** Send to tmux
-**** Send Region
+*** Send Region
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-region (beg end &optional append-return)
   "Send region to tmux."
@@ -644,7 +709,7 @@ but do not execute them."
   (j/tmux-run (buffer-substring-no-properties beg end)
               append-return))
 #+END_SRC
-**** Send Paragraph
+*** Send Paragraph
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-paragraph ()
   "Send current paragraph to the selected tmux session"
@@ -653,7 +718,7 @@ but do not execute them."
       (bounds-of-thing-at-point 'paragraph)
     (j/tmux-send-region beg end t)))
 #+END_SRC
-**** Send org-mode src-block
+*** Send org-mode src-block
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-src-block ()
   "Send current src block to selected tmux session"
@@ -676,7 +741,13 @@ but do not execute them."
          :desc "tmux-send-src-block" "e" #'j/tmux-send-src-block)))
 #+END_SRC
 
-*** Navigation in tmux tty
+** Navigation in tmux tty
+*** Install tmux-pane
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! tmux-pane)
+#+END_SRC
+
+*** Configuration
 #+BEGIN_SRC emacs-lisp
 (use-package! tmux-pane
   :config
@@ -769,32 +840,36 @@ but do not execute them."
   (evil-set-initial-state 'vterm-mode 'vterm))
 #+END_SRC
 
-** Org
 ** Org-Roam
-*** Config
+*** Set mode hooks, customze directory, bind keys
 #+BEGIN_SRC emacs-lisp
 (use-package! org-roam
-      :hook
-      (after-init . org-roam-mode)
-      :custom
-      (org-roam-directory org-directory)
-      (org-roam-tag-sources '(prop all-directories))
-      (org-roam-capture-templates
-       (list
-        '("d" "default" plain (function org-roam--capture-get-point)
-          "%?"
-          :file-name "${dir}%<%Y%m%d%H%M%S>-${slug}"
-          :head "#+title: ${title}\n"
-          :unnarrowed t)))
-      :bind (:map org-roam-mode-map
-              (("C-c n l" . org-roam)
-               ("C-c n f" . org-roam-find-file)
-               ("C-c n g" . org-roam-graph))
-              :map org-mode-map
-              (("C-c n i" . org-roam-insert))
-              (("C-c n I" . org-roam-insert-immediate))))
+  :hook
+  (after-init . org-roam-mode)
+  :custom
+  (org-roam-directory org-directory)
+  (org-roam-tag-sources '(prop all-directories))
+  :bind (:map org-roam-mode-map
+         (("C-c n l" . org-roam)
+          ("C-c n f" . org-roam-find-file)
+          ("C-c n g" . org-roam-graph))
+         :map org-mode-map
+         (("C-c n i" . org-roam-insert))
+         (("C-c n I" . org-roam-insert-immediate))))
 #+END_SRC
-*** Update org-roam functions to support creating notes in tag directories
+*** Capture templates
+#+BEGIN_SRC emacs-lisp
+(after! org-roam
+  (setq! org-roam-capture-templates
+   (list
+    '("d" "default" plain (function org-roam--capture-get-point)
+      "%?"
+      :file-name "${dir}%<%Y%m%d%H%M%S>-${slug}"
+      :head "#+title: ${title}\n"
+      :unnarrowed t))))
+#+END_SRC
+
+*** Create org-roam files in tag directories
 **** Capture
 #+BEGIN_SRC emacs-lisp
 (defadvice! j/org-roam-capture (&optional goto keys)
@@ -824,7 +899,6 @@ Arguments GOTO and KEYS see `org-capture`."
         (error (user-error "%s.  Please adjust `org-roam-capture-templates'"
                            (error-message-string err)))))))
 #+END_SRC
-
 
 
 **** Find File
@@ -915,7 +989,13 @@ Arguments GOTO and KEYS see `org-capture`."
           res))
     (deactivate-mark)))
 #+END_SRC
-*** Org-Roam-Server
+** Org-Roam-Server
+*** Install package
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! org-roam-server)
+#+END_SRC
+
+*** Configuration
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-server
   :config
@@ -931,6 +1011,59 @@ Arguments GOTO and KEYS see `org-capture`."
         org-roam-server-network-label-truncate-length 60
         org-roam-server-network-label-wrap-length 20))
 #+END_SRC
+
+** Theme preview
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/counsel-load-theme ()
+  "Automatically cycles through themes. Forward to `load-theme'.
+Usable with `ivy-resume', `ivy-next-line-and-call' and
+`ivy-previous-line-and-call'."
+  :override #'counsel-load-theme
+  (interactive)
+  (let ((current-theme (symbol-name doom-theme)))
+    (ivy-read "Load custom theme: "
+              (mapcar 'symbol-name
+                      (custom-available-themes))
+              :preselect current-theme
+              :action #'counsel-load-theme-action
+              :update-fn (lambda (&rest args)
+                           (counsel-load-theme-action (ivy-state-current
+                                                       ivy-last)))
+              :unwind (lambda (&rest args)
+                        (let ((preview-theme (symbol-name doom-theme)))
+                          (when (not (equal current-theme preview-theme))
+                            (counsel-load-theme-action current-theme))))
+              :caller 'counsel-load-theme)))
+#+END_SRC
+
+** Switch buffer when splitting windows
+Thanks to tecosaur from https://tecosaur.github.io/emacs-config/config.html#windows
+#+BEGIN_SRC emacs-lisp
+(defadvice! prompt-for-buffer (&rest _)
+  :after '(evil-window-split evil-window-vsplit)
+  (call-interactively #'switch-to-buffer))
+#+END_SRC
+** Clean up org-mode formatting
+From https://tecosaur.github.io/emacs-config/config.html#org-mode
+*** Unpin package
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(unpin! org)
+#+END_SRC
+*** Configure org-mode superstar
+#+BEGIN_SRC emacs-lisp
+(use-package! org-superstar
+  :after org
+  :config
+  (setq org-superstar-remove-leading-stars t)
+  (setq org-superstar-headline-bullets-list '(" "))
+  (setq org-superstar-item-bullet-alist
+        '((?+ . ?•)
+          (?* . ?➤)
+          (?- . ?–)))
+  (org-superstar-mode -1))
+#+END_SRC
+
+
 
 * Literate Experiments
 ** Setup
@@ -964,5 +1097,6 @@ Arguments GOTO and KEYS see `org-capture`."
 #+END_SRC
 
 #+RESULTS:
+
 * Local config
 #+INCLUDE: ./local.org
