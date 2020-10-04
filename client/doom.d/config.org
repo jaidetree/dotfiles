@@ -1,0 +1,968 @@
+#+TITLE: DOOM Config
+#+PROPERTY: header-args :lexical yes
+#+STARTUP: overview
+
+
+* TODOS
+** TODO Move config.el into config.org
+** TODO Research and fix pressing enter on list items
+** TODO Research and swap org-mode enter behavior with C-ent
+** DONE Update init.el to stop using childframe
+** TODO [[file:~/org/roam/20201002225634-create_an_org_mode_guide_for_doom_emacs.org][Create an org-mode guide for Doom Emacs]]
+** TODO Update config.el to enter into buffer select-mode when creating a split
+** TODO Look into [[file:~/org/roam/20201002230128-wrap_text_in_org_mode.org][Wrap text in org-mode]]
+* Usage and tips
+** Additional functions/macros that could help you configure Doom
+- `load!' for loading external *.el files relative to this one
+- `use-package' for configuring packages
+- `after!' for running code after a package has loaded
+- `add-load-path!' for adding directories to the `load-path', relative to
+  - this file. Emacs searches the `load-path' when you load packages with
+  - `require' or `use-package'.
+- `map!' for binding new keys
+
+** Lookup symbol under cursor
+To get information about any of these functions/macros, move the cursor over
+  the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
+  This will open documentation for it, including demos of how they are used.
+
+** Lookup definition
+You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
+  they are implemented.
+** Reload config
+#+BEGIN_SRC emacs-lisp :tangle no
+(org-babel-load-file "~/.doom.d/config.org")
+#+END_SRC
+* Initialization
+** Profile Info
+Place your private configuration here! Remember, you do not need to run 'doom sync' after modifying this file!
+ 
+Some functionality uses this to identify you, e.g. GPG configuration, email
+clients, file templates and snippets.
+
+#+BEGIN_SRC emacs-lisp
+(setq user-full-name "Jay Zawrotny"
+      user-mail-address "jayzawrotny@gmail.com")
+#+END_SRC
+
+** Line Numbers
+This determines the style of line numbers in effect. If set to `nil', line
+  numbers are disabled. For relative line numbers, set this to `relative'.
+
+#+BEGIN_SRC emacs-lisp
+(setq display-line-numbers-type 'relative)
+#+END_SRC
+
+** Theme Settings
+*** Introduction
+Doom exposes five (optional) variables for controlling fonts in Doom. Here are
+the three important ones:
+
+  + `doom-font'
+  + `doom-variable-pitch-font'
+  + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+    presentations or streaming.
+
+They all accept either a font-spec, font string ("Input Mono-12"), or xlfd font
+string. You generally only need these two: (setq doom-font (font-spec :family
+"monospace" :size 12 :weight 'semi-light) doom-variable-pitch-font (font-spec
+:family "sans" :size 13))
+
+There are two ways to load a theme. Both assume the theme is installed and
+available. You can either set `doom-theme' or manually load a theme with the
+
+*** Theme
+#+BEGIN_SRC emacs-lisp
+(setq doom-theme 'doom-one)
+#+END_SRC
+*** Font
+Set default font
+
+#+BEGIN_SRC emacs-lisp
+(setq doom-font (font-spec :family "operator mono" :size 14 :weight 'medium))
+#+END_SRC
+
+Make line numbers brighter
+
+#+BEGIN_SRC emacs-lisp
+(custom-set-faces!
+  '(line-number
+    :foreground "#888")
+  '(line-number-current-line
+    :foreground "#ebbd80"))
+#+END_SRC
+
+** Org Directory
+- If you use `org' and don't want your org files in the default location below,
+  change `org-directory'. It must be set before org loads!
+#+BEGIN_SRC emacs-lisp
+(setq org-directory "~/org/roam")
+#+END_SRC
+
+* General var Settings
+- What can I say? I'm fussy.
+
+#+BEGIN_SRC emacs-lisp
+(setq
+ tab-always-indent                  t
+ make-backup-files                  nil
+ create-lockfiles                   nil
+ uniquify-buffer-name-style         'post-forward-angle-brackets
+ +ivy-buffer-preview                 t
+ save-interprogram-paste-before-kill t
+ enable-local-variables              :all)
+#+END_SRC
+
+* Utility Macros
+** Lisp comment macro
+- Similar to Clojure's. Lets you wrap any elisp code without eval'ing it.
+
+#+BEGIN_SRC emacs-lisp
+(defmacro comment (&rest _)
+  `nil)
+#+END_SRC* Local config
+
+** Sorting collections
+#+BEGIN_SRC emacs-lisp
+(defun j/sort (pred errors)
+  (sort errors pred))
+#+END_SRC
+** Get project name
+#+BEGIN_SRC emacs-lisp
+(defun j/persp-name ()
+  (or (safe-persp-name (get-current-persp))
+      "main"))
+#+END_SRC
+** Run command and return output
+#+BEGIN_SRC emacs-lisp
+(defun j/cmd (command &rest args)
+  "Run a command and return output"
+  (let* ((args (mapcar #'shell-quote-argument (delq nil args)))
+         (cmdstr (if args (apply #'format command args) command))
+         (output (get-buffer-create " *cmd stdout*"))
+         (errors (get-buffer-create " *cmd stderr*"))
+         code)
+    (unwind-protect
+        (if (= 0 (setq code (quiet! (shell-command cmdstr output errors))))
+            (with-current-buffer output
+              (buffer-string))
+          (error "[%d] %s $ %s (%s)"
+                 code
+                 cmdstr
+                 (with-current-buffer errors
+                   (buffer-string))
+                 cmdstr))
+      (and (kill-buffer output)
+           (kill-buffer errors)))))
+#+END_SRC
+
+* Customizations
+** Hydra Paste Cycler
+- Cycle through the kill ring on paste - only for p and P in normal mode
+
+#+BEGIN_SRC emacs-lisp
+(defhydra hydra-paste
+  (:color red
+    :hint nil)
+  "\n[%s(length kill-ring-yank-pointer)/%s(length kill-ring)] \
+ [_C-j_/_C-k_] cycles through yanked text, [_p_/_P_] pastes the same text \
+ above or below. Anything else exits."
+  ("C-j" evil-paste-pop)
+  ("C-k" evil-paste-pop-next)
+  ("p"   evil-paste-after)
+  ("P"   evil-paste-before))
+
+(map!
+  :after evil
+  :nv [remap evil-paste-after] #'hydra-paste/evil-paste-after
+  :nv [remap evil-paste-before] #'hydra-paste/evil-paste-before)
+#+END_SRC
+** Commenting with cmd-;
+#+BEGIN_SRC emacs-lisp
+(map! :nv "s-;" #'comment-or-uncomment-region)
+#+END_SRC
+
+** Spacemacs window split bindings
+#+BEGIN_SRC emacs-lisp
+(map! :map evil-window-map
+      "/" #'evil-window-vsplit
+      "-" #'evil-window-split
+      "x" #'kill-buffer-and-window)
+#+END_SRC
+** Clojure
+*** General config
+#+BEGIN_SRC emacs-lisp
+(after! clojure
+  (setq! clojure-toplevel-inside-comment-form t))
+#+END_SRC
+
+*** Use Anakondo for static linting
+#+BEGIN_SRC emacs-lisp
+(use-package! anakondo
+  :hook ((clojure-mode . anakondo-minor-mode)))
+#+END_SRC
+
+*** Lispy config
+#+BEGIN_SRC emacs-lisp
+(map!
+  :after lispy
+  :map lispy-mode-map-lispy
+  "[" #'lispy-brackets
+  "]" #'lispy-right-nostring)
+
+(map!
+  :after lispy
+  :mode lispy-mode
+  :n "[" #'lispy-backward
+  :n "]" #'lispy-forward)
+
+
+#+END_SRC
+** Org
+*** Config
+#+BEGIN_SRC emacs-lisp
+(after! org
+  (setq
+   diary-file                            (concat org-directory "/diary")
+   org-agenda-include-diary              nil
+   org-agenda-file-regexp                "\\`[^.].*\\.org'\\|[0-9]+\\.org$"
+   org-agenda-timegrid-use-ampm          t
+   org-journal-dir                       (concat org-directory "/journal")
+   org-journal-enable-agenda-integration nil
+   org-journal-file-format               "%Y%m%d.org"
+   org-journal-time-format               "%-l:%M%#p"
+   org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
+  (setq! org-agenda-files (list org-journal-dir))
+
+  (require 'ox-gfm nil t))
+#+END_SRC
+*** Use TAB to cycle through visibility states of current subtree
+#+BEGIN_SRC emacs-lisp
+(after! evil-org
+  (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
+#+END_SRC
+** Save frame on quit; restore on load
+*** Saves drame dimensions on quit
+#+BEGIN_SRC emacs-lisp
+(defun save-frame-dimensions ()
+  (doom-store-put 'last-frame-size
+                  (list (frame-position)
+                        (frame-width)
+                        (frame-height)
+                        (frame-parameter nil 'fullscreen))))
+
+(add-hook 'kill-emacs-hook #'save-frame-dimensions)
+
+#+END_SRC
+*** Restore frame dimensions on load
+#+BEGIN_SRC emacs-lisp
+(when-let (dims (doom-store-get 'last-frame-size))
+  (when (eq (length dims) 4)
+    (cl-destructuring-bind ((left . top) width height fullscreen) dims
+      (setq initial-frame-alist
+        (append initial-frame-alist
+          `((left . ,left)
+             (top . ,top)
+             (width . ,width)
+             (height . ,height)
+             (fullscreen . ,fullscreen)))))))
+#+END_SRC
+** JavaScript
+*** Settings
+*NOTE:* Relies on editorconfig package
+#+BEGIN_SRC emacs-lisp
+(use-package! js2-mode
+  :config
+  (setq
+    js-expr-indent-offset -2
+    js-chain-indent nil))
+#+END_SRC
+
+*** Indentation
+**** Multi-line expressions
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/fix-js-multi-line-indent ()
+  "Indent expression declarations by 2 just like the rest of the code"
+  :after-while #'js--multi-line-declaration-indentation
+  (let ((beg (match-beginning 0)))
+    (when beg
+      (goto-char beg)
+      (+ js-indent-level (current-column)))))
+#+END_SRC
+
+***** Sample
+#+BEGIN_EXAMPLE js
+const x = myfunc()
+.test
+#+END_EXAMPLE
+**** TODO regular chaining
+
+** Delete current buffer file
+Borrowed from spacemacs
+#+BEGIN_SRC emacs-lisp
+(defun delete-current-buffer-file ()
+  "Removes file connected to current buffer and kills buffer."
+  (interactive)
+  (let ((filename (buffer-file-name))
+         (buffer (current-buffer)))
+    (if (not (and filename (file-exists-p filename)))
+      (ido-kill-buffer)
+      (when (yes-or-no-p "Are you sure you want to delete this file? ")
+        (delete-file filename t)
+        (kill-buffer buffer)
+        (when (and (configuration-layer/package-usedp 'projectile)
+                (projectile-project-p))
+          (call-interactively #'projectile-invalidate-cache))
+        (message "File '%s' successfully removed" filename)))))
+#+END_SRC
+** Rename current buffer file
+Borrowed this from spacemacs but uses current name as default
+#+BEGIN_SRC emacs-lisp
+(defun rename-current-buffer-file ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let* ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let* ((dir (file-name-directory filename))
+             (new-name (read-file-name "New name: " dir nil nil filename)))
+        (cond ((get-buffer new-name)
+               (error "A buffer named '%s' already exists!" new-name))
+              (t
+               (let ((dir (file-name-directory new-name)))
+                 (when (and (not (file-exists-p dir)) (yes-or-no-p (format "Create directory '%s'?" dir)))
+                   (make-directory dir t)))
+               (rename-file filename new-name 1)
+               (rename-buffer new-name)
+               (set-visited-file-name new-name)
+               (set-buffer-modified-p nil)
+               (when (fboundp 'recentf-add-file)
+                   (recentf-add-file new-name)
+                   (recentf-remove-if-non-kept filename))
+               (when (and (configuration-layer/package-usedp 'projectile)
+                          (projectile-project-p))
+                 (call-interactively #'projectile-invalidate-cache))
+               (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
+#+END_SRC
+** Copy project path
+#+BEGIN_SRC emacs-lisp
+(defun copy-project-path ()
+  "Copies the current buffer path from the project root to copy a relative path"
+  (interactive)
+  (let* ((file-path (buffer-file-name))
+         (project-path (or (doom-project-root) ""))
+         (rel-path (replace-regexp-in-string (regexp-quote project-path) "" file-path nil 'literal)))
+    (kill-new rel-path)))
+#+END_SRC
+** Zoom font size
+Based on the hydra demo zoom example
+#+BEGIN_SRC emacs-lisp
+(map!
+  :leader
+  :desc "Font zoom" "z" #'+hydra/text-zoom/body)
+#+END_SRC
+** Flycheck
+Make the flycheck messages easier to read\distinguish from surrounding code
+*** Font customization
+#+BEGIN_SRC emacs-lisp
+(custom-set-faces!
+  '(popup-tip-face
+     :background "#FD6D6E" :foreground "black"
+     :weight normal :slant oblique
+     :height 120)
+  '(flycheck-posframe-face
+     :weight normal :slant oblique)
+  '(flycheck-posframe-warning-face
+     :background "#ECBE7B" :foreground "black")
+  '(flycheck-posframe-info-face
+     :background "#7EAF54" :foreground "black")
+  '(flycheck-posframe-error-face
+     :background "#FD6D6E" :foreground "black"))
+#+END_SRC
+*** Format regular flycheck errors
+#+BEGIN_SRC emacs-lisp
+(defun j/format-flycheck-messages (msg)
+  (concat
+    " "
+    flycheck-popup-tip-error-prefix
+    (flycheck-error-format-message-and-id msg)
+    " "))
+
+(defun j/flycheck-errors->string (errors)
+  "Formats ERRORS messages for display. Pads left and right of message with a space"
+  (let ((messages (->> errors
+                    (delete-dups)
+                    (mapcar #'j/format-flycheck-message)
+                    (j/sort))))
+    (mapconcat 'identity messages "\n")))
+
+(defadvice! j/format-flycheck-popup (errors)
+  "Add padding to errors"
+  :override #'flycheck-popup-tip-format-errors
+  (-> errors
+    (j/flycheck-errors->string)
+    (propertize 'face 'popup-tip-face)))
+#+END_SRC
+*** Format childframe errors
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/flycheck-posframe-format-error (err)
+  "Pads error message"
+  :override #'flycheck-posframe-format-error
+  (propertize (concat
+                " "
+                (flycheck-posframe-get-prefix-for-error err)
+                (flycheck-error-format-message-and-id err)
+                " ")
+    'face
+    `(:inherit ,(flycheck-posframe-get-face-for-error err))) )
+#+END_SRC
+
+** Evil Lisp State
+*** Wrap\Unwrap Comment Command
+**** Unwrap
+#+BEGIN_SRC emacs-lisp
+(defun unwrap-comment ()
+  "Unwrap sexp (comment ...)"
+  (interactive)
+  (save-excursion
+    (forward-char)
+    (beginning-of-sexp)
+    (let ((line (string-trim (thing-at-point 'line))))
+      (if (equal line "(comment")
+        (cl-destructuring-bind (beg . end) (bounds-of-thing-at-point 'line)
+          (lispyville-join beg end)
+          (sp-backward-sexp)
+          (sp-backward-sexp)))
+      (sp-unwrap-sexp)
+      (sp-kill-sexp)
+      (indent-sexp))))
+#+END_SRC
+**** Wrap
+#+BEGIN_SRC emacs-lisp
+(defun wrap-comment ()
+  "Wrap sexp in (comment ...) and indent it"
+  (interactive)
+  (let ((sexp (save-excursion
+                (sexp-at-point))))
+    (if (or (eq sexp 'comment)
+            (eq (car sexp) 'comment))
+      (unwrap-comment)
+      (sp-wrap-with-pair "(")
+      (insert "comment\n")
+      (indent-for-tab-command)
+      (evil-first-non-blank))))
+
+#+END_SRC
+*** Modeline
+Create a purple state color for the modeline when in lisp-state
+#+BEGIN_SRC emacs-lisp
+(after! doom-modeline
+  (custom-set-faces!
+    '(doom-modeline-evil-operator-state :foreground "#FF9F9E")))
+
+(defsubst j/doom-modeline--evil ()
+  "The current evil state. Requires `evil-mode' to be enabled."
+  (when (bound-and-true-p evil-local-mode)
+    (doom-modeline--modal-icon
+     (let ((tag (evil-state-property evil-state :tag t)))
+       (if (stringp tag) tag (funcall tag)))
+     (cond
+      ((evil-normal-state-p)   'doom-modeline-evil-normal-state)
+      ((evil-emacs-state-p)    'doom-modeline-evil-emacs-state)
+      ((evil-lisp-state-p)     'doom-modeline-evil-emacs-state)
+      ((evil-insert-state-p)   'doom-modeline-evil-insert-state)
+      ((evil-motion-state-p)   'doom-modeline-evil-motion-state)
+      ((evil-visual-state-p)   'doom-modeline-evil-visual-state)
+      ((evil-operator-state-p) 'doom-modeline-evil-operator-state)
+      ((evil-vterm-state-p)    'error)
+      ((evil-replace-state-p)  'doom-modeline-evil-replace-state)
+      (t                       'doom-modeline-evil-normal-state))
+     (evil-state-property evil-state :name t))))
+
+(after! (evil-lisp-state doom-modeline)
+  (doom-modeline-def-segment modals
+    "Displays modal editing states, including `evil', `overwrite', ... etc."
+    (let* ((evil (j/doom-modeline--evil))
+           (ow (doom-modeline--overwrite))
+           (vsep (doom-modeline-vspc))
+           (sep (and (or evil ow) (doom-modeline-spc))))
+      (concat sep
+              (and evil (concat evil (and ow vsep)))
+              (and ow (concat ow))
+              sep))))
+
+(defun j/evil-state-fg (state)
+  (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
+    (face-foreground sym nil t)))
+
+(add-hook! 'doom-load-theme-hook
+    (defun j/theme-evil-cursors ()
+      (setq
+       evil-insert-state-cursor   (list 'bar (j/evil-state-fg "insert"))
+       evil-normal-state-cursor   (list 'box (j/evil-state-fg "normal"))
+       evil-visual-state-cursor   (list 'box (j/evil-state-fg "visual"))
+       evil-operator-state-cursor (list 'box (j/evil-state-fg "operator"))
+       evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs"))
+       evil-vterm-state-cursor    (list 'box (face-foreground 'error nil t)))))
+#+END_SRC
+** Relabel keys in the which-key menu
+The which-key menu can sometimes display too long of names which causes them to
+be truncated.
+#+BEGIN_SRC emacs-lisp
+(after! which-key
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "evil-lisp-state-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "evil-mc-") . (nil . "")))
+  (add-to-list
+    'which-key-replacement-alist
+    '((nil . "+multiple-cursors/") . (nil . ""))))
+#+END_SRC
+** Create new workspace with name prompt, cancel on exit
+After creating a workspace prompt to rename. Anon workspaces are not a
+fun surprise.
+
+*** Trigger an early load of workspace autoload functions
+#+BEGIN_SRC emacs-lisp
+(after! persp-mode
+  (+workspace-current-name))
+#+END_SRC
+
+*** Advise workspace-new to prompt for name and delete if bad one is generated
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/workspace-new (workspace-new &optional _ clone-p)
+  "Prompt for workspace name after creating the workspace, delete if no name entered"
+  :around #'+workspace/new
+  (interactive "iP")
+  (let ((name (read-string "Workspace name: "
+                           (format "#%s" (+workspace--generate-id)))))
+    (when name
+      (funcall workspace-new name clone-p))))
+#+END_SRC
+** Indent guides
+*** Show only the active guide
+#+BEGIN_SRC emacs-lisp
+(defun j/active-guide (level responsive display)
+  (when (eq responsive 'top)
+    (highlight-indent-guides--highlighter-default
+      level responsive display)))
+#+END_SRC
+
+*** Settings
+#+BEGIN_SRC emacs-lisp
+(after! highlight-indent-guides
+  (setq!
+    highlight-indent-guides-auto-enabled         nil
+    highlight-indent-guides-responsive           'top
+    highlight-indent-guides-delay                0
+    highlight-indent-guides-highlighter-function 'j/active-guide)
+  (custom-set-faces!
+    '(highlight-indent-guides-top-character-face
+       :foreground "#DE5356")))
+#+END_SRC
+
+*** Hide guides in lisp and clojure modes
+#+BEGIN_SRC emacs-lisp
+(add-hook! '(lisp-mode-hook emacs-lisp-mode-hook clojure-mode-hook)
+    (defun +disable-indent-guides-in-lisp ()
+      (highlight-indent-guides-mode -1)))
+#+END_SRC
+
+** Tramp
+Set shell to bash for simplicity
+#+BEGIN_SRC emacs-lisp
+(after! tramp
+  ;; (setenv "SHELL" "/usr/local/bin/fish")
+  (setq tramp-default-method "sshx"))
+#+END_SRC
+** Tmux
+*** Shared utils
+**** Send command to tmux
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-run (command &optional append-return)
+  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
+but do not execute them."
+  (interactive "P")
+  (let* (;; (cmd (concat command (when append-return "\r\n")))
+         (cmd command)
+         (session (j/tmux-select-get-session))
+         (tmp (make-temp-file "emacs-send-tmux" nil nil cmd)))
+    ;; (message "tmux-run: text %s" cmd)
+    (unwind-protect
+        (progn
+          (message "tmux-run")
+          (message "%s" cmd)
+          (message "---")
+          (j/cmd "tmux load-buffer %s" tmp)
+          (j/cmd "tmux paste-buffer -dpr -t %s;" session)
+          (when append-return
+            (j/cmd "tmux send-keys -t %s Enter;" session))
+          )
+      (delete-file tmp))))
+#+END_SRC
+*** Select tmux session
+**** Get sessions from tmux
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-sessions ()
+  "Returns a lit of active tmux-sessions"
+  (-> (j/cmd "tmux list-sessions %s %s" "-F" "#S")
+      (split-string nil nil)))
+
+(defun j/tmux-select-session ()
+  "Select and update a tmux session associated with the persp"
+  (interactive)
+  (let* ((sessions (j/tmux-sessions))
+         (persp-key (intern (j/persp-name))))
+    (ivy-read "Select tmux session: " sessions
+              :history j/tmux-history
+              :initial-input (plist-get j/tmux-sessions persp-key)
+              :action (lambda (session)
+                        (setq j/tmux-sessions
+                              (plist-put j/tmux-sessions persp-key session))))))
+#+END_SRC
+
+**** API to set a shared target tmux session
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-select-get-session ()
+  "Get the tmux session for the given persp or select a new one"
+  (interactive)
+  (let* ((persp-key (intern (j/persp-name)))
+         (session   (plist-get j/tmux-sessions persp-key)))
+    (if session
+        session
+        (j/tmux-select-session))))
+#+END_SRC
+*** Send to tmux
+**** Send Region
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-send-region (beg end &optional append-return)
+  "Send region to tmux."
+  (interactive "rP")
+  (j/tmux-run (buffer-substring-no-properties beg end)
+              append-return))
+#+END_SRC
+**** Send Paragraph
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-send-paragraph ()
+  "Send current paragraph to the selected tmux session"
+  (interactive)
+  (cl-destructuring-bind (beg . end)
+      (bounds-of-thing-at-point 'paragraph)
+    (j/tmux-send-region beg end t)))
+#+END_SRC
+**** Send org-mode src-block
+#+BEGIN_SRC emacs-lisp
+(defun j/tmux-send-src-block ()
+  "Send current src block to selected tmux session"
+  (interactive)
+  (org-babel-when-in-src-block
+   (let* ((info (org-babel-get-src-block-info))
+          (body (nth 1 info)))
+     (j/tmux-run body t))))
+#+END_SRC
+*** Bindings
+#+BEGIN_SRC emacs-lisp
+(after! persp-mode
+  (setq j/tmux-sessions '()
+        j/tmux-history '())
+  (map! :leader
+        (:prefix ("e" . "tmux")
+         :desc "select-session"      "s" #'j/tmux-select-session
+         :desc "tmux-send-region"    "r" #'j/tmux-send-region
+         :desc "tmux-send-paragraph" "p" #'j/tmux-send-paragraph
+         :desc "tmux-send-src-block" "e" #'j/tmux-send-src-block)))
+#+END_SRC
+
+*** Navigation in tmux tty
+#+BEGIN_SRC emacs-lisp
+(use-package! tmux-pane
+  :config
+  (tmux-pane-mode)
+  (map! :leader
+        (:prefix ("v" . "tmux pane")
+          :desc "Open vpane" :nv "o" #'tmux-pane-open-vertical
+          :desc "Open hpane" :nv "h" #'tmux-pane-open-horizontal
+          :desc "Open hpane" :nv "s" #'tmux-pane-open-horizontal
+          :desc "Open vpane" :nv "v" #'tmux-pane-open-vertical
+          :desc "Close pane" :nv "c" #'tmux-pane-close
+          :desc "Rerun last command" :nv "r" #'tmux-pane-rerun))
+  (map! :leader
+        (:prefix "t"
+          :desc "vpane" :nv "v" #'tmux-pane-toggle-vertical
+          :desc "hpane" :nv "h" #'tmux-pane-toggle-horizontal)))
+
+#+END_SRC
+
+** VTerm
+*** Key functions
+#+BEGIN_SRC emacs-lisp
+(defun vterm-send-esc ()
+  (interactive)
+  (vterm-send "ESC"))
+
+(defun vterm-send-colon ()
+  (interactive)
+  (vterm-send ":"))
+
+(defun vterm-exit ()
+  (interactive)
+  (evil-normal-state))
+
+(defun vterm-enter (&rest _)
+  (interactive)
+  (evil-vterm-state))
+
+(defun vterm-quit ()
+  (interactive)
+  (evil-window-mru)
+  (vterm-exit))
+#+END_SRC
+
+*** Bindings
+#+BEGIN_SRC emacs-lisp
+(after! evil
+  (map! "C-`" #'+vterm/toggle))
+
+(after! vterm
+  (map!
+    :map vterm-mode-map
+    "C-c <escape>" #'vterm-exit
+    "C-c q"        #'vterm-quit
+    "C-c x"        #'vterm-send-C-x
+    "C-c C-d"      #'vterm-send-C-d
+    "C-c :"        #'vterm-send-colon
+    "C-h"          #'vterm-send-C-h
+    "C-u"          #'vterm-send-C-u
+    "C-]"          (cmd!! #'vterm-send-key "^]" t nil t)
+    "C-^"          (cmd!! #'vterm-send-key "^" t nil t)))
+#+END_SRC
+
+*** Change the target vterm folder based on the file
+#+BEGIN_SRC emacs-lisp
+(defun vterm-buffer-change ()
+  (when (derived-mode-p 'vterm-mode)
+    (vterm-enter)))
+
+(defadvice! j/vterm-project-root (toggle-vterm arg)
+  "Change vterm directory project root"
+  :around #'+vterm/toggle
+  (let* ((default-directory (or (doom-project-root)
+                              default-directory)))
+    (funcall toggle-vterm arg)))
+#+END_SRC
+*** vterm hooks
+#+BEGIN_SRC emacs-lisp
+(after! vterm
+  (evil-define-state vterm
+    "Evil vterm state.
+    Used to signify when in vterm mode"
+    :tag " <T> "
+    :suppress-keymap t)
+  (map-keymap
+    (lambda (key cmd) (define-key evil-vterm-state-map (vector key) cmd))
+    vterm-mode-map)
+  (add-hook! 'buffer-list-update-hook #'vterm-buffer-change)
+  (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
+  (evil-set-initial-state 'vterm-mode 'vterm))
+#+END_SRC
+
+** Org
+** Org-Roam
+*** Config
+#+BEGIN_SRC emacs-lisp
+(use-package! org-roam
+      :hook
+      (after-init . org-roam-mode)
+      :custom
+      (org-roam-directory org-directory)
+      (org-roam-tag-sources '(prop all-directories))
+      (org-roam-capture-templates
+       (list
+        '("d" "default" plain (function org-roam--capture-get-point)
+          "%?"
+          :file-name "${dir}%<%Y%m%d%H%M%S>-${slug}"
+          :head "#+title: ${title}\n"
+          :unnarrowed t)))
+      :bind (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph))
+              :map org-mode-map
+              (("C-c n i" . org-roam-insert))
+              (("C-c n I" . org-roam-insert-immediate))))
+#+END_SRC
+*** Update org-roam functions to support creating notes in tag directories
+**** Capture
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/org-roam-capture (&optional goto keys)
+  "Launches an `org-capture` process for a new existing note.
+This uses the templates defined at `org-roam-capture-templates`.
+Arguments GOTO and KEYS see `org-capture`."
+  :override #'org-roam-capture
+  (interactive "P")
+  (unless org-roam-mode (org-roam-mode))
+  (let* ((completions (org-roam--get-title-path-completions))
+         (title-with-keys (org-roam-completion--completing-read "File: "
+                                                                completions))
+         (res (cdr (assoc title-with-keys completions)))
+         (title (or (plist-get res :title) title-with-keys))
+         (tags (split-string title "/"))
+         (title (car (last tags)))
+         (dir (string-join (butlast tags) "/"))
+         (dir (if (string-blank-p dir) "" (concat dir "/")))
+         (file-path (plist-get res :path)))
+    (let ((org-roam-capture--info (list (cons 'title title)
+                                        (cons 'slug (funcall org-roam-title-to-slug-function title))
+                                        (cons 'file file-path)
+                                        (cons 'dir dir)))
+          (org-roam-capture--context 'capture))
+      (condition-case err
+          (org-roam-capture--capture goto keys)
+        (error (user-error "%s.  Please adjust `org-roam-capture-templates'"
+                           (error-message-string err)))))))
+#+END_SRC
+
+
+
+**** Find File
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/org-roam-find-file (&optional initial-prompt completions filter-fn no-confirm)
+  "launches org-roam-find-file but supports creating notes in subdirectories"
+  :override #'org-roam-find-file
+  (interactive)
+  (unless org-roam-mode (org-roam-mode))
+  (let* ((completions (funcall (or filter-fn #'identity)
+                               (or completions (org-roam--get-title-path-completions))))
+         (title-with-tags (if no-confirm
+                              initial-prompt
+                            (org-roam-completion--completing-read "File: " completions
+                                                                  :initial-input initial-prompt)))
+         (res (cdr (assoc title-with-tags completions)))
+         (title title-with-tags)
+         (tags (split-string title "/"))
+         (title (car (last tags)))
+         (dir (string-join (butlast tags) "/"))
+         (dir (if (string-blank-p dir) "" (concat dir "/")))
+         (file-path (plist-get res :path)))
+    (if file-path
+        (org-roam--find-file file-path)
+      (let ((org-roam-capture--info `((title . ,title)
+                                      (slug  . ,(funcall org-roam-title-to-slug-function title-with-tags))
+                                      (dir   . ,dir)))
+            (org-roam-capture--context 'title))
+        (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
+        (org-roam-capture--capture)))))
+#+END_SRC
+
+**** Insert
+#+BEGIN_SRC emacs-lisp
+(defadvice! j/org-roam-insert (&optional lowercase completions filter-fn description link-type)
+  "launches org-roam-insert but supports creating notes in subdirectories"
+  :override #'org-roam-insert
+  (interactive "P")
+  (unless org-roam-mode (org-roam-mode))
+  ;; Deactivate the mark on quit since `atomic-change-group' prevents it
+  (unwind-protect
+      ;; Group functions together to avoid inconsistent state on quit
+      (atomic-change-group
+        (let* (region-text
+               beg end
+               (_ (when (region-active-p)
+                    (setq beg (set-marker (make-marker) (region-beginning)))
+                    (setq end (set-marker (make-marker) (region-end)))
+                    (setq region-text (buffer-substring-no-properties beg end))))
+               (completions (--> (or completions
+                                     (org-roam--get-title-path-completions))
+                                 (if filter-fn
+                                     (funcall filter-fn it)
+                                   it)))
+               (title-with-tags (org-roam-completion--completing-read "File: " completions
+                                                                      :initial-input region-text))
+               (res (cdr (assoc title-with-tags completions)))
+               (title (or (plist-get res :title)
+                          title-with-tags))
+               (tags (split-string title "/"))
+               (title (car (last tags)))
+               (dir (string-join (butlast tags) "/"))
+               (dir (if (string-blank-p dir) "" (concat dir "/")))
+               (target-file-path (plist-get res :path))
+               (description (or description region-text title))
+               (link-description (org-roam--format-link-title (if lowercase
+                                                                  (downcase description)
+                                                                description)
+                                                              link-type)))
+          (cond ((and target-file-path
+                      (file-exists-p target-file-path))
+                 (when region-text
+                   (delete-region beg end)
+                   (set-marker beg nil)
+                   (set-marker end nil))
+                 (insert (org-roam--format-link target-file-path link-description link-type)))
+                (t
+                 (let ((org-roam-capture--info `((title . ,title)
+                                                 (dir .   ,dir)
+                                                 (slug . ,(funcall org-roam-title-to-slug-function title-with-tags))))
+                       (org-roam-capture--context 'title))
+                   (setq org-roam-capture-additional-template-props (list :region (org-roam-shield-region beg end)
+                                                                          :insert-at (point-marker)
+                                                                          :link-type link-type
+                                                                          :link-description link-description
+                                                                          :finalize 'insert-link))
+                   (org-roam-capture--capture))))
+          res))
+    (deactivate-mark)))
+#+END_SRC
+*** Org-Roam-Server
+#+BEGIN_SRC emacs-lisp
+(use-package org-roam-server
+  :config
+  (setq org-roam-server-host "127.0.0.1"
+        org-roam-server-port 8989
+        org-roam-server-authenticate nil
+        org-roam-server-export-inline-images t
+        org-roam-server-serve-files nil
+        org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
+        org-roam-server-network-poll t
+        org-roam-server-network-arrows nil
+        org-roam-server-network-label-truncate t
+        org-roam-server-network-label-truncate-length 60
+        org-roam-server-network-label-wrap-length 20))
+#+END_SRC
+
+* Literate Experiments
+** Setup
+*** Function to execute emacs-lisp src blocks
+#+BEGIN_SRC emacs-lisp :results silent
+(defun org-babel-execute:emacs-lisp-config (body params)
+  "Execute a block of emacs-lisp code with Babel."
+  (cl-letf (((symbol-function 'current-window-configuration) #'ignore)
+            ((symbol-function 'set-window-configuration) #'ignore))
+    (org-babel-execute:emacs-lisp body params)))
+#+END_SRC
+
+*** Added emacs-lisp-config to org-babel using emacs-lisp as base
+#+BEGIN_SRC emacs-lisp :results silent
+(after! org
+  (add-to-list 'org-src-lang-modes '("emacs-lisp-config" . emacs-lisp)))
+#+END_SRC
+** Demos
+:PROPERTIES:
+:header-args: :tangle no
+:END:
+*** Which Key
+#+BEGIN_SRC emacs-lisp-config
+(call-interactively #'helpful-key)
+#+END_SRC
+
+*** Splitting windows
+#+BEGIN_SRC emacs-lisp-config
+(evil-window-vsplit)
+
+#+END_SRC
+
+#+RESULTS:
+* Local config
+#+INCLUDE: ./local.org

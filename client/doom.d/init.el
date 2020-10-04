@@ -1,4 +1,4 @@
- ;;; init.el -*- lexical-binding: t; -*-
+ ;;; init.el -*- lexical-binding: t; lispy-mode: nil; -*-
 
 ;; This file controls what Doom modules are enabled and what order they load
 ;; in. Remember to run 'doom sync' after modifying it!
@@ -22,10 +22,10 @@
        tty
 
        :completion
-       (company +childframe) ; the ultimate code completion backend
+       (company) ; the ultimate code completion backend
        ;;helm                ; the *other* search engine for love and life
        ;;ido                 ; the other *other* search engine...
-       (ivy +childframe)     ; a search engine for love and life
+       (ivy)     ; a search engine for love and life
 
        :ui
        ;;deft             ; notational velocity for Emacs
@@ -54,7 +54,7 @@
 
        :editor
        (evil +everywhere) ; come to the dark side, we have cookies
-       file-templates     ; auto-snippets for empty files
+       ;; file-templates     ; auto-snippets for empty files
        fold               ; (nigh) universal code folding
        ;;(format +onsave) ; automated prettiness
        ;;god              ; run Emacs commands without modifier keys
@@ -64,7 +64,7 @@
        ;;parinfer         ; turn lisp into python, sort of
        ;;rotate-text      ; cycle region at point between text candidates
        snippets           ; my elves. They type so I don't have to
-       ;;word-wrap        ; soft wrapping with language-aware indent
+       word-wrap        ; soft wrapping with language-aware indent
 
        :emacs
        dired             ; making dired pretty [functional]
@@ -80,9 +80,9 @@
        vterm               ; the best terminal emulation in Emacs
 
        :checkers
-       (syntax +childframe) ; tasing you for every semicolon you forget
-       ;;spell              ; tasing you for misspelling mispelling
-       ;;grammar            ; tasing grammar mistake every you make
+       (syntax) ; tasing you for every semicolon you forget
+       spell              ; tasing you for misspelling mispelling
+       grammar            ; tasing grammar mistake every you make
 
        :tools
        ;;ansible
@@ -144,7 +144,7 @@
        ;;nim               ; python + lisp at the speed of c
        ;;nix               ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
-       (org +roam)         ; organize your plain life in plain text
+       (org +dragndrop +pretty +roam) ; organize your plain life in plain text
        ;;perl              ; write code no one else can comprehend
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
@@ -178,5 +178,5 @@
        ;;twitter           ; twitter client https://twitter.com/vnought
 
        :config
-       ;;literate
+       literate
        (default +bindings +smartparens))
