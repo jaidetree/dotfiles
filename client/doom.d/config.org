@@ -3,7 +3,7 @@
 #+STARTUP: overview
 
 
-* TODOS
+* Tasks
 ** DONE Move config.el into config.org
 ** TODO Research and fix pressing enter on list items
 ** TODO Research and swap org-mode enter behavior with C-ent
@@ -15,7 +15,9 @@
 
 
 * Usage and tips
+
 ** Additional functions/macros that could help you configure Doom
+
 - `load!' for loading external *.el files relative to this one
 - `use-package' for configuring packages
 - `after!' for running code after a package has loaded
@@ -25,32 +27,128 @@
 - `map!' for binding new keys
 
 ** Lookup symbol under cursor
+
 To get information about any of these functions/macros, move the cursor over
   the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
   This will open documentation for it, including demos of how they are used.
 
 ** Lookup definition
+
 You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
   they are implemented.
+
 ** Reload config
 #+BEGIN_SRC emacs-lisp :tangle no
 (org-babel-load-file "~/.doom.d/config.org")
 #+END_SRC
 
 ** Packages
+To install a package with Doom you must declare them here and run ~doom sync~
+on the command line, then restart Emacs for the changes to take effect -- or
+use =M-x doom/reload=.
+
+
+*** Installing packages
+To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! some-package)
+#+END_EXAMPLE
+
+*** Git Receipes
+To install a package directly from a remote git repo, you must specify a
+~:recipe~. You'll find documentation on what ~:recipe~ accepts here:
+https://github.com/raxod502/straight.el#the-recipe-format
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! another-package
+ :recipe (:host github :repo "username/repo"))
+#+END_EXAMPLE
+
+If the package you are trying to install does not contain a PACKAGENAME.el
+file, or is located in a subdirectory of the repo, you'll need to specify
+~:files~ in the ~:recipe~:
+
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! this-package
+ :recipe (:host github :repo "username/repo"
+          :files ("some-file.el" "src/lisp/*.el")))
+#+END_EXAMPLE
+
+*** Disable Packages
+If you'd like to disable a package included with Doom, you can do so here
+with the ~:disable~ property:
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! builtin-package :disable t)
+#+END_EXAMPLE
+
+*** Overriding default packages
+You can override the recipe of a built in package without having to specify
+all the properties for ~:recipe~. These will inherit the rest of its recipe
+from Doom or MELPA/ELPA/Emacsmirror:
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! builtin-package :recipe (:nonrecursive t))
+(package! builtin-package-2 :recipe (:repo "myfork/package"))
+#+END_EXAMPLE
+
+*** Targeting a specific recipe branch
+Specify a ~:branch~ to install a package from a particular branch or tag.
+This is required for some packages whose default branch isn't 'master' (which
+our package manager can't deal withsee =raxod502/straight.el#279=)
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! builtin-package :recipe (:branch "develop"))
+#+END_EXAMPLE
+
+*** Pin a specific commit
+Use ~:pin~ to specify a particular commit to install.
+
+#+BEGIN_EXAMPLE emacs-lisp
+(package! builtin-package :pin "1a2b3c4d5e")
+#+END_EXAMPLE
+
+
+*** Unpin a package to use latest head
+Doom's packages are pinned to a specific commit and updated from release to
+release. The ~unpin!~ macro allows you to unpin single packages...
+
+#+BEGIN_EXAMPLE example
+(unpin! pinned-package)
+#+END_EXAMPLE
+
+...or multiple packages
+
+#+BEGIN_EXAMPLE emacs-lisp
+(unpin! pinned-package another-pinned-package)
+#+END_EXAMPLE
+
+...Or *all* packages (NOT RECOMMENDEDwill likely break things)
+
+#+BEGIN_EXAMPLE emacs-lisp
+(unpin! t)
+#+END_EXAMPLE
+
 
 * Headers
 ** Packages
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 ;;; $DOOMDIR/packages.el -*- no-byte-compile: t; -*-
 #+END_SRC
+
 ** Config
 #+BEGIN_SRC emacs-lisp :tangle config.el
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 #+END_SRC
+
+
 * Initialization
+
 ** Profile Info
-Place your private configuration here! Remember, you do not need to run 'doom sync' after modifying this file!
+Place your private configuration here! Remember, you do not need to run ~doom
+sync~ after modifying this file!
  
 Some functionality uses this to identify you, e.g. GPG configuration, email
 clients, file templates and snippets.
@@ -62,7 +160,7 @@ clients, file templates and snippets.
 
 ** Line Numbers
 This determines the style of line numbers in effect. If set to `nil', line
-  numbers are disabled. For relative line numbers, set this to `relative'.
+numbers are disabled. For relative line numbers, set this to `relative'.
 
 #+BEGIN_SRC emacs-lisp
 (setq display-line-numbers-type 'relative)
@@ -75,36 +173,39 @@ the three important ones:
 
   + `doom-font'
   + `doom-variable-pitch-font'
-  + `doom-big-font' -- used for `doom-big-font-mode'; use this for
-    presentations or streaming.
+  + `doom-big-font' -- used for `doom-big-font-mode'; use this for presentations or streaming.
 
 They all accept either a font-spec, font string ("Input Mono-12"), or xlfd font
-string. You generally only need these two: (setq doom-font (font-spec :family
-"monospace" :size 12 :weight 'semi-light) doom-variable-pitch-font (font-spec
-:family "sans" :size 13))
+string. You generally only need these two:
+#+BEGIN_EXAMPLE emacs-lisp
+(setq
+  doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+  doom-variable-pitch-font (font-spec :family "sans" :size 13))
+#+END_EXAMPLE
 
 There are two ways to load a theme. Both assume the theme is installed and
-available. You can either set `doom-theme' or manually load a theme with the
+available. You can either set =doom-theme= or manually load a theme with the
 
 *** Theme
 #+BEGIN_SRC emacs-lisp
 (setq doom-theme 'doom-one)
 #+END_SRC
+
 **** Change a theme at runtime
 It's recommended to use doom-theme so Henrik can update how its used over time,
 but this should work for loading when needed.
+
 #+BEGIN_SRC emacs-lisp :tangle no
 (load-theme 'doom-one t)
 #+END_SRC
-
-#+RESULTS:
-: t
 
 *** Font
 Set default font
 
 #+BEGIN_SRC emacs-lisp
-(setq doom-font (font-spec :family "operator mono" :size 14 :weight 'medium))
+(setq
+ doom-font (font-spec :family "operator mono" :size 14 :weight 'medium)
+ doom-variable-pitch-font (font-spec :family "museo sans" :size 14 :height 180))
 #+END_SRC
 
 Make line numbers brighter
@@ -116,6 +217,7 @@ Make line numbers brighter
   '(line-number-current-line
     :foreground "#ebbd80"))
 #+END_SRC
+
 
 
 * General var Settings
@@ -133,14 +235,13 @@ Make line numbers brighter
  evil-vsplit-window-right            t)
 #+END_SRC
 
+
 * Org Initialization
 - If you use `org' and don't want your org files in the default location below,
   change `org-directory'. It must be set before org loads!
 
 #+BEGIN_SRC emacs-lisp
-(setq
- org-directory "~/org/roam"
- org-use-property-inheritance t)
+(setq org-directory "~/org/roam")
 #+END_SRC
 
 
@@ -195,10 +296,12 @@ Make line numbers brighter
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 (package! fish-mode)
 #+END_SRC
+
 ** SQL Indentation
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 (package! sql-indent)
 #+END_SRC
+
 ** Hydra Paste Cycler
 - Cycle through the kill ring on paste - only for p and P in normal mode
 
@@ -219,10 +322,12 @@ Make line numbers brighter
   :nv [remap evil-paste-after] #'hydra-paste/evil-paste-after
   :nv [remap evil-paste-before] #'hydra-paste/evil-paste-before)
 #+END_SRC
+
 ** Commenting with cmd-;
 #+BEGIN_SRC emacs-lisp
 (map! :nv "s-;" #'comment-or-uncomment-region)
 #+END_SRC
+
 
 ** Spacemacs window split bindings
 #+BEGIN_SRC emacs-lisp
@@ -231,6 +336,7 @@ Make line numbers brighter
       "-" #'evil-window-split
       "x" #'kill-buffer-and-window)
 #+END_SRC
+
 ** Clojure
 *** Install packages
 #+BEGIN_SRC emacs-lisp :tangle packages.el
@@ -266,10 +372,6 @@ Make line numbers brighter
 
 
 #+END_SRC
-** Install github flavored markdown package for better exports
-#+BEGIN_SRC emacs-lisp :tangle packages.el
-(package! ox-gfm)
-#+END_SRC
 
 ** Org Config
 #+BEGIN_SRC emacs-lisp
@@ -284,15 +386,15 @@ Make line numbers brighter
    org-journal-file-format               "%Y%m%d.org"
    org-journal-time-format               "%-l:%M%#p"
    org-journal-carryover-items           "TODO=\"TODO\"|TODO=\"STRT\"|TODO=\"HOLD\"")
-  (setq! org-agenda-files (list org-journal-dir))
-
-  (require 'ox-gfm nil t))
+  (setq! org-agenda-files (list org-journal-dir)))
 #+END_SRC
+
 ** Org Use TAB to cycle through visibility states of current subtree
 #+BEGIN_SRC emacs-lisp
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
 #+END_SRC
+
 ** Save frame on quit; restore on load
 *** Saves drame dimensions on quit
 #+BEGIN_SRC emacs-lisp
@@ -319,6 +421,7 @@ Make line numbers brighter
              (height . ,height)
              (fullscreen . ,fullscreen)))))))
 #+END_SRC
+
 ** JavaScript
 *** Settings
 *NOTE:* Relies on editorconfig package
@@ -349,6 +452,7 @@ const x = myfunc()
 #+END_EXAMPLE
 **** TODO regular chaining
 
+
 ** Delete current buffer file
 Borrowed from spacemacs
 #+BEGIN_SRC emacs-lisp
@@ -367,18 +471,20 @@ Borrowed from spacemacs
           (call-interactively #'projectile-invalidate-cache))
         (message "File '%s' successfully removed" filename)))))
 #+END_SRC
+
 ** Rename current buffer file
 Borrowed this from spacemacs but uses current name as default
 #+BEGIN_SRC emacs-lisp
 (defun rename-current-buffer-file ()
   "Renames current buffer and file it is visiting."
   (interactive)
-  (let* ((name (buffer-name))
+  (let ((name (buffer-name))
         (filename (buffer-file-name)))
     (if (not (and filename (file-exists-p filename)))
         (error "Buffer '%s' is not visiting a file!" name)
-      (let* ((dir (file-name-directory filename))
-             (new-name (read-file-name "New name: " dir nil nil filename)))
+      (let* ((prev-name (file-name-nondirectory filename))
+             (dir (file-name-directory filename))
+             (new-name (read-file-name "New name: (M-n prev file)" dir prev-name nil nil)))
         (cond ((get-buffer new-name)
                (error "A buffer named '%s' already exists!" new-name))
               (t
@@ -390,13 +496,14 @@ Borrowed this from spacemacs but uses current name as default
                (set-visited-file-name new-name)
                (set-buffer-modified-p nil)
                (when (fboundp 'recentf-add-file)
-                   (recentf-add-file new-name)
-                   (recentf-remove-if-non-kept filename))
+                 (recentf-add-file new-name)
+                 (recentf-remove-if-non-kept filename))
                (when (and (configuration-layer/package-usedp 'projectile)
                           (projectile-project-p))
                  (call-interactively #'projectile-invalidate-cache))
                (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
 #+END_SRC
+
 ** Copy project path
 #+BEGIN_SRC emacs-lisp
 (defun copy-project-path ()
@@ -407,6 +514,7 @@ Borrowed this from spacemacs but uses current name as default
          (rel-path (replace-regexp-in-string (regexp-quote project-path) "" file-path nil 'literal)))
     (kill-new rel-path)))
 #+END_SRC
+
 ** Zoom font size
 Based on the hydra demo zoom example
 #+BEGIN_SRC emacs-lisp
@@ -414,6 +522,7 @@ Based on the hydra demo zoom example
   :leader
   :desc "Font zoom" "z" #'+hydra/text-zoom/body)
 #+END_SRC
+
 ** Flycheck
 Make the flycheck messages easier to read\distinguish from surrounding code
 *** Font customization
@@ -434,7 +543,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 #+END_SRC
 *** Format regular flycheck errors
 #+BEGIN_SRC emacs-lisp
-(defun j/format-flycheck-messages (msg)
+(defun j/format-flycheck-message (msg)
   (concat
     " "
     flycheck-popup-tip-error-prefix
@@ -444,9 +553,9 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 (defun j/flycheck-errors->string (errors)
   "Formats ERRORS messages for display. Pads left and right of message with a space"
   (let ((messages (->> errors
-                    (delete-dups)
-                    (mapcar #'j/format-flycheck-message)
-                    (j/sort))))
+                       (delete-dups)
+                       (mapcar #'j/format-flycheck-message)
+                       (j/sort #'identity))))
     (mapconcat 'identity messages "\n")))
 
 (defadvice! j/format-flycheck-popup (errors)
@@ -573,6 +682,7 @@ Create a purple state color for the modeline when in lisp-state
        evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs"))
        evil-vterm-state-cursor    (list 'box (face-foreground 'error nil t)))))
 #+END_SRC
+
 ** Relabel keys in the which-key menu
 The which-key menu can sometimes display too long of names which causes them to
 be truncated.
@@ -588,6 +698,7 @@ be truncated.
     'which-key-replacement-alist
     '((nil . "+multiple-cursors/") . (nil . ""))))
 #+END_SRC
+
 ** Create new workspace with name prompt, cancel on exit
 After creating a workspace prompt to rename. Anon workspaces are not a
 fun surprise.
@@ -609,6 +720,7 @@ fun surprise.
     (when name
       (funcall workspace-new name clone-p))))
 #+END_SRC
+
 ** Indent guides
 *** Show only the active guide
 #+BEGIN_SRC emacs-lisp
@@ -638,6 +750,7 @@ fun surprise.
       (highlight-indent-guides-mode -1)))
 #+END_SRC
 
+
 ** Tramp
 Set shell to bash for simplicity
 #+BEGIN_SRC emacs-lisp
@@ -645,6 +758,7 @@ Set shell to bash for simplicity
   ;; (setenv "SHELL" "/usr/local/bin/fish")
   (setq tramp-default-method "sshx"))
 #+END_SRC
+
 ** Send to Tmux Session
 *** Send text to tmux
 #+BEGIN_SRC emacs-lisp
@@ -671,6 +785,7 @@ but do not execute them."
 #+END_SRC
 *** Select tmux session
 **** Get sessions from tmux
+
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-sessions ()
   "Returns a lit of active tmux-sessions"
@@ -691,6 +806,7 @@ but do not execute them."
 #+END_SRC
 
 **** API to set a shared target tmux session
+
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-select-get-session ()
   "Get the tmux session for the given persp or select a new one"
@@ -702,6 +818,7 @@ but do not execute them."
         (j/tmux-select-session))))
 #+END_SRC
 *** Send Region
+
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-region (beg end &optional append-return)
   "Send region to tmux."
@@ -710,6 +827,7 @@ but do not execute them."
               append-return))
 #+END_SRC
 *** Send Paragraph
+
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-paragraph ()
   "Send current paragraph to the selected tmux session"
@@ -718,7 +836,9 @@ but do not execute them."
       (bounds-of-thing-at-point 'paragraph)
     (j/tmux-send-region beg end t)))
 #+END_SRC
+
 *** Send org-mode src-block
+
 #+BEGIN_SRC emacs-lisp
 (defun j/tmux-send-src-block ()
   "Send current src block to selected tmux session"
@@ -741,7 +861,9 @@ but do not execute them."
          :desc "tmux-send-src-block" "e" #'j/tmux-send-src-block)))
 #+END_SRC
 
+
 ** Navigation in tmux tty
+
 *** Install tmux-pane
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 (package! tmux-pane)
@@ -763,11 +885,16 @@ but do not execute them."
   (map! :leader
         (:prefix "t"
           :desc "vpane" :nv "v" #'tmux-pane-toggle-vertical
-          :desc "hpane" :nv "h" #'tmux-pane-toggle-horizontal)))
-
+          :desc "hpane" :nv "h" #'tmux-pane-toggle-horizontal))
+  (map! :map org-mode-map
+        :after org
+        :n "C-k" #'tmux-pane-omni-window-up
+        :n "C-j" #'tmux-pane-omni-window-down))
 #+END_SRC
 
+
 ** VTerm
+
 *** Key functions
 #+BEGIN_SRC emacs-lisp
 (defun vterm-send-esc ()
@@ -840,7 +967,13 @@ but do not execute them."
   (evil-set-initial-state 'vterm-mode 'vterm))
 #+END_SRC
 
+
 ** Org-Roam
+*** Unpin the package
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(unpin! org-roam)
+#+END_SRC
+
 *** Set mode hooks, customze directory, bind keys
 #+BEGIN_SRC emacs-lisp
 (use-package! org-roam
@@ -924,7 +1057,7 @@ Arguments GOTO and KEYS see `org-capture`."
     (if file-path
         (org-roam--find-file file-path)
       (let ((org-roam-capture--info `((title . ,title)
-                                      (slug  . ,(funcall org-roam-title-to-slug-function title-with-tags))
+                                      (slug  . ,(funcall org-roam-title-to-slug-function title))
                                       (dir   . ,dir)))
             (org-roam-capture--context 'title))
         (setq org-roam-capture-additional-template-props (list :finalize 'find-file))
@@ -989,6 +1122,7 @@ Arguments GOTO and KEYS see `org-capture`."
           res))
     (deactivate-mark)))
 #+END_SRC
+
 ** Org-Roam-Server
 *** Install package
 #+BEGIN_SRC emacs-lisp :tangle packages.el
@@ -996,6 +1130,7 @@ Arguments GOTO and KEYS see `org-capture`."
 #+END_SRC
 
 *** Configuration
+Some customizations are coming from
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-server
   :config
@@ -1003,7 +1138,7 @@ Arguments GOTO and KEYS see `org-capture`."
         org-roam-server-port 8989
         org-roam-server-authenticate nil
         org-roam-server-export-inline-images t
-        org-roam-server-serve-files nil
+        org-roam-server-serve-files t
         org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
         org-roam-server-network-poll t
         org-roam-server-network-arrows nil
@@ -1011,6 +1146,8 @@ Arguments GOTO and KEYS see `org-capture`."
         org-roam-server-network-label-truncate-length 60
         org-roam-server-network-label-wrap-length 20))
 #+END_SRC
+
+
 
 ** Theme preview
 #+BEGIN_SRC emacs-lisp
@@ -1036,31 +1173,345 @@ Usable with `ivy-resume', `ivy-next-line-and-call' and
               :caller 'counsel-load-theme)))
 #+END_SRC
 
-** Switch buffer when splitting windows
+
+
+** Find file when splitting windows
 Thanks to tecosaur from https://tecosaur.github.io/emacs-config/config.html#windows
 #+BEGIN_SRC emacs-lisp
 (defadvice! prompt-for-buffer (&rest _)
   :after '(evil-window-split evil-window-vsplit)
-  (call-interactively #'switch-to-buffer))
+  (call-interactively #'counsel-find-file))
 #+END_SRC
+
+
 ** Clean up org-mode formatting
 From https://tecosaur.github.io/emacs-config/config.html#org-mode
-*** Unpin package
+
+*** Unpin org to get latest
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 (unpin! org)
 #+END_SRC
-*** Configure org-mode superstar
+
+*** Additional packages
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! org-pretty-table-mode
+  :recipe (:host github :repo "Fuco1/org-pretty-table") :pin "88380f865a...")
+(package! org-pretty-tags :pin "40fd72f3e7...")
+(package! ox-gfm :pin "99f93011b0...")
+(package! org-graph-view
+  :recipe (:host github
+           :repo "alphapapa/org-graph-view")
+  :pin "13314338d7...")
+#+END_SRC
+
+
+*** Configure org-mode
 #+BEGIN_SRC emacs-lisp
+(setq
+ org-hide-leading-stars                          t
+ org-hide-emphasis-markers                       t
+ org-use-property-inheritance                    t
+ org-log-done                                    'time
+ org-list-allow-alphabetical                     t
+ org-export-in-background                        t
+ org-catch-invisible-edits                       'smart
+ org-indent-indentation-per-level                2
+ org-adapt-indentation                           nil
+ org-indent-mode-turns-off-org-adapt-indentation t
+ org-indent-mode-turns-on-hiding-stars           t
+ org-re-reveal-root                              "https://cdn.jsdelivr.net/npm/reveal.js"
+ org-babel-default-header-args                   '((:session .  "none")
+                                                   (:results .  "replace")
+                                                   (:exports .  "code")
+                                                   (:cache   .  "no")
+                                                   (:noweb   .  "no")
+                                                   (:hlines  .  "no")
+                                                   (:tangle  .  "no")
+                                                   (:comments . "link")))
+
 (use-package! org-superstar
   :after org
   :config
   (setq org-superstar-remove-leading-stars t)
+  ;(setq org-superstar-headline-bullets-list '("⠁" "⠃" "⠇" "⠏" "⠟" "⠿"))
+  ;(setq org-superstar-headline-bullets-list '("𐄇" "𐄈" "𐄉" "𐄊" "𐄋" "𐄌" "𐄍" "𐄎" "𐄏"))
+  ;(setq org-superstar-headline-bullets-list '("჻"))
+  ;(setq org-superstar-headline-bullets-list '("#"))
   (setq org-superstar-headline-bullets-list '(" "))
   (setq org-superstar-item-bullet-alist
         '((?+ . ?•)
           (?* . ?➤)
           (?- . ?–)))
-  (org-superstar-mode -1))
+  (org-superstar-restart))
+#+END_SRC
+
+*** Disable visual-line-mode and enable auto-fill-mode
+:PROPERTIES:
+:ID:       78b70e5d-729f-4b1c-bf90-3e603a60cf74
+:END:
+#+BEGIN_SRC emacs-lisp
+(remove-hook 'text-mode-hook #'visual-line-mode)
+#+END_SRC
+
+Add auto-fill-mode to text mode files
+#+BEGIN_SRC emacs-lisp
+(add-hook 'text-mode-hook #'auto-fill-mode)
+#+END_SRC
+
+*** Spellcheck
+#+BEGIN_SRC emacs-lisp
+(after! org (add-hook 'org-mode-hook 'turn-on-flyspell))
+#+END_SRC
+
+*** Change enter in org-mode
+
+**** Defines a function to see what we are descendant of, useful for checking context
+#+BEGIN_SRC emacs-lisp
+(after! org
+  (defun unpackaged/org-element-descendant-of (type element)
+    "Return non-nil if ELEMENT is a descendant of TYPE.
+TYPE should be an element type, like `item' or `paragraph'.
+ELEMENT should be a list like that returned by `org-element-context'."
+    ;; MAYBE: Use `org-element-lineage'.
+    (when-let* ((parent (org-element-property :parent element)))
+      (or (eq type (car parent))
+          (unpackaged/org-element-descendant-of type parent)))))
+#+END_SRC
+
+**** Do-what-I-mean enter behavior
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+#+BEGIN_SRC emacs-lisp
+;;;###autoload
+(after! org
+  (defun unpackaged/org-return-dwim (&optional default)
+    "A helpful replacement for `org-return-indent'.  With prefix, call `org-return-indent'.
+
+On headings, move point to position after entry content.  In
+lists, insert a new item or end the list, with checkbox if
+appropriate.  In tables, insert a new row or end the table."
+    ;; Inspired by John Kitchin: http://kitchingroup.cheme.cmu.edu/blog/2017/04/09/A-better-return-in-org-mode/
+    (interactive "P")
+    (if default
+        (org-return t)
+      (cond
+       ;; Act depending on context around point.
+
+       ;; NOTE: I prefer RET to not follow links, but by uncommenting this block, links will be
+       ;; followed.
+
+       ;; ((eq 'link (car (org-element-context)))
+       ;;  ;; Link: Open it.
+       ;;  (org-open-at-point-global))
+
+       ((org-at-heading-p)
+        ;; Heading: Move to position after entry content.
+        ;; NOTE: This is probably the most interesting feature of this function.
+        (let ((heading-start (org-entry-beginning-position)))
+          (goto-char (org-entry-end-position))
+          (cond ((and (org-at-heading-p)
+                      (= heading-start (org-entry-beginning-position)))
+                 ;; Entry ends on its heading; add newline after
+                 (end-of-line)
+                 (insert "\n\n"))
+                (t
+                 ;; Entry ends after its heading; back up
+                 (forward-line -1)
+                 (end-of-line)
+                 (when (org-at-heading-p)
+                   ;; At the same heading
+                   (forward-line)
+                   (insert "\n")
+                   (forward-line -1))
+                 ;; FIXME: looking-back is supposed to be called with more arguments.
+                 (while (not (looking-back (rx (repeat 3 (seq (optional blank) "\n")))))
+                   (insert "\n"))
+                 (forward-line -1)))))
+
+       ((org-at-item-checkbox-p)
+        ;; Checkbox: Insert new item with checkbox.
+        (org-insert-todo-heading nil))
+
+       ((org-in-item-p)
+        ;; Plain list.  Yes, this gets a little complicated...
+        (let ((context (org-element-context)))
+          (if (or (eq 'plain-list (car context))  ; First item in list
+                  (and (eq 'item (car context))
+                       (not (eq (org-element-property :contents-begin context)
+                                (org-element-property :contents-end context))))
+                  (unpackaged/org-element-descendant-of 'item context))  ; Element in list item, e.g. a link
+              ;; Non-empty item: Add new item.
+              (org-insert-item)
+            ;; Empty item: Close the list.
+            ;; TODO: Do this with org functions rather than operating on the text. Can't seem to find the right function.
+            (delete-region (line-beginning-position) (line-end-position))
+            (insert "\n"))))
+
+       ((when (fboundp 'org-inlinetask-in-task-p)
+          (org-inlinetask-in-task-p))
+        ;; Inline task: Don't insert a new heading.
+        (org-return t))
+
+       ((org-at-table-p)
+        (cond ((save-excursion
+                 (beginning-of-line)
+                 ;; See `org-table-next-field'.
+                 (cl-loop with end = (line-end-position)
+                          for cell = (org-element-table-cell-parser)
+                          always (equal (org-element-property :contents-begin cell)
+                                        (org-element-property :contents-end cell))
+                          while (re-search-forward "|" end t)))
+               ;; Empty row: end the table.
+               (delete-region (line-beginning-position) (line-end-position))
+               (org-return t))
+              (t
+               ;; Non-empty row: call `org-return-indent'.
+               (org-return t))))
+       (t
+        ;; All other cases: call `org-return-indent'.
+        (org-return t))))))
+#+END_SRC
+
+**** Remap the enter key in evil-org-mode-map
+#+BEGIN_SRC emacs-lisp :tangle no
+(map!
+ :after      evil-org
+ :map        evil-org-mode-map
+ :i [return] #'unpackaged/org-return-dwim)
+#+END_SRC
+
+
+*** Youtube preview links in exports
+#+BEGIN_SRC emacs-lisp
+(after! org
+  (org-link-set-parameters "yt" :export #'+org-export-yt)
+  (defun +org-export-yt (path desc backend _com)
+    (cond ((org-export-derived-backend-p backend 'html)
+           (format "<iframe width='440' \
+height='335' \
+src='https://www.youtube.com/embed/%s' \
+frameborder='0' \
+allowfullscreen>%s</iframe>" path (or "" desc)))
+          ((org-export-derived-backend-p backend 'latex)
+           (format "\\href{https://youtu.be/%s}{%s}" path (or desc "youtube")))
+          (t (format "https://youtu.be/%s" path)))))
+#+END_SRC
+
+
+*** Make org prettier
+#+BEGIN_SRC emacs-lisp
+(add-hook! 'org-mode-hook #'+org-pretty-mode #'mixed-pitch-mode)
+#+END_SRC
+
+
+*** Make org tables prettier
+#+BEGIN_SRC emacs-lisp
+(setq! global-org-pretty-table-mode t)
+#+END_SRC
+
+
+*** Make headings bigger
+#+BEGIN_SRC emacs-lisp
+(custom-set-faces!
+  '(outline-1 :weight regular :height 1.4)
+  '(outline-2 :weight regular :height 1.3)
+  '(outline-3 :weight regular :height 1.2)
+  '(outline-4 :weight regular :height 1.1)
+  '(outline-5 :weight semi-bold :height 1.06)
+  '(outline-6 :weight semi-bold :height 1.03)
+  '(outline-8 :weight semi-bold)
+  '(outline-9 :weight semi-bold))
+
+
+
+(after! org
+  (custom-set-faces!
+    '(org-document-title :height 1.4)))
+
+#+END_SRC
+
+
+*** Symbols
+See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols with ligatures enabled
+#+BEGIN_SRC emacs-lisp
+(after! org
+  (set-ligatures! 'org-mode
+                  :merge t
+                  :checkbox      "[ ]"
+                  :pending       "[-]"
+                  :checkedbox    "[X]"
+                  :list_property "::"
+                  :results       "#+RESULTS:"
+                  :property      "#+PROPERTY:"
+                  :property      ":PROPERTIES:"
+                  :end           ":END:"
+                  :options       "#+OPTIONS:"
+                  :title         "#+TITLE:"
+                  :subtitle      "#+SUBTITLE:"
+                  :author        "#+AUTHOR:"
+                  :date          "#+DATE:"
+                  :latex_class   "#+LATEX_CLASS:"
+                  :latex_header  "#+LATEX_HEADER:"
+                  :beamer_header "#+BEAMER_HEADER:"
+                  :begin_quote   "#+BEGIN_QUOTE"
+                  :end_quote     "#+END_QUOTE"
+                  :begin_export  "#+BEGIN_EXPORT"
+                  :end_export    "#+END_EXPORT"
+                  :priority_a    "[#A]"
+                  :priority_b    "[#B]"
+                  :priority_c    "[#C]"
+                  :priority_d    "[#D]"
+                  :priority_e    "[#E]"
+                  :em_dash       "---"))
+#+END_SRC
+
+
+*** Github Flavored Markdown Export
+#+BEGIN_SRC emacs-lisp
+(eval-after-load "org"
+'(require 'ox-gfm nil t))
+#+END_SRC
+
+** Org Mode headers margin bottom
+#+BEGIN_SRC emacs-lisp
+(setq!
+ org-cycle-separator-lines 1
+ org-blank-before-new-entry '((heading .         t)
+                              (plain-list-item . auto)))
+#+END_SRC
+
+** Make spc-spc open counsel menu
+#+BEGIN_SRC emacs-lisp map
+(map!
+  :leader
+  "SPC" #'counsel-M-x)
+#+END_SRC
+
+
+
+** Highlight fill column
+If a line of text exceeds 80 characters in a prog-mode derivative, then
+highlight the character at the fill column.
+
+*** Enable Package
+
+#+BEGIN_SRC emacs-lisp :tangle packages.el
+(package! hl-fill-column)
+#+END_SRC
+
+
+*** Configure fill column
+
+#+BEGIN_SRC emacs-lisp
+;;;###autoload
+(autoload 'hl-fill-column-mode "hl-fill-column" nil t)
+
+(map! :leader
+      (:prefix ("t" . "toggle")
+               :desc "fill column" "c" #'hl-fill-column-mode))
+
+(add-hook! 'prog-mode-hook #'hl-fill-column-mode)
 #+END_SRC
 
 
@@ -1085,6 +1536,7 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
 :PROPERTIES:
 :header-args: :tangle no
 :END:
+
 *** Which Key
 #+BEGIN_SRC emacs-lisp-config
 (call-interactively #'helpful-key)
@@ -1097,6 +1549,11 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
 #+END_SRC
 
 #+RESULTS:
+
+* Debugging
+#+BEGIN_SRC emacs-lisp :tangle no
+(toggle-debug-on-error)
+#+END_SRC
 
 * Local config
 #+INCLUDE: ./local.org

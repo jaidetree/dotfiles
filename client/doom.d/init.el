@@ -32,7 +32,7 @@
        doom               ; what makes DOOM look the way it does
        doom-dashboard     ; a nifty splash screen for Emacs
        doom-quit          ; DOOM quit-message prompts when you quit Emacs
-       fill-column        ; a `fill-column' indicator
+       ;; fill-column        ; a `fill-column' indicator
        hl-todo            ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
        hydra
        indent-guides      ; highlighted indent columns
@@ -50,7 +50,7 @@
        vi-tilde-fringe    ; fringe tildes to mark beyond EOB
        ;;window-select    ; visually switch windows
        workspaces         ; tab emulation, persistence & separate workspaces
-       ;;zen              ; distraction-free coding or writing
+       zen              ; distraction-free coding or writing
 
        :editor
        (evil +everywhere) ; come to the dark side, we have cookies
@@ -64,7 +64,7 @@
        ;;parinfer         ; turn lisp into python, sort of
        ;;rotate-text      ; cycle region at point between text candidates
        snippets           ; my elves. They type so I don't have to
-       word-wrap        ; soft wrapping with language-aware indent
+       ;;word-wrap        ; soft wrapping with language-aware indent
 
        :emacs
        dired             ; making dired pretty [functional]
@@ -126,7 +126,7 @@
        ;;fsharp            ; ML stands for Microsoft's Language
        ;;fstar             ; (dependent) types and (monadic) effects and Z3
        ;;gdscript          ; the language you waited for
-       ;;(go +lsp)         ; the hipster dialect
+       (go +lsp)         ; the hipster dialect
        ;;(haskell +dante)  ; a language that's lazier than I am
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ;
