@@ -292,6 +292,7 @@ Make line numbers brighter
 
 
 * Customizations
+
 ** Fish syntax support
 #+BEGIN_SRC emacs-lisp :tangle packages.el
 (package! fish-mode)
@@ -969,11 +970,6 @@ but do not execute them."
 
 
 ** Org-Roam
-*** Unpin the package
-#+BEGIN_SRC emacs-lisp :tangle packages.el
-(unpin! org-roam)
-#+END_SRC
-
 *** Set mode hooks, customze directory, bind keys
 #+BEGIN_SRC emacs-lisp
 (use-package! org-roam
@@ -1175,22 +1171,8 @@ Usable with `ivy-resume', `ivy-next-line-and-call' and
 
 
 
-** Find file when splitting windows
-Thanks to tecosaur from https://tecosaur.github.io/emacs-config/config.html#windows
-#+BEGIN_SRC emacs-lisp
-(defadvice! prompt-for-buffer (&rest _)
-  :after '(evil-window-split evil-window-vsplit)
-  (call-interactively #'counsel-find-file))
-#+END_SRC
-
-
-** Clean up org-mode formatting
+** Improve org-mode formatting
 From https://tecosaur.github.io/emacs-config/config.html#org-mode
-
-*** Unpin org to get latest
-#+BEGIN_SRC emacs-lisp :tangle packages.el
-(unpin! org)
-#+END_SRC
 
 *** Additional packages
 #+BEGIN_SRC emacs-lisp :tangle packages.el
@@ -1399,16 +1381,12 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
 #+END_SRC
 
 
-*** Make org prettier
-#+BEGIN_SRC emacs-lisp
-(add-hook! 'org-mode-hook #'+org-pretty-mode #'mixed-pitch-mode)
-#+END_SRC
-
 
 *** Make org tables prettier
 #+BEGIN_SRC emacs-lisp
 (setq! global-org-pretty-table-mode t)
 #+END_SRC
+
 
 
 *** Make headings bigger
@@ -1430,6 +1408,7 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
     '(org-document-title :height 1.4)))
 
 #+END_SRC
+
 
 
 *** Symbols
@@ -1465,6 +1444,7 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
                   :priority_e    "[#E]"
                   :em_dash       "---"))
 #+END_SRC
+
 
 
 *** Github Flavored Markdown Export
@@ -1515,6 +1495,8 @@ highlight the character at the fill column.
 #+END_SRC
 
 
+
+** Make org-mode wrap
 
 * Literate Experiments
 ** Setup
