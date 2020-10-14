@@ -4,11 +4,13 @@
 
 
 * Tasks
-** DONE Move config.el into config.org
+** TODO Move config.el into config.org
 ** TODO Research and fix pressing enter on list items
 ** TODO Research and swap org-mode enter behavior with C-ent
-** TODO Find better config for org-mode pretty symbols
-** TODO Experiment with a command to load a buffer into tmux and copy it to clipboard
+** DONE Find better config for org-mode pretty symbols
+CLOSED: [2020-10-11 Sun 15:56]
+** KILL Experiment with a command to load a buffer into tmux and copy it to clipboard
+CLOSED: [2020-10-11 Sun 15:56]
 ** DONE Update init.el to stop using childframe
 ** DONE Update config to enter into buffer select-mode when creating a split
 ** DONE Look into [[file:~/org/roam/20201002230128-wrap_text_in_org_mode.org][Wrap text in org-mode]]
@@ -139,7 +141,7 @@ release. The ~unpin!~ macro allows you to unpin single packages...
 #+END_SRC
 
 ** Config
-#+BEGIN_SRC emacs-lisp :tangle config.el
+#+BEGIN_SRC emacs-lisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 #+END_SRC
 
@@ -231,6 +233,7 @@ Make line numbers brighter
  +ivy-buffer-preview                 t
  save-interprogram-paste-before-kill t
  enable-local-variables              :all
+ evil-move-beyond-eol                t
  evil-split-window-below             t
  evil-vsplit-window-right            t)
 #+END_SRC
@@ -399,6 +402,12 @@ Make line numbers brighter
 ** Save frame on quit; restore on load
 *** Saves drame dimensions on quit
 #+BEGIN_SRC emacs-lisp
+(doom-store-put 'last-frame-size
+                (list (frame-position)
+                      (frame-width)
+                      (frame-height)
+                      (frame-parameter nil 'fullscreen)))
+
 (defun save-frame-dimensions ()
   (doom-store-put 'last-frame-size
                   (list (frame-position)
@@ -1219,7 +1228,7 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
   ;(setq org-superstar-headline-bullets-list '("𐄇" "𐄈" "𐄉" "𐄊" "𐄋" "𐄌" "𐄍" "𐄎" "𐄏"))
   ;(setq org-superstar-headline-bullets-list '("჻"))
   ;(setq org-superstar-headline-bullets-list '("#"))
-  (setq org-superstar-headline-bullets-list '(" "))
+  (setq org-superstar-headline-bullets-list '("∮" "∯" "∰" "∫" "∬" "∭" "⨌"))
   (setq org-superstar-item-bullet-alist
         '((?+ . ?•)
           (?* . ?➤)
@@ -1401,8 +1410,6 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
   '(outline-8 :weight semi-bold)
   '(outline-9 :weight semi-bold))
 
-
-
 (after! org
   (custom-set-faces!
     '(org-document-title :height 1.4)))
@@ -1538,4 +1545,4 @@ highlight the character at the fill column.
 #+END_SRC
 
 * Local config
-#+INCLUDE: ./local.org
+    #+INCLUDE: ./local.org
