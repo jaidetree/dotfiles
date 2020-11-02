@@ -1,6 +1,6 @@
 #+TITLE: DOOM Config
 #+PROPERTY: header-args :lexical yes :results silent
-#+STARTUP: overview
+#+STARTUP: content
 
 
 * Tasks
@@ -40,7 +40,7 @@ You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
   they are implemented.
 
 ** Reload config
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (org-babel-load-file "~/.doom.d/config.org")
 #+END_SRC
 
@@ -136,12 +136,12 @@ release. The ~unpin!~ macro allows you to unpin single packages...
 
 * Headers
 ** Packages
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 ;;; $DOOMDIR/packages.el -*- no-byte-compile: t; -*-
 #+END_SRC
 
 ** Config
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 #+END_SRC
 
@@ -155,7 +155,7 @@ sync~ after modifying this file!
 Some functionality uses this to identify you, e.g. GPG configuration, email
 clients, file templates and snippets.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq user-full-name "Jay Zawrotny"
       user-mail-address "jayzawrotny@gmail.com")
 #+END_SRC
@@ -164,7 +164,7 @@ clients, file templates and snippets.
 This determines the style of line numbers in effect. If set to `nil', line
 numbers are disabled. For relative line numbers, set this to `relative'.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq display-line-numbers-type 'relative)
 #+END_SRC
 
@@ -181,38 +181,38 @@ They all accept either a font-spec, font string ("Input Mono-12"), or xlfd font
 string. You generally only need these two:
 #+BEGIN_EXAMPLE emacs-lisp
 (setq
-  doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
-  doom-variable-pitch-font (font-spec :family "sans" :size 13))
+  doom-font                (font-spec :family "monospace" :size 12 :weight 'semi-light)
+  doom-variable-pitch-font (font-spec :family "monospace" :size 12 :weight 'semi-light))
 #+END_EXAMPLE
 
 There are two ways to load a theme. Both assume the theme is installed and
 available. You can either set =doom-theme= or manually load a theme with the
 
 *** Theme
-#+BEGIN_SRC emacs-lisp
-(setq doom-theme 'doom-one)
+#+begin_src emacs-lisp
+(setq doom-theme (if (controlling-tty-p) 'doom-Iosvkem 'doom-one))
 #+END_SRC
 
 **** Change a theme at runtime
 It's recommended to use doom-theme so Henrik can update how its used over time,
 but this should work for loading when needed.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (load-theme 'doom-one t)
 #+END_SRC
 
 *** Font
 Set default font
 
-#+BEGIN_SRC emacs-lisp
-(setq
- doom-font (font-spec :family "operator mono" :size 14 :weight 'medium)
- doom-variable-pitch-font (font-spec :family "museo sans" :size 14 :height 180))
+#+begin_src emacs-lisp
+(setq!
+ doom-font                (font-spec :family "operator mono" :size 14 :weight 'medium)
+ doom-variable-pitch-font (font-spec :family "operator mono" :size 14 :weight 'medium :slant 'italic))
 #+END_SRC
 
 Make line numbers brighter
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (custom-set-faces!
   '(line-number
     :foreground "#888")
@@ -224,7 +224,7 @@ Make line numbers brighter
 
 * General var Settings
 - What can I say? I'm fussy.
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq
  tab-always-indent                   t
  make-backup-files                   nil
@@ -243,7 +243,7 @@ Make line numbers brighter
 - If you use `org' and don't want your org files in the default location below,
   change `org-directory'. It must be set before org loads!
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq org-directory "~/org/roam")
 #+END_SRC
 
@@ -252,26 +252,26 @@ Make line numbers brighter
 ** Lisp comment macro
 - Similar to Clojure's. Lets you wrap any elisp code without eval'ing it.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defmacro comment (&rest _)
   `nil)
 #+END_SRC* Local config
 
 ** Sorting collections with reverse arg order for thread macros
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/sort (pred errors)
   (sort errors pred))
 #+END_SRC
 
 ** Get project name
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/persp-name ()
   (or (safe-persp-name (get-current-persp))
       "main"))
 #+END_SRC
 
 ** Run command and return output
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/cmd (command &rest args)
   "Run a command and return output"
   (let* ((args (mapcar #'shell-quote-argument (delq nil args)))
@@ -297,19 +297,19 @@ Make line numbers brighter
 * Customizations
 
 ** Fish syntax support
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! fish-mode)
 #+END_SRC
 
 ** SQL Indentation
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! sql-indent)
 #+END_SRC
 
 ** Hydra Paste Cycler
 - Cycle through the kill ring on paste - only for p and P in normal mode
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defhydra hydra-paste
   (:color red
     :hint nil)
@@ -328,13 +328,13 @@ Make line numbers brighter
 #+END_SRC
 
 ** Commenting with cmd-;
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (map! :nv "s-;" #'comment-or-uncomment-region)
 #+END_SRC
 
 
 ** Spacemacs window split bindings
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (map! :map evil-window-map
       "/" #'evil-window-vsplit
       "-" #'evil-window-split
@@ -343,30 +343,31 @@ Make line numbers brighter
 
 ** Clojure
 *** Install packages
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! anakondo)
 (package! inf-clojure)
 #+END_SRC
 
 *** General config
-#+BEGIN_SRC emacs-lisp
-(after! clojure
-  (setq! clojure-toplevel-inside-comment-form t))
+#+begin_src emacs-lisp
+(use-package! clojure-mode
+  :custom (clojure-toplevel-inside-comment-form t))
 #+END_SRC
 
 *** Use Anakondo for static linting
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package! anakondo
-  :hook ((clojure-mode . anakondo-minor-mode)))
+  :hook (clojure-mode . anakondo-minor-mode))
 #+END_SRC
 
 *** Lispy config
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (map!
   :after lispy
   :map lispy-mode-map-lispy
   "[" #'lispy-brackets
-  "]" #'lispy-right-nostring)
+  "]" #'lispy-right-nostring
+  "}" #'lispy-right-nostring)
 
 (map!
   :after lispy
@@ -378,7 +379,7 @@ Make line numbers brighter
 #+END_SRC
 
 ** Org Config
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! org
   (setq
    diary-file                            (concat org-directory "/diary")
@@ -394,14 +395,14 @@ Make line numbers brighter
 #+END_SRC
 
 ** Org Use TAB to cycle through visibility states of current subtree
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! evil-org
   (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h))
 #+END_SRC
 
 ** Save frame on quit; restore on load
 *** Saves drame dimensions on quit
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (doom-store-put 'last-frame-size
                 (list (frame-position)
                       (frame-width)
@@ -419,7 +420,7 @@ Make line numbers brighter
 
 #+END_SRC
 *** Restore frame dimensions on load
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (when-let (dims (doom-store-get 'last-frame-size))
   (when (eq (length dims) 4)
     (cl-destructuring-bind ((left . top) width height fullscreen) dims
@@ -435,7 +436,7 @@ Make line numbers brighter
 ** JavaScript
 *** Settings
 *NOTE:* Relies on editorconfig package
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package! js2-mode
   :config
   (setq
@@ -445,7 +446,7 @@ Make line numbers brighter
 
 *** Indentation
 **** Multi-line expressions
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/fix-js-multi-line-indent ()
   "Indent expression declarations by 2 just like the rest of the code"
   :after-while #'js--multi-line-declaration-indentation
@@ -465,7 +466,7 @@ const x = myfunc()
 
 ** Delete current buffer file
 Borrowed from spacemacs
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun delete-current-buffer-file ()
   "Removes file connected to current buffer and kills buffer."
   (interactive)
@@ -484,7 +485,7 @@ Borrowed from spacemacs
 
 ** Rename current buffer file
 Borrowed this from spacemacs but uses current name as default
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun rename-current-buffer-file ()
   "Renames current buffer and file it is visiting."
   (interactive)
@@ -515,7 +516,7 @@ Borrowed this from spacemacs but uses current name as default
 #+END_SRC
 
 ** Copy project path
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun copy-project-path ()
   "Copies the current buffer path from the project root to copy a relative path"
   (interactive)
@@ -527,7 +528,7 @@ Borrowed this from spacemacs but uses current name as default
 
 ** Zoom font size
 Based on the hydra demo zoom example
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (map!
   :leader
   :desc "Font zoom" "z" #'+hydra/text-zoom/body)
@@ -536,7 +537,7 @@ Based on the hydra demo zoom example
 ** Flycheck
 Make the flycheck messages easier to read\distinguish from surrounding code
 *** Font customization
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (custom-set-faces!
   '(popup-tip-face
      :background "#FD6D6E" :foreground "black"
@@ -552,7 +553,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
      :background "#FD6D6E" :foreground "black"))
 #+END_SRC
 *** Format regular flycheck errors
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/format-flycheck-message (msg)
   (concat
     " "
@@ -576,7 +577,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
     (propertize 'face 'popup-tip-face)))
 #+END_SRC
 *** Format childframe errors
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/flycheck-posframe-format-error (err)
   "Pads error message"
   :override #'flycheck-posframe-format-error
@@ -591,12 +592,12 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 
 ** Evil Lisp State
 *** Install package
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! evil-lisp-state)
 #+END_SRC
-*** Wrap\Unwrap Comment Command
+*** Wrap/Unwrap Comment Command
 **** Unwrap
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun unwrap-comment ()
   "Unwrap sexp (comment ...)"
   (interactive)
@@ -614,7 +615,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
       (indent-sexp))))
 #+END_SRC
 **** Wrap
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun wrap-comment ()
   "Wrap sexp in (comment ...) and indent it"
   (interactive)
@@ -630,7 +631,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 
 #+END_SRC
 *** Use package
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package! evil-lisp-state
   :init
   (setq evil-lisp-state-global t)
@@ -642,7 +643,7 @@ Make the flycheck messages easier to read\distinguish from surrounding code
 #+END_SRC
 *** Modeline
 Create a purple state color for the modeline when in lisp-state
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! doom-modeline
   (custom-set-faces!
     '(doom-modeline-evil-operator-state :foreground "#FF9F9E")))
@@ -696,7 +697,7 @@ Create a purple state color for the modeline when in lisp-state
 ** Relabel keys in the which-key menu
 The which-key menu can sometimes display too long of names which causes them to
 be truncated.
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! which-key
   (add-to-list
     'which-key-replacement-alist
@@ -714,13 +715,13 @@ After creating a workspace prompt to rename. Anon workspaces are not a
 fun surprise.
 
 *** Trigger an early load of workspace autoload functions
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! persp-mode
   (+workspace-current-name))
 #+END_SRC
 
 *** Advise workspace-new to prompt for name and delete if bad one is generated
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/workspace-new (workspace-new &optional _ clone-p)
   "Prompt for workspace name after creating the workspace, delete if no name entered"
   :around #'+workspace/new
@@ -733,7 +734,7 @@ fun surprise.
 
 ** Indent guides
 *** Show only the active guide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/active-guide (level responsive display)
   (when (eq responsive 'top)
     (highlight-indent-guides--highlighter-default
@@ -741,7 +742,7 @@ fun surprise.
 #+END_SRC
 
 *** Settings
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! highlight-indent-guides
   (setq!
     highlight-indent-guides-auto-enabled         nil
@@ -754,7 +755,7 @@ fun surprise.
 #+END_SRC
 
 *** Hide guides in lisp and clojure modes
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (add-hook! '(lisp-mode-hook emacs-lisp-mode-hook clojure-mode-hook)
     (defun +disable-indent-guides-in-lisp ()
       (highlight-indent-guides-mode -1)))
@@ -763,7 +764,7 @@ fun surprise.
 
 ** Tramp
 Set shell to bash for simplicity
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! tramp
   ;; (setenv "SHELL" "/usr/local/bin/fish")
   (setq tramp-default-method "sshx"))
@@ -771,7 +772,7 @@ Set shell to bash for simplicity
 
 ** Send to Tmux Session
 *** Send text to tmux
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-run (command &optional append-return)
   "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
 but do not execute them."
@@ -796,7 +797,7 @@ but do not execute them."
 *** Select tmux session
 **** Get sessions from tmux
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-sessions ()
   "Returns a lit of active tmux-sessions"
   (-> (j/cmd "tmux list-sessions %s %s" "-F" "#S")
@@ -817,7 +818,7 @@ but do not execute them."
 
 **** API to set a shared target tmux session
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-select-get-session ()
   "Get the tmux session for the given persp or select a new one"
   (interactive)
@@ -829,7 +830,7 @@ but do not execute them."
 #+END_SRC
 *** Send Region
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-send-region (beg end &optional append-return)
   "Send region to tmux."
   (interactive "rP")
@@ -838,7 +839,7 @@ but do not execute them."
 #+END_SRC
 *** Send Paragraph
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-send-paragraph ()
   "Send current paragraph to the selected tmux session"
   (interactive)
@@ -849,7 +850,7 @@ but do not execute them."
 
 *** Send org-mode src-block
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun j/tmux-send-src-block ()
   "Send current src block to selected tmux session"
   (interactive)
@@ -859,7 +860,7 @@ but do not execute them."
      (j/tmux-run body t))))
 #+END_SRC
 *** Bindings
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! persp-mode
   (setq j/tmux-sessions '()
         j/tmux-history '())
@@ -875,12 +876,12 @@ but do not execute them."
 ** Navigation in tmux tty
 
 *** Install tmux-pane
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! tmux-pane)
 #+END_SRC
 
 *** Configuration
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package! tmux-pane
   :config
   (tmux-pane-mode)
@@ -906,7 +907,7 @@ but do not execute them."
 ** VTerm
 
 *** Key functions
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun vterm-send-esc ()
   (interactive)
   (vterm-send "ESC"))
@@ -930,7 +931,7 @@ but do not execute them."
 #+END_SRC
 
 *** Bindings
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! evil
   (map! "C-`" #'+vterm/toggle))
 
@@ -949,7 +950,7 @@ but do not execute them."
 #+END_SRC
 
 *** Change the target vterm folder based on the file
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun vterm-buffer-change ()
   (when (derived-mode-p 'vterm-mode)
     (vterm-enter)))
@@ -962,7 +963,7 @@ but do not execute them."
     (funcall toggle-vterm arg)))
 #+END_SRC
 *** vterm hooks
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! vterm
   (evil-define-state vterm
     "Evil vterm state.
@@ -979,8 +980,14 @@ but do not execute them."
 
 
 ** Org-Roam
+*** Unpin org-roam
+
+#+begin_src emacs-lisp :tangle packages.el
+(unpin! org-roam)
+#+end_src
+
 *** Set mode hooks, customze directory, bind keys
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package! org-roam
   :hook
   (after-init . org-roam-mode)
@@ -996,7 +1003,7 @@ but do not execute them."
          (("C-c n I" . org-roam-insert-immediate))))
 #+END_SRC
 *** Capture templates
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! org-roam
   (setq! org-roam-capture-templates
    (list
@@ -1009,7 +1016,7 @@ but do not execute them."
 
 *** Create org-roam files in tag directories
 **** Capture
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/org-roam-capture (&optional goto keys)
   "Launches an `org-capture` process for a new existing note.
 This uses the templates defined at `org-roam-capture-templates`.
@@ -1040,7 +1047,7 @@ Arguments GOTO and KEYS see `org-capture`."
 
 
 **** Find File
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/org-roam-find-file (&optional initial-prompt completions filter-fn no-confirm)
   "launches org-roam-find-file but supports creating notes in subdirectories"
   :override #'org-roam-find-file
@@ -1070,13 +1077,12 @@ Arguments GOTO and KEYS see `org-capture`."
 #+END_SRC
 
 **** Insert
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defadvice! j/org-roam-insert (&optional lowercase completions filter-fn description link-type)
   "launches org-roam-insert but supports creating notes in subdirectories"
   :override #'org-roam-insert
   (interactive "P")
   (unless org-roam-mode (org-roam-mode))
-  ;; Deactivate the mark on quit since `atomic-change-group' prevents it
   (unwind-protect
       ;; Group functions together to avoid inconsistent state on quit
       (atomic-change-group
@@ -1102,44 +1108,47 @@ Arguments GOTO and KEYS see `org-capture`."
                (dir (if (string-blank-p dir) "" (concat dir "/")))
                (target-file-path (plist-get res :path))
                (description (or description region-text title))
-               (link-description (org-roam--format-link-title (if lowercase
-                                                                  (downcase description)
-                                                                description)
-                                                              link-type)))
+               (description (if lowercase
+                                (downcase description)
+                              description)))
           (cond ((and target-file-path
                       (file-exists-p target-file-path))
                  (when region-text
                    (delete-region beg end)
                    (set-marker beg nil)
                    (set-marker end nil))
-                 (insert (org-roam--format-link target-file-path link-description link-type)))
+                 (insert (org-roam-format-link target-file-path description link-type)))
                 (t
-                 (let ((org-roam-capture--info `((title . ,title)
-                                                 (dir .   ,dir)
-                                                 (slug . ,(funcall org-roam-title-to-slug-function title-with-tags))))
+                 (let ((org-roam-capture--info `((title . ,title-with-tags)
+                                                 (dir   . ,dir)
+                                                 (slug . ,(funcall org-roam-title-to-slug-function title))))
                        (org-roam-capture--context 'title))
                    (setq org-roam-capture-additional-template-props (list :region (org-roam-shield-region beg end)
                                                                           :insert-at (point-marker)
                                                                           :link-type link-type
-                                                                          :link-description link-description
+                                                                          :link-description description
                                                                           :finalize 'insert-link))
                    (org-roam-capture--capture))))
           res))
-    (deactivate-mark)))
+    (deactivate-mark)) ;; Deactivate the mark on quit since `atomic-change-group' prevents it
+  )
 #+END_SRC
 
 ** Org-Roam-Server
+
 *** Install package
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! org-roam-server)
 #+END_SRC
 
 *** Configuration
-Some customizations are coming from
-#+BEGIN_SRC emacs-lisp
+Some customizations are coming from Tecosaurs config as well as the
+org-roam-server readme
+
+#+begin_src emacs-lisp
 (use-package org-roam-server
   :config
-  (setq org-roam-server-host "127.0.0.1"
+  (setq org-roam-server-host "0.0.0.0"
         org-roam-server-port 8989
         org-roam-server-authenticate nil
         org-roam-server-export-inline-images t
@@ -1155,7 +1164,10 @@ Some customizations are coming from
 
 
 ** Theme preview
-#+BEGIN_SRC emacs-lisp
+Automatically loads the theme as you navigate as =C-spc= doesn't seem to work in
+tty mode. There may be a bug in one of the themes that breaks previewing other themes.
+
+#+begin_src emacs-lisp
 (defadvice! j/counsel-load-theme ()
   "Automatically cycles through themes. Forward to `load-theme'.
 Usable with `ivy-resume', `ivy-next-line-and-call' and
@@ -1184,7 +1196,7 @@ Usable with `ivy-resume', `ivy-next-line-and-call' and
 From https://tecosaur.github.io/emacs-config/config.html#org-mode
 
 *** Additional packages
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! org-pretty-table-mode
   :recipe (:host github :repo "Fuco1/org-pretty-table") :pin "88380f865a...")
 (package! org-pretty-tags :pin "40fd72f3e7...")
@@ -1197,7 +1209,7 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
 
 
 *** Configure org-mode
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq
  org-hide-leading-stars                          t
  org-hide-emphasis-markers                       t
@@ -1219,7 +1231,11 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
                                                    (:hlines  .  "no")
                                                    (:tangle  .  "no")
                                                    (:comments . "link")))
+#+END_SRC
 
+*** Configure org-superstar to change org-mode bullets
+
+#+begin_src emacs-lisp
 (use-package! org-superstar
   :after org
   :config
@@ -1228,7 +1244,8 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
   ;(setq org-superstar-headline-bullets-list '("𐄇" "𐄈" "𐄉" "𐄊" "𐄋" "𐄌" "𐄍" "𐄎" "𐄏"))
   ;(setq org-superstar-headline-bullets-list '("჻"))
   ;(setq org-superstar-headline-bullets-list '("#"))
-  (setq org-superstar-headline-bullets-list '("∮" "∯" "∰" "∫" "∬" "∭" "⨌"))
+  ;(setq org-superstar-headline-bullets-list '("∮" "∯" "∰" "∫" "∬" "∭" "⨌"))
+  (setq org-superstar-headline-bullets-list '("♚" "♛" "♝" "♞" "♜" "⊱"))
   (setq org-superstar-item-bullet-alist
         '((?+ . ?•)
           (?* . ?➤)
@@ -1236,28 +1253,32 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
   (org-superstar-restart))
 #+END_SRC
 
+
 *** Disable visual-line-mode and enable auto-fill-mode
 :PROPERTIES:
 :ID:       78b70e5d-729f-4b1c-bf90-3e603a60cf74
 :END:
-#+BEGIN_SRC emacs-lisp
+
+#+begin_src emacs-lisp
 (remove-hook 'text-mode-hook #'visual-line-mode)
 #+END_SRC
 
 Add auto-fill-mode to text mode files
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (add-hook 'text-mode-hook #'auto-fill-mode)
 #+END_SRC
 
 *** Spellcheck
-#+BEGIN_SRC emacs-lisp
+
+#+begin_src emacs-lisp
 (after! org (add-hook 'org-mode-hook 'turn-on-flyspell))
 #+END_SRC
 
 *** Change enter in org-mode
 
 **** Defines a function to see what we are descendant of, useful for checking context
-#+BEGIN_SRC emacs-lisp
+
+#+begin_src emacs-lisp
 (after! org
   (defun unpackaged/org-element-descendant-of (type element)
     "Return non-nil if ELEMENT is a descendant of TYPE.
@@ -1270,10 +1291,11 @@ ELEMENT should be a list like that returned by `org-element-context'."
 #+END_SRC
 
 **** Do-what-I-mean enter behavior
+
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 ;;;###autoload
 (after! org
   (defun unpackaged/org-return-dwim (&optional default)
@@ -1365,7 +1387,7 @@ appropriate.  In tables, insert a new row or end the table."
 #+END_SRC
 
 **** Remap the enter key in evil-org-mode-map
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (map!
  :after      evil-org
  :map        evil-org-mode-map
@@ -1374,7 +1396,7 @@ appropriate.  In tables, insert a new row or end the table."
 
 
 *** Youtube preview links in exports
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! org
   (org-link-set-parameters "yt" :export #'+org-export-yt)
   (defun +org-export-yt (path desc backend _com)
@@ -1392,14 +1414,14 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
 
 
 *** Make org tables prettier
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq! global-org-pretty-table-mode t)
 #+END_SRC
 
 
 
 *** Make headings bigger
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (custom-set-faces!
   '(outline-1 :weight regular :height 1.4)
   '(outline-2 :weight regular :height 1.3)
@@ -1420,7 +1442,7 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
 
 *** Symbols
 See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols with ligatures enabled
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (after! org
   (set-ligatures! 'org-mode
                   :merge t
@@ -1455,21 +1477,66 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
 
 
 *** Github Flavored Markdown Export
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (eval-after-load "org"
 '(require 'ox-gfm nil t))
 #+END_SRC
 
 ** Org Mode headers margin bottom
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (setq!
  org-cycle-separator-lines 1
  org-blank-before-new-entry '((heading .         t)
                               (plain-list-item . auto)))
 #+END_SRC
 
+** Add mixed-pitch-mode to org-mode
+:PROPERTIES:
+:header-args: :tangle no
+:END:
+
+*** Install mixed-pitch-mode
+
+#+begin_src emacs-lisp
+(package! mixed-pitch)
+#+END_SRC
+
+*** Configure mixed-pitch-mode
+
+Customize mixed-pitch-mode faces. Matches the zen ui module's configuration
+
+#+begin_src emacs-lisp
+ (pushnew! mixed-pitch-fixed-pitch-faces
+            'org-date
+            'org-special-keyword
+            'org-property-value
+            'org-ref-cite-face
+            'org-tag
+            'org-todo-keyword-todo
+            'org-todo-keyword-habt
+            'org-todo-keyword-done
+            'org-todo-keyword-wait
+            'org-todo-keyword-kill
+            'org-todo-keyword-outd
+            'org-todo
+            'org-done
+            'font-lock-comment-face
+            'line-number
+            'line-number-current-line)
+#+END_SRC
+
+Enable mixed-pitch-mode on org-mode buffers
+
+#+begin_src emacs-lisp
+(after! org
+  (add-hook! 'org-mode-hook #'mixed-pitch-mode))
+#+END_SRC
+
+
+
+
 ** Make spc-spc open counsel menu
-#+BEGIN_SRC emacs-lisp map
+#+begin_src emacs-lisp map
 (map!
   :leader
   "SPC" #'counsel-M-x)
@@ -1483,14 +1550,14 @@ highlight the character at the fill column.
 
 *** Enable Package
 
-#+BEGIN_SRC emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle packages.el
 (package! hl-fill-column)
 #+END_SRC
 
 
 *** Configure fill column
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 ;;;###autoload
 (autoload 'hl-fill-column-mode "hl-fill-column" nil t)
 
@@ -1502,13 +1569,53 @@ highlight the character at the fill column.
 #+END_SRC
 
 
+** Eval typescript in org files
+*** Install ob-typescript
+#+begin_src emacs-lisp :tangle packages.el
+(package! ob-typescript)
+#+end_src
 
-** Make org-mode wrap
+*** Configure ob-typescript
+#+begin_src emacs-lisp
+(after! org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((typescript . t)
+     )))
+#+END_SRC
+
+
+
+** Command log mode
+
+Shows a buffer logging key presses and resulting commands
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! command-log-mode)
+#+end_src
+
+** Display LSP breadcrumbs automatically
+
+Displays a breadcrumbs of project, path, file, and symbols when working in LSP
+powered files.
+
+#+begin_src emacs-lisp
+(defun j/lsp-breadcrumbs-setup ()
+  (setq! lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  (lsp-headerline-breadcrumb-mode))
+
+(use-package! lsp-mode
+  :hook (lsp-mode . j/lsp-breadcrumbs-setup))
+#+end_src
+
+
 
 * Literate Experiments
+
 ** Setup
+
 *** Function to execute emacs-lisp src blocks
-#+BEGIN_SRC emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent
 (defun org-babel-execute:emacs-lisp-config (body params)
   "Execute a block of emacs-lisp code with Babel."
   (cl-letf (((symbol-function 'current-window-configuration) #'ignore)
@@ -1517,22 +1624,23 @@ highlight the character at the fill column.
 #+END_SRC
 
 *** Added emacs-lisp-config to org-babel using emacs-lisp as base
-#+BEGIN_SRC emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent
 (after! org
   (add-to-list 'org-src-lang-modes '("emacs-lisp-config" . emacs-lisp)))
 #+END_SRC
+
 ** Demos
 :PROPERTIES:
 :header-args: :tangle no
 :END:
 
 *** Which Key
-#+BEGIN_SRC emacs-lisp-config
+#+begin_src emacs-lisp-config
 (call-interactively #'helpful-key)
 #+END_SRC
 
 *** Splitting windows
-#+BEGIN_SRC emacs-lisp-config
+#+begin_src emacs-lisp-config
 (evil-window-vsplit)
 
 #+END_SRC
@@ -1540,7 +1648,7 @@ highlight the character at the fill column.
 #+RESULTS:
 
 * Debugging
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
 (toggle-debug-on-error)
 #+END_SRC
 
