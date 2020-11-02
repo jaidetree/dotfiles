@@ -472,6 +472,10 @@
         hammerspoon-config
         slack-config])
 
+(fn shadow-running?
+  []
+  (hs.application.get "com.blade.shadow-macos"))
+
 (local config
        {:title "Main Menu"
         :items menu-items
@@ -482,6 +486,32 @@
         ;; :hyper {:key :F18}
         :hyper {:mods []
                 :key :F18}
+        :idle {:tasks [{:delay 1800
+                        :idle (fn [state]
+                                (let [speaker (hs.audiodevice.defaultOutputDevice)
+                                      pre-muted (: speaker :muted)]
+                                  (when (not pre-muted)
+                                    (: speaker :setMuted true))
+                                  (if pre-muted
+                                      {:pre-muted true}
+                                      {:pre-muted false})))
+                        :active (fn [state]
+                                  (let [speaker (hs.audiodevice.defaultOutputDevice)
+                                        pre-muted state.pre-muted]
+                                    (when (not pre-muted)
+                                      (: speaker :setMuted false))))}
+                       {:delay 1800
+                        :idle (fn [state]
+                                (let [is-playing (hs.spotify.isPlaying)]
+                                  (when is-playing
+                                    (hs.spotify.pause))
+                                  (if is-playing
+                                      {:was-playing true}
+                                      {:was-playing false})))
+                        :active (fn [state]
+                                  (when state.was-playing
+                                    (hs.spotify.play)))}]
+               :unless shadow-running?}
         :vim {:enabled false}})
 
 

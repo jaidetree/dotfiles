@@ -3,6 +3,8 @@
 (local hyper (require :lib.hyper))
 (local zoom (require :zoom))
 (local tmux (require :tmux))
+(local idle (require :idle))
+(local config (require :config))
 
 (var timer nil)
 
@@ -32,3 +34,5 @@
               (reset-timer))
    :repeat reset-timer})
 
+
+(global idle-state (idle.init config))
