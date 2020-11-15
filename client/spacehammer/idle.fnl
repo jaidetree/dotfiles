@@ -7,6 +7,7 @@
 
 (local types hs.eventtap.event.types)
 (local fsms (atom.new []))
+(local ui-watcher (atom.new nil))
 
 (fn run-task?
   [idle-config]
@@ -69,6 +70,34 @@
              {:status :active
               :kill-timer (fn [] nil)})))
 
+(fn active->disabled
+  [state data idle-task idle-config fsm]
+  "
+  "
+  (when state.kill-timer
+    (state.kill-timer))
+  (merge state
+         {:status :disabled
+          :kill-timer (fn [] nil)}))
+
+(fn idle->disabled
+  [state data idle-task idle-config fsm]
+  "
+  "
+  (merge state
+         {:status :disabled
+          :custom-state (if (and idle-task.active (run-task? idle-config))
+                            (idle-task.active state.custom-state)
+                            state.custom-state)}))
+
+(fn disabled->disabled
+  [state data idle-task idle-config fsm]
+  state)
+
+(fn disabled->active
+  [state data idle-task idle-config fsm]
+  (active->active state data idle-task idle-config fsm))
+
 (fn idle->active
   [state data idle-task idle-config fsm]
   "
@@ -108,9 +137,13 @@
                      [f]
                      (fn [state data]
                        (f state data idle-task idle-config fsm)))
-        states {:idle {:activate (transition idle->active)}
+        states {:idle {:activate (transition idle->active)
+                       :disable (transition idle->disabled)}
                 :active {:idled (transition active->idle)
-                         :activate (transition active->active)}}]
+                         :activate (transition active->active)
+                         :disable (transition active->disabled)}
+                :disabled {:activate (transition disabled->active)
+                           :disable (transition disabled->disabled)}}]
     (set fsm (statemachine.new states initial-state :status))
     fsm))
 
@@ -130,6 +163,15 @@
   "
   (each [_ fsm (ipairs (atom.deref fsms))]
     (fsm.dispatch :activate nil)))
+
+(fn disable
+  []
+  "
+  Disable turns off the idle timer behavior. Ideal for when using a full-screen
+  application.
+  "
+  (each [_ fsm (ipairs (atom.deref fsms))]
+    (fsm.dispatch :disable nil)))
 
 (fn activate-err
   [err]
@@ -151,6 +193,59 @@
   "
   (xpcall activate activate-err)
   (values false []))
+
+(fn toggle-on-fullscreen
+  []
+  (let [window (hs.window.frontmostWindow)
+        is-full-screen (window:isFullScreen)]
+      (if is-full-screen
+          (disable)
+          (activate))))
+
+(fn debouncer
+  [ms f]
+  (var kill-timer (fn [] nil))
+  (fn debounce
+    [...]
+    (kill-timer)
+    (let [args [...]]
+      (set kill-timer
+           (timeout ms
+            (fn []
+              (f (table.unpack args))))))
+    kill-timer))
+
+(fn app-updated
+  [app-name event-type app]
+  "
+  Application watcher event handler. Used to detect full-screen windows and
+  disable while watching a video.
+  "
+  (when (= event-type hs.application.watcher.activated)
+    (let [window (app:focusedWindow)
+          prev-ui-watch (atom.deref ui-watcher)
+          new-ui-watch (: window :newWatcher
+                          (debouncer
+                           0.25
+                           (fn [...]
+                             (toggle-on-fullscreen))))]
+      (when prev-ui-watch
+       (prev-ui-watch:stop))
+      (atom.reset! ui-watcher
+                   new-ui-watch)
+      (new-ui-watch:start [hs.uielement.watcher.focusedWindowChanged
+                           hs.uielement.watcher.windowResized])
+      (toggle-on-fullscreen))))
+
+(fn logging
+  []
+  (each [_ fsm (ipairs (atom.deref fsms))]
+    (atom.add-watch
+     fsm.state :logging
+     (debouncer
+      0.5
+      (fn [old new]
+        (print (hs.inspect (atom.deref fsm.state))))))))
 
 (fn init
   [config]
@@ -176,9 +271,12 @@
                               types.mouseMoved
                               types.keyDown
                               types.keyUp]
-                             user-activity)]
+                             user-activity)
+        app-watch (hs.application.watcher.new app-updated)]
     (: tap :start)
+    (: app-watch :start)
     {:tap tap
+     :app-watch app-watch
      :fsms fsms
      :destroy (fn []
                 (: tap :stop)
