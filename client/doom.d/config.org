@@ -57,7 +57,7 @@ To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 (package! some-package)
 #+END_EXAMPLE
 
-*** Git Receipes
+*** Git Recipes
 To install a package directly from a remote git repo, you must specify a
 ~:recipe~. You'll find documentation on what ~:recipe~ accepts here:
 https://github.com/raxod502/straight.el#the-recipe-format
@@ -207,7 +207,7 @@ Set default font
 #+begin_src emacs-lisp
 (setq!
  doom-font                (font-spec :family "operator mono" :size 14 :weight 'medium)
- doom-variable-pitch-font (font-spec :family "operator mono" :size 14 :weight 'medium :slant 'italic))
+ doom-variable-pitch-font (font-spec :family "avenir next" :size 14 :weight 'medium :slant 'italic))
 #+END_SRC
 
 Make line numbers brighter
@@ -374,8 +374,6 @@ Make line numbers brighter
   :mode lispy-mode
   :n "[" #'lispy-backward
   :n "]" #'lispy-forward)
-
-
 #+END_SRC
 
 ** Org Config
@@ -440,6 +438,7 @@ Make line numbers brighter
 (use-package! js2-mode
   :config
   (setq
+    js2-basic-offset 2
     js-expr-indent-offset -2
     js-chain-indent nil))
 #+END_SRC
@@ -647,7 +646,9 @@ Create a purple state color for the modeline when in lisp-state
 (after! doom-modeline
   (custom-set-faces!
     '(doom-modeline-evil-operator-state :foreground "#FF9F9E")))
+#+end_src
 
+#+begin_src emacs-lisp :tangle no
 (defsubst j/doom-modeline--evil ()
   "The current evil state. Requires `evil-mode' to be enabled."
   (when (bound-and-true-p evil-local-mode)
@@ -678,7 +679,10 @@ Create a purple state color for the modeline when in lisp-state
               (and evil (concat evil (and ow vsep)))
               (and ow (concat ow))
               sep))))
+#+END_SRC
 
+Color the cursor in evil-lisp-state
+#+begin_src emacs-lisp
 (defun j/evil-state-fg (state)
   (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
     (face-foreground sym nil t)))
@@ -692,7 +696,7 @@ Create a purple state color for the modeline when in lisp-state
        evil-operator-state-cursor (list 'box (j/evil-state-fg "operator"))
        evil-lisp-state-cursor     (list 'box (j/evil-state-fg "emacs"))
        evil-vterm-state-cursor    (list 'box (face-foreground 'error nil t)))))
-#+END_SRC
+#+end_src
 
 ** Relabel keys in the which-key menu
 The which-key menu can sometimes display too long of names which causes them to
@@ -989,6 +993,7 @@ but do not execute them."
 *** Set mode hooks, customze directory, bind keys
 #+begin_src emacs-lisp
 (use-package! org-roam
+  :defer t
   :hook
   (after-init . org-roam-mode)
   :custom
@@ -1137,7 +1142,7 @@ Arguments GOTO and KEYS see `org-capture`."
 ** Org-Roam-Server
 
 *** Install package
-#+begin_src emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle no
 (package! org-roam-server)
 #+END_SRC
 
@@ -1145,9 +1150,8 @@ Arguments GOTO and KEYS see `org-capture`."
 Some customizations are coming from Tecosaurs config as well as the
 org-roam-server readme
 
-#+begin_src emacs-lisp
-(use-package org-roam-server
-  :config
+#+begin_src emacs-lisp :tangle no
+(after! org-roam-server
   (setq org-roam-server-host "0.0.0.0"
         org-roam-server-port 8989
         org-roam-server-authenticate nil
@@ -1198,13 +1202,12 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
 *** Additional packages
 #+begin_src emacs-lisp :tangle packages.el
 (package! org-pretty-table-mode
-  :recipe (:host github :repo "Fuco1/org-pretty-table") :pin "88380f865a...")
-(package! org-pretty-tags :pin "40fd72f3e7...")
-(package! ox-gfm :pin "99f93011b0...")
+  :recipe (:host github :repo "Fuco1/org-pretty-table"))
+(package! org-pretty-tags)
+(package! ox-gfm)
 (package! org-graph-view
   :recipe (:host github
-           :repo "alphapapa/org-graph-view")
-  :pin "13314338d7...")
+           :repo "alphapapa/org-graph-view"))
 #+END_SRC
 
 
@@ -1439,7 +1442,6 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
 #+END_SRC
 
 
-
 *** Symbols
 See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols with ligatures enabled
 #+begin_src emacs-lisp
@@ -1491,13 +1493,10 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
 #+END_SRC
 
 ** Add mixed-pitch-mode to org-mode
-:PROPERTIES:
-:header-args: :tangle no
-:END:
 
 *** Install mixed-pitch-mode
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle packages.el
 (package! mixed-pitch)
 #+END_SRC
 
@@ -1506,7 +1505,8 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
 Customize mixed-pitch-mode faces. Matches the zen ui module's configuration
 
 #+begin_src emacs-lisp
- (pushnew! mixed-pitch-fixed-pitch-faces
+(after! mixed-pitch
+  (pushnew! mixed-pitch-fixed-pitch-faces
             'org-date
             'org-special-keyword
             'org-property-value
@@ -1522,14 +1522,13 @@ Customize mixed-pitch-mode faces. Matches the zen ui module's configuration
             'org-done
             'font-lock-comment-face
             'line-number
-            'line-number-current-line)
+            'line-number-current-line))
 #+END_SRC
 
 Enable mixed-pitch-mode on org-mode buffers
 
 #+begin_src emacs-lisp
-(after! org
-  (add-hook! 'org-mode-hook #'mixed-pitch-mode))
+(add-hook! 'org-mode-hook #'mixed-pitch-mode)
 #+END_SRC
 
 
@@ -1586,7 +1585,7 @@ highlight the character at the fill column.
 
 
 
-** Command log mode
+** Command log mode :package:debug:
 
 Shows a buffer logging key presses and resulting commands
 
@@ -1594,7 +1593,7 @@ Shows a buffer logging key presses and resulting commands
 (package! command-log-mode)
 #+end_src
 
-** Display LSP breadcrumbs automatically
+** Display LSP breadcrumbs automatically :lsp:ui:
 
 Displays a breadcrumbs of project, path, file, and symbols when working in LSP
 powered files.
@@ -1605,10 +1604,129 @@ powered files.
   (lsp-headerline-breadcrumb-mode))
 
 (use-package! lsp-mode
+  :defer t
   :hook (lsp-mode . j/lsp-breadcrumbs-setup))
 #+end_src
 
+** Evil move between visual lines instead of logical lines :evil:behavior:remap:
 
+Makes evil jk movements work with soft-wrapped (visual) lines of text. Good for
+writing in org and markdown files.
+
+#+begin_src emacs-lisp
+(map!
+  :after evil
+  :nmv [remap evil-previous-line] #'evil-previous-visual-line
+  :nmv [remap evil-next-line] #'evil-next-visual-line)
+#+end_src
+
+** Change evil surround pairs alist :evil:evil-surround:behavior:
+
+When changing surrounding pairs like from [hello-world] to (hello-world), using
+a keyboard shortcut like =cs[(=, it makes more sense to assume it's formatted
+correctly. Instead it will add a space after the substitute.
+
+#+begin_src emacs-lisp
+(after! evil
+  (setq! evil-surround-pairs-alist
+         '((40 "(" . ")")
+           (91 "[" . "]")
+           (123 "{" . "}")
+           (41 "(" . ")")
+           (93 "[" . "]")
+           (125 "{" . "}")
+           (35 "#{" . "}")
+           (98 "(" . ")")
+           (66 "{" . "}")
+           (62 "<" . ">")
+           (116 . evil-surround-read-tag)
+           (60 . evil-surround-read-tag)
+           (102 . evil-surround-function))))
+#+end_src
+
+** Interactive function to convert px to rem :css:conversion:helpers:command:
+
+Prompts for a number like 8 in px then inserts ="0.5rem; //* 8px /*//"=
+Intended usage is to press =SPC SPC= in normal mode or =M-x= in insert mode and run
+the command directly. It will prompt for the value in px in a minibuffer.
+
+Set a base font-size used for converting to rem. Can be overwritten locally if
+desired.
+
+#+begin_src emacs-lisp
+(defvar j-css-base-font-size 16.0
+  "Used by the px->rem function to convert px units into rem in css. Be sure to
+add .0 to get accurate calculations, and this can be overwritten for a specific
+buffer or project with dir-locals.el.")
+#+end_src
+
+Function to convert px to rem and insert it. If there is an active region, this
+function will replace it. If the active region is numeric like 3 or 3px, this
+function will use that value.
+
+#+begin_src emacs-lisp
+(defun px->rem (px &optional beg end)
+  "
+  Prompts for a value in px and returns the value in rem based off
+  j-css-base-font-size. Intended for use in css.
+  "
+  (interactive
+   (if (use-region-p)
+       (list nil (region-beginning) (region-end))
+     (let ((bds (bounds-of-thing-at-point 'word)))
+       (list nil (car bds) (cdr bds)))))
+
+  (let* ((has-region (and beg end))
+         (txt (if has-region
+                  (buffer-substring-no-properties beg end)
+                px))
+         px-num)
+    (setq px-num
+          (cond
+           ((numberp txt)
+            txt)
+           ((string-match-p "^[0-9]+px;$" txt)
+            (string-to-number (substring txt 0 -3)))
+           ((string-match-p "^[0-9]+px$" txt)
+            (string-to-number (substring txt 0 -2)))
+           ((string-match-p "^[0-9]+$" txt)
+            (string-to-number txt))
+           (t ;else
+            (read-number "Enter value in px: "))))
+    (when has-region
+      (kill-region beg end))
+    (insert
+     (concat
+      (number-to-string (/ px-num j-css-base-font-size)) "rem;"
+      " /* " (number-to-string px-num) "px */"))))
+#+end_src
+
+Create a binding for it in ~css-mode-map~ localleader =SPC m ?=
+
+#+begin_src emacs-lisp
+(map! :localleader
+      :map css-mode-map
+      :after css-mode
+      "j" #'px->rem)
+#+end_src
+
+* Distro Configs
+
+** emacs-mac installation config
+
+Add support for the typical cmd-* ops like cmd-s -> save, cmd-v -> paste, cmd-c
+-> yank, etc...
+
+#+begin_src emacs-lisp
+(map!
+ "<H-a>"  #'mark-whole-buffer
+ "<H-v>"  #'hydra-paste/evil-paste-after
+ "<H-c>"  #'kill-ring-save
+ "<H-s>"  #'save-buffer
+ "<H-l>"  #'goto-lin
+ "<H-w>"  #'delete-window
+ "<H-z>"  #'undo)
+#+end_src
 
 * Literate Experiments
 

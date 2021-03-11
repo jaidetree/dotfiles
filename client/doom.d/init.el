@@ -17,9 +17,10 @@
 (doom! :input
        ;;chinese
        ;;japanese
+       ;;layout
        :os
-       macos             ; MacOS-specific commands
-       tty
+       ;macos             ; MacOS-specific commands
+       ;tty
 
        :completion
        (company) ; the ultimate code completion backend
@@ -32,17 +33,18 @@
        doom               ; what makes DOOM look the way it does
        doom-dashboard     ; a nifty splash screen for Emacs
        doom-quit          ; DOOM quit-message prompts when you quit Emacs
+       (emoji +unicode)
        ;; fill-column        ; a `fill-column' indicator
        ;;hl-todo            ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
        hydra
        indent-guides      ; highlighted indent columns
+       ;;ligatures
        ;;minimap          ; show a map of the code on the side
        modeline           ; snazzy, Atom-inspired modeline, plus API
        ;;nav-flash        ; blink cursor line after big motions
        ;;neotree          ; a project drawer, like NERDTree for vim
        ophints            ; highlight the region an operation acts on
        (popup +defaults)  ; tame sudden yet inevitable temporary windows
-       ;; pretty-code     ; ligatures or substitute text with pretty symbols
        tabs               ; an tab bar for Emacs
        treemacs           ; a project drawer, like neotree but cooler
        ;;unicode          ; extended unicode support for various languages
@@ -58,7 +60,7 @@
        fold               ; (nigh) universal code folding
        ;;(format +onsave) ; automated prettiness
        ;;god              ; run Emacs commands without modifier keys
-       lispy              ; vim for lisp, for people who don't like vim
+       ;lispy              ; vim for lisp, for people who don't like vim
        multiple-cursors   ; editing in many places at once
        ;;objed            ; text object editing for the innocent
        ;;parinfer         ; turn lisp into python, sort of
@@ -81,12 +83,12 @@
 
        :checkers
        (syntax) ; tasing you for every semicolon you forget
-       spell              ; tasing you for misspelling mispelling
+       (spell +flyspell)              ; tasing you for misspelling mispelling
        grammar            ; tasing grammar mistake every you make
 
        :tools
        ;;ansible
-       debugger          ; FIXME stepping through code, to help you add bugs
+       ;debugger          ; FIXME stepping through code, to help you add bugs
        direnv
        docker
        editorconfig        ; let someone else argue about tabs vs spaces
@@ -105,6 +107,10 @@
        ;;terraform         ; infrastructure as code
        tmux                ; an API for interacting with tmux
        ;;upload            ; map local to remote projects via ssh/ftp
+
+       :os
+       (:if IS-MAC macos)
+       tty
 
        :lang
        ;;agda              ; types of types of types of types...
