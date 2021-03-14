@@ -22,3 +22,10 @@ fish_default_key_bindings
 # DIR ENV
 ##############################################################################
 direnv hook fish | source
+
+
+# Nix
+##############################################################################
+# set -x NIX_PATH "darwin-config=$HOME/.nixpkgs/darwin-configuration.nix:$HOME/.nix-defexpr/channels"
+# source ~/dotfiles/client/nix/nix.fish
+# echo "$NIX_PATH"

@@ -1443,7 +1443,9 @@ allowfullscreen>%s</iframe>" path (or "" desc)))
 
 
 *** Symbols
+
 See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols with ligatures enabled
+
 #+begin_src emacs-lisp
 (after! org
   (set-ligatures! 'org-mode
@@ -1485,6 +1487,7 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
 #+END_SRC
 
 ** Org Mode headers margin bottom
+
 #+begin_src emacs-lisp
 (setq!
  org-cycle-separator-lines 1
@@ -1492,55 +1495,23 @@ See https://tecosaur.github.io/emacs-config/config.html#symbols for more symbols
                               (plain-list-item . auto)))
 #+END_SRC
 
-** Add mixed-pitch-mode to org-mode
+** Zen mode :org:pretty:ui:
 
-*** Install mixed-pitch-mode
+Zen mode enables mixed-pitch mode, writeroom mode, and other enhancements
+to make writing more enjoyable.
 
-#+begin_src emacs-lisp :tangle packages.el
-(package! mixed-pitch)
-#+END_SRC
-
-*** Configure mixed-pitch-mode
-
-Customize mixed-pitch-mode faces. Matches the zen ui module's configuration
+Make sure to enable ~:ui zen~  in your =~/.doom.d/init.el=
 
 #+begin_src emacs-lisp
-(after! mixed-pitch
-  (pushnew! mixed-pitch-fixed-pitch-faces
-            'org-date
-            'org-special-keyword
-            'org-property-value
-            'org-ref-cite-face
-            'org-tag
-            'org-todo-keyword-todo
-            'org-todo-keyword-habt
-            'org-todo-keyword-done
-            'org-todo-keyword-wait
-            'org-todo-keyword-kill
-            'org-todo-keyword-outd
-            'org-todo
-            'org-done
-            'font-lock-comment-face
-            'line-number
-            'line-number-current-line))
+(add-hook! 'org-mode-hook #'+zen/toggle)
 #+END_SRC
 
-Enable mixed-pitch-mode on org-mode buffers
+If writeroom-mode is not helpful, it can disabled by changing ~:tangle no~ to
+~:tangle packages.el~
 
-#+begin_src emacs-lisp
-(add-hook! 'org-mode-hook #'mixed-pitch-mode)
-#+END_SRC
-
-
-
-
-** Make spc-spc open counsel menu
-#+begin_src emacs-lisp map
-(map!
-  :leader
-  "SPC" #'counsel-M-x)
-#+END_SRC
-
+#+begin_src emacs-lisp :tangle no
+(package! writeroom-mode :disable t)
+#+end_src
 
 
 ** Highlight fill column
@@ -1569,6 +1540,7 @@ highlight the character at the fill column.
 
 
 ** Eval typescript in org files
+
 *** Install ob-typescript
 #+begin_src emacs-lisp :tangle packages.el
 (package! ob-typescript)

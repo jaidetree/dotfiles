@@ -7,7 +7,6 @@
 
 (local types hs.eventtap.event.types)
 (local fsms (atom.new []))
-(local ui-watcher (atom.new nil))
 
 (fn run-task?
   [idle-config]
@@ -181,18 +180,6 @@
   "
   (print (hs.inspect err)))
 
-(fn user-activity
-  [e]
-  "
-  User has clicked, moved the mouse, or pressed a key on a keyboard.
-  Calls the activate API in a fail-safe xpcall, this prevents an error
-  messing with clicks and key presses.
-
-  Takes an hs.eventtap.event
-  Must return a boolean to block the event and a list of events to post.
-  "
-  (xpcall activate activate-err)
-  (values false []))
 
 (fn toggle-on-fullscreen
   []
@@ -215,6 +202,19 @@
               (f (table.unpack args))))))
     kill-timer))
 
+(fn user-activity
+  [e]
+  "
+  User has clicked, moved the mouse, or pressed a key on a keyboard.
+  Calls the activate API in a fail-safe xpcall, this prevents an error
+  messing with clicks and key presses.
+
+  Takes an hs.eventtap.event
+  Must return a boolean to block the event and a list of events to post.
+  "
+  (xpcall (debouncer 0.5 toggle-on-fullscreen) activate-err)
+  (values false []))
+
 (fn app-updated
   [app-name event-type app]
   "
@@ -222,20 +222,7 @@
   disable while watching a video.
   "
   (when (= event-type hs.application.watcher.activated)
-    (let [window (app:focusedWindow)
-          prev-ui-watch (atom.deref ui-watcher)
-          new-ui-watch (: window :newWatcher
-                          (debouncer
-                           0.25
-                           (fn [...]
-                             (toggle-on-fullscreen))))]
-      (when prev-ui-watch
-       (prev-ui-watch:stop))
-      (atom.reset! ui-watcher
-                   new-ui-watch)
-      (new-ui-watch:start [hs.uielement.watcher.focusedWindowChanged
-                           hs.uielement.watcher.windowResized])
-      (toggle-on-fullscreen))))
+    (toggle-on-fullscreen)))
 
 (fn logging
   []
@@ -275,6 +262,7 @@
         app-watch (hs.application.watcher.new app-updated)]
     (: tap :start)
     (: app-watch :start)
+    (logging)
     {:tap tap
      :app-watch app-watch
      :fsms fsms
