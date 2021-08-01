@@ -47,14 +47,29 @@ Advising API to register functions
    entry.advice.around
    (entry.advice.around entry.original (table.unpack args))
 
-   (do
-    (when entry.advice.before
-      (entry.advice.before (table.unpack args)))
+   (let [args (and entry.advice.filter-args
+                   (entry.advice.filter-args (table.unpack args)))
+         passed-before-while (or (not entry.advice.before-while)
+                                 (and entry.advice.before-while (entry.advice.before-while (table.unpack args))))
+         passed-before-until (or passed-before-while
+                                 (and (not passed-before-while) entry.advice.before-until (not (entry.advice.before-until (table.unpack args)))))]
 
-    (entry.original (table.unpack args))
+     (when (and passed-before-while passed-before-until entry.advice.before)
+       (entry.advice.before (table.unpack args)))
 
-    (when entry.advice.after
-      (entry.advice.after (table.unpack args))))))
+     
+     (when (and passed-before-while passed-before-until)
+       (let [return (entry.original (table.unpack args))]
+
+         (let [passed-after-while (or (and return (not entry.advice.after-while) return)
+                                      (and entry.advice.after-while (entry.advice.after-while (table.unpack args))))
+               passed-after-until (or passed-after-while
+                                      (and (not passed-after-while) entry.advice.after-until (entry.advice.after-until (table.unpack args))))]
+
+           (when (and passed-after-until
+                      entry.advice.after)
+             (entry.advice.after (table.unpack args)))
+           (if passed-after-until ))))))))
 
 (fn count
   [tbl]
