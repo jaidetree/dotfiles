@@ -1,0 +1,95 @@
+#+title: Install Packages & Setup
+:CONFIG:
+#+property: header-args:bash :tangle install.sh
+#+property: header-args :mkdirp yes :comments no
+#+startup: indent
+:END:
+
+* Usage
+:PROPERTIES:
+:header-args:bash: :tangle no
+:END:
+
+** Tangle files
+
+Generates an install.sh as well as relevant config files. This file should
+prompt on save to tangle automatically.
+
+#+begin_src emacs-lisp
+(org-babel-tangle)
+#+end_src
+
+
+** Install packages
+
+Install the HomeBrew packages
+
+#+begin_src bash :eval no
+sh ./install.sh
+#+end_src
+
+* Setup
+
+#+begin_src bash
+#!/usr/bin/env bash
+#+end_src
+
+* Packages
+
+** direnv
+
+direnv provides hooks to load local .envrc files in projects into the shell
+environment. It's useful because I don't have to remember to set environment
+variables for every project that requires them. A key usecase is setting the
+DOCKER_HOST if I want to offload the VM to a remote server over SSH.
+
+*** Install
+
+#+begin_src bash
+brew install direnv
+#+end_src
+
+** vterm
+
+A virtual terminal that renders nicely in emacs. Requires cmake.
+
+#+begin_src bash
+brew install libvterm cmake
+#+end_src
+
+* Package Config
+
+** Elvish :shell:
+
+#+begin_src bash
+brew install elvish
+#+end_src
+
+#+begin_src bash
+source elvish/install.sh
+#+end_src
+
+** Lua & Fennel :lang:
+
+#+begin_src bash
+luarocks install --local readline HISTORY_DIR=/usr/local/Cellar/readline/8.1 READLINE_DIR=/usr/local/Cellar/readline/8.1
+#+end_src
+
+* Hints
+
+** Org-mode Doc Config to Tangle to Dynamic Filenames
+
+#+begin_src org-mode
+:CONFIG:
+#+property: header-args:elvish :tangle (concat (file-name-sans-extension (buffer-file-name)) ".elv")
+#+property: header-args :mkdirp yes :comments no
+#+startup: indent
+:END:
+
+#+end_src
+
+* Org File Config
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
+;; End:

@@ -1,0 +1,21 @@
+:CONFIG:
+#+property: header-args:sh :tangle (file-name-sans-extension (buffer-file-name))
+#+property: header-args :mkdirp yes :comments no
+#+startup: indent
+:END:
+#+title: ZShell Literate Config
+
+* About
+
+I don't really use zsh anymore but there are some settings that are necessary
+given that it's the default shell on macs.
+
+* Config
+
+#+begin_src sh
+export PATH=$HOME/bin:$HOME/.emacs.d/bin:$HOME/.luarocks/bin:/usr/local/opt/openjdk/bin:/usr/local/bin:$PATH
+#+end_src
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
+;; End:

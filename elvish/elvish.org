@@ -1,0 +1,93 @@
+#+title: Elvish Shell Literate Config
+:CONFIG:
+#+property: header-args:elvish :tangle rc.elv
+#+property: header-args:bash :tangle install.sh
+#+property: header-args :mkdirp yes :comments no
+#+startup: indent
+:END:
+
+* direnv module
+
+The direnv package loads local .envrc files into environment variables when
+navigating into project directories. See [[../brew-packages.org]] for more info.
+
+** Setup Install script
+
+Generate script shebang for any commands required to install elvish packages
+
+#+begin_src bash
+#!/usr/bin/env bash
+#+end_src
+
+** Setup hooks
+
+Generate an elvish module to load into the shell
+
+#+begin_src bash
+mkdir ~/.elvish/lib
+direnv hook elvish > ~/.elvish/lib/direnv.elv
+#+end_src
+
+** Load regex expressions into shell
+
+#+begin_src elvish
+use re
+#+end_src
+
+** Load direnv module into shell
+
+#+begin_src elvish
+use direnv
+#+end_src
+
+** Use emacs style binds while writing commands
+
+#+begin_src elvish
+use readline-binding
+#+end_src
+
+** Path module
+
+#+begin_src elvish
+use path
+#+end_src
+
+** Additional bundled modules
+
+#+begin_src elvish
+use str
+use math
+#+end_src
+
+* Set paths
+
+#+begin_src elvish
+set paths = [
+	~/bin
+	~/.emacs.d/bin
+	~/.luarocks/bin
+	/usr/local/opt/openjdk/bin
+	/usr/local/bin
+	/usr/bin
+	/bin
+	/usr/sbin
+	/sbin
+	/usr/local/MacGPG2/bin
+  /Library/Frameworks/Mono.framework/Versions/Current/bin/
+]
+#+end_src
+
+
+* Configure nvm
+
+Node version manager supports project-based configuration to specify a version
+of node to use.
+
+#+begin_src elvish
+set E:NVM_DIR = $E:HOME"/.nvm"
+bash $E:NVM_DIR"/nvm.sh"
+#+end_src
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
+;; End:

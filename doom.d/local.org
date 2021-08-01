@@ -1,0 +1,25 @@
+#+TITLE: Local Doom Config
+
+* Default vterm position
+Ensures vterm window is on the right side of the screen since this computer has
+a wider screen.
+#+BEGIN_SRC emacs-lisp
+(after! vterm
+  (set-popup-rule!
+    "^*doom:vterm-popup"
+    :width  88
+    :side   'right
+    :vslot -4
+    :select t
+    :quit   nil
+    :ttl    nil))
+#+END_SRC
+
+* Start emacs server and org-roam-server mode
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(after! (org-roam server)
+  (ignore-errors (org-roam-server-mode +1)))
+#+END_SRC
+
+#+RESULTS:
