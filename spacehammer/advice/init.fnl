@@ -12,10 +12,17 @@ Advising API to register functions
 "
 
 (require-macros :lib.macros)
-(local {:reduce reduce
-        :seq    seq} (require :lib.functional))
+(local {: contains?
+        : first
+        : join
+        : last
+        : reduce
+        : seq
+        : slice
+        : split} (require :lib.functional))
 
-(local advice {})
+(var advice {})
+(var advisable [])
 
 (fn add-advice
   [f advice-type advice-fn]
@@ -31,12 +38,34 @@ Advising API to register functions
 (fn register-advisable
   [key f]
   ;; @TODO Replace with if-let or similar macro but doesn't work in an isolated fennel file
+  (when (contains? key advisable)
+    (error (.. "Advisable function" key "already exists")))
+  (table.insert advisable key)
   (let [advice-entry (. advice key)]
     (if advice-entry
         advice-entry
         (tset advice key
               {:original f
                :advice {}}))))
+
+(fn advisable-keys
+  []
+  (slice 0 advisable))
+
+(fn print-advisable-keys
+  []
+  (print "\nAdvisable functions:\n")
+  (each [i key (ipairs (advisable-keys))]
+    (print (.. "  :" key))))
+
+(fn get-module-name
+  []
+  (->> (. (debug.getinfo 3 "S") :short_src)
+       (split "/")
+       (slice -1)
+       (join "/")
+       (split "%.")
+       (first)))
 
 (fn apply-advice
   [entry args]
@@ -47,8 +76,9 @@ Advising API to register functions
    entry.advice.around
    (entry.advice.around entry.original (table.unpack args))
 
-   (let [args (and entry.advice.filter-args
-                   (entry.advice.filter-args (table.unpack args)))
+   (let [args (if entry.advice.filter-args
+                  (entry.advice.filter-args (table.unpack args))
+                  args)
          passed-before-while (or (not entry.advice.before-while)
                                  (and entry.advice.before-while (entry.advice.before-while (table.unpack args))))
          passed-before-until (or passed-before-while
@@ -69,7 +99,7 @@ Advising API to register functions
            (when (and passed-after-until
                       entry.advice.after)
              (entry.advice.after (table.unpack args)))
-           (if passed-after-until ))))))))
+           ))))))
 
 (fn count
   [tbl]
@@ -87,9 +117,10 @@ Advising API to register functions
         (do
           (entry.original (table.unpack args))))))
 
-(fn afn
-  [f]
-  (let [key (tostring f)
+(fn make-advisable
+  [fn-name f]
+  (let [module (get-module-name)
+        key (.. module "/" fn-name)
         advice-reg (register-advisable key f)
         ret {:key key}]
     (setmetatable ret
@@ -97,11 +128,16 @@ Advising API to register functions
                              (dispatch-advice key [...]))
                    :__index (fn [tbl key]
                               (. tbl key))})
-    ret
-    ;(fn [...]
-    ;  (dispatch-advice key [...]))
-    ))
+    ret))
 
-{: afn
+(fn reset
+  []
+  (set advice {})
+  (set advisable []))
+
+{: reset
+ : make-advisable
  : add-advice
- : remove-advice}
+ : remove-advice
+ : advisable-keys
+ : print-advisable-keys}

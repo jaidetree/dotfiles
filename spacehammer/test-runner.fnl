@@ -8,8 +8,12 @@
 
 (global pprint (fn [x] (print (fennel.view x))))
 
-(global {: it
-         : describe} (require :testing))
+(global {: after
+         : before
+         : describe
+         : it} (require :testing))
+
+(print _G.describe)
 
 (local {: init
         : collect-tests
