@@ -86,15 +86,17 @@ Advising API to register functions
 
      (when (and passed-before-while passed-before-until entry.advice.before)
        (entry.advice.before (table.unpack args)))
-
      
      (when (and passed-before-while passed-before-until)
-       (let [return (entry.original (table.unpack args))]
+       (let [return (entry.original (table.unpack args))
+             return (if entry.advice.filter-return
+                        (entry.advice.filter-return return)
+                        return)]
 
          (let [passed-after-while (or (and return (not entry.advice.after-while) return)
                                       (and entry.advice.after-while (entry.advice.after-while (table.unpack args))))
                passed-after-until (or passed-after-while
-                                      (and (not passed-after-while) entry.advice.after-until (entry.advice.after-until (table.unpack args))))]
+                                      (and (not passed-after-while) entry.advice.after-until (entry.advice.after-until (table.unpack args)) true))]
 
            (when (and passed-after-until
                       entry.advice.after)
