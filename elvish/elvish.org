@@ -76,18 +76,3 @@ set paths = [
   /Library/Frameworks/Mono.framework/Versions/Current/bin/
 ]
 #+end_src
-
-
-* Configure nvm
-
-Node version manager supports project-based configuration to specify a version
-of node to use.
-
-#+begin_src elvish
-set E:NVM_DIR = $E:HOME"/.nvm"
-bash $E:NVM_DIR"/nvm.sh"
-#+end_src
-
-;; Local Variables:
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
-;; End:

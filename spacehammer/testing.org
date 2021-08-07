@@ -1,0 +1,7 @@
+#+title: Testing
+
+* Watching Tests
+
+#+begin_src bash :results none
+nodemon -e ".fnl" -x "./run-test" --delay 2 -- "./advice-test.fnl"
+#+end_src

@@ -1,0 +1,120 @@
+#+title: Emacs Advice Test
+#+property: header-args :tangle advice-test.el
+
+* Emacs Advice Test
+
+Implementing an advising system for [[https://fennel-lang.org][fennel-lang]] for use in the OS X [[https://github.com/agzam/spacehammer/][Spacehammer]]
+configuration framework.
+
+** Original function definition
+
+#+begin_src elisp
+(defun some-fun (&rest args)
+  (message "original some-fun called %s" (string-join args " "))
+  (string-join (cons "original" args) " "))
+#+end_src
+
+#+RESULTS:
+: some-fun
+
+** Advice
+
+*** Before 3
+
+#+begin_src elisp :results none
+(defadvice! advtest-before-3 (&rest args)
+  "Before test 3"
+  :before #'some-fun
+  (message "before-3 args: %s" (string-join args " ")))
+#+end_src
+
+*** Before 1
+
+#+begin_src elisp :results none
+(defadvice! advtest-before-1 (&rest args)
+  "Before test 1"
+  :before #'some-fun
+  (message "before-1 args: %s" (string-join args " ")))
+#+end_src
+
+*** Before-While 1
+
+#+begin_src elisp :results none
+(defadvice! advtest-before-while-1 (&rest args)
+  "Before-while test 1"
+  :before-while #'some-fun
+  (message "before-while-1 args: %s" (string-join args " "))
+  nil)
+#+end_src
+
+
+*** After 1
+
+#+begin_src elisp :results none
+(defadvice! advtest-after-1 (&rest args)
+  "After test 1"
+  :after #'some-fun
+  (message "after-1 args: %s" (string-join args " ")))
+#+end_src
+
+*** Before 2
+
+#+begin_src elisp :results none
+(defadvice! advtest-before-2 (&rest args)
+  "Before test 2"
+  :before #'some-fun
+  (message "before-2 args: %s" (string-join args " ")))
+#+end_src
+
+** Test Advice
+
+#+begin_src elisp :tangle no
+(some-fun "one" "two")
+#+end_src
+
+#+RESULTS:
+
+** Debugging & Reset
+
+:PROPERTIES:
+:header-args: :tangle no
+:END:
+
+#+begin_src elisp
+(describe-function #'some-fun)
+#+end_src
+
+#+RESULTS:
+: some-fun is a Lisp function.
+:
+: (some-fun &rest ARGS)
+:
+: Not documented.
+
+#+begin_src elisp
+(defun advice-unadvice (sym)
+  "Remove all advices from symbol SYM."
+  (interactive "aFunction symbol: ")
+  (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
+#+end_src
+
+#+RESULTS:
+: advice-unadvice
+
+#+begin_src elisp
+(advice-unadvice #'some-fun)
+#+end_src
+
+#+RESULTS:
+
+** Results
+
+1. Advice is additive, supports multiple of same type
+2. Advice fires last-added-runs-first
+3. Types of advice processed at specific times: before and before-while are
+   processed together before calling the original function
+4. In the case of before-while, the before and after advice that added after the
+   =before-while= advice did run. The =before= advice added earlier will not run if
+   =before-while= returns ~nil~.
+   a. Does this mean that if before-while returns false it short-circuits the
+      remaining advice defined before it, which would run after =before-while=?

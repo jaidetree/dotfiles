@@ -1,31 +1,29 @@
-# BEHAVIOR CHANGES
-##############################################################################
-# fish_vi_key_bindings
-# fish_hybrid_key_bindings
-# fish_default_key_bindings
+# [[file:oh-my-fish.org::*Path][Path:1]]
+set -x PATH \
+    $HOME/.npm-global/bin \
+    $HOME/bin \
+    $HOME/.yarn/bin \
+    $HOME/.config/yarn/global/node_modules/.bin \
+    $HOME/.luarocks/bin \
+    $HOME/.emacs.d/bin \
+    /usr/local/bin \
+    /usr/local/opt/openjdk/bin \
+    /usr/bin \
+    /usr/sbin \
+    /sbin \
+    /usr/local/MacGPG2/bin \
+    /Library/Frameworks/Mono.framework/Versions/Current/bin \
+    $PATH
+# Path:1 ends here
 
-# PATH
-##############################################################################
-set -x PATH $HOME/.npm-global/bin $HOME/bin $HOME/.yarn/bin $HOME/.config/yarn/global/node_modules/.bin $PATH
-set -x PATH $HOME/.luarocks/bin /usr/local/bin $HOME/.emacs.d/bin $PATH
-set -x LUA_PATH '$HOME/.luarocks/share/lua/5.3/?.lua;$HOME/.luarocks/share/lua/5.3/?/init.lua;/usr/local/share/lua/5.3/?.lua;/usr/local/share/lua/5.3/?/init.lua;/usr/local/Cellar/luarocks/3.1.3/share/lua/5.3/?.lua;/usr/local/lib/lua/5.3/?.lua;/usr/local/lib/lua/5.3/?/init.lua;./?.lua;./?/init.lua'
-set -x LUA_CPATH '$HOME/.luarocks/lib/lua/5.3/?.so;/usr/local/lib/lua/5.3/?.so;/usr/local/lib/lua/5.3/loadall.so;./?.so'
-
-# CONFIG
-##############################################################################
-# set -gx JAVA_TOOL_OPTIONS "--add-modules=java.xml.bind"
-
-# Conditional Configs
-##############################################################################
+# [[file:oh-my-fish.org::*Bindings][Bindings:1]]
 fish_default_key_bindings
+# Bindings:1 ends here
 
-# DIR ENV
-##############################################################################
+# [[file:oh-my-fish.org::*Dir Env][Dir Env:1]]
 direnv hook fish | source
+# Dir Env:1 ends here
 
-
-# Nix
-##############################################################################
-# set -x NIX_PATH "darwin-config=$HOME/.nixpkgs/darwin-configuration.nix:$HOME/.nix-defexpr/channels"
-# source ~/dotfiles/client/nix/nix.fish
-# echo "$NIX_PATH"
+# [[file:oh-my-fish.org::*ASDF Version Manager][ASDF Version Manager:1]]
+source (brew --prefix asdf)"/asdf.fish"
+# ASDF Version Manager:1 ends here

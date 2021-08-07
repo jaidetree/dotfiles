@@ -1,0 +1,86 @@
+#+title: Oh My Fish
+:CONFIG:
+#+property: header-args:fish :tangle init.fish
+#+property: header-args:bash :tangle install.sh
+#+property: header-args :mkdirp yes
+#+startup: indent
+:END:
+
+
+* Install
+
+** Setup Install Script
+
+Generate shebang for install.sh script
+
+#+begin_src bash
+#!/usr/bin/env bash
+#+end_src
+
+** Install Fish
+#+begin_src bash
+brew install fish
+#+end_src
+
+** Change Default Shell
+
+#+begin_src bash
+which fish | sudo tee -a /etc/shells
+chsh -s `which fish`
+#+end_src
+
+* Config
+
+** Path
+
+Determines which binaries and executables are always accessible without having
+to specify a path prefix.
+
+#+begin_src fish
+set -x PATH \
+    $HOME/.npm-global/bin \
+    $HOME/bin \
+    $HOME/.yarn/bin \
+    $HOME/.config/yarn/global/node_modules/.bin \
+    $HOME/.luarocks/bin \
+    $HOME/.emacs.d/bin \
+    /usr/local/bin \
+    /usr/local/opt/openjdk/bin \
+    /usr/bin \
+    /usr/sbin \
+    /sbin \
+    /usr/local/MacGPG2/bin \
+    /Library/Frameworks/Mono.framework/Versions/Current/bin \
+    $PATH
+#+end_src
+
+** Bindings
+
+#+begin_src fish
+fish_default_key_bindings
+#+end_src
+
+* Plugins
+
+** Dir Env
+
+Loads .envrc files when entering into a directory
+https://direnv.net/docs/hook.html#fish
+
+#+begin_src fish
+direnv hook fish | source
+#+end_src
+
+** ASDF Version Manager
+
+A version manager for a wide variety of tools such as node.
+http://asdf-vm.com/guide/getting-started.html#_3-install-asdf
+
+#+begin_src fish
+source (brew --prefix asdf)"/asdf.fish"
+#+end_src
+
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
+;; End:

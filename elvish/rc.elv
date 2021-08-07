@@ -22,6 +22,3 @@ set paths = [
 	/usr/local/MacGPG2/bin
   /Library/Frameworks/Mono.framework/Versions/Current/bin/
 ]
-
-set E:NVM_DIR = $E:HOME"/.nvm"
-bash $E:NVM_DIR"/nvm.sh"

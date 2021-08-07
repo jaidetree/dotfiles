@@ -84,6 +84,10 @@ Advising API to register functions
          passed-before-until (or passed-before-while
                                  (and (not passed-before-while) entry.advice.before-until (not (entry.advice.before-until (table.unpack args)))))]
 
+     (pprint {: passed-before-while
+              : passed-before-until})
+
+
      (when (and passed-before-while passed-before-until entry.advice.before)
        (entry.advice.before (table.unpack args)))
      
@@ -101,7 +105,7 @@ Advising API to register functions
            (when (and passed-after-until
                       entry.advice.after)
              (entry.advice.after (table.unpack args)))
-           ))))))
+           return))))))
 
 (fn count
   [tbl]

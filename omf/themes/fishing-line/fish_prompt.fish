@@ -45,7 +45,7 @@ end
 function fish_prompt
   set -g _last_status $status
   set -l branch (__fish_git_prompt "%s")
-  set -l _is_git_dirty (git status -s --ignore-submodules=dirty ^/dev/null)
+  set -l _is_git_dirty (git status -s --ignore-submodules=dirty 2>/dev/null)
 
   __theme_glyphs
 

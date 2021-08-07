@@ -67,12 +67,47 @@
            (is.eq? state.calls 2 "Before test-func did not call both the original and before fn")
            (is.eq? state.args "1 2 3 4" "Before test-func did not call both the original and before with the same args"))))
 
+   (it "Should call orig if before-while returns truthy"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-5
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :before-while
+                       (fn [...]
+                         (tset state :called true)
+                         true))
+           (is.eq? (test-func 1 2) "original 1 2" "Before-while test-func did not call original function")
+           (is.eq? state.called true "Before-while test-func advice function was not called"))))
+
+   (it "Should call orig if before-until returns falsey value"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-6
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :before-until
+                       (fn [...]
+                         (tset state :called true)
+                         false))
+           (is.eq? (test-func 1 2) "original 1 2" "Before-until test-func did not call original function")
+           (is.eq? state.called true "Before-until test-func advice function was not called"))))
+
+
    (it "Should call after functions"
        (fn []
          (let [state {:calls 0
                       :args ""}
                test-func (make-advisable
-                          :test-func-5
+                          :test-func-7
                           (fn [...]
                             "Advisable test function"
                             (let [args [...]]
@@ -87,6 +122,8 @@
            (test-func 1 2)
            (is.eq? state.calls 2 "After test-func did not call both the original and after fn")
            (is.eq? state.args "1 2 3 4" "After test-func did not call both the original and after with the same args"))))
+
+   
 
 
    ))
