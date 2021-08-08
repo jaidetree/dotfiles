@@ -1,0 +1,286 @@
+#+title: TMUX
+:CONFIG:
+#+property: header-args:conf :tangle tmux.conf
+#+property: header-args:bash :tangle install.sh
+#+property: header-args :mkdirp yes
+#+startup: indent
+:END:
+
+
+* Install
+
+** Shebang
+
+#+begin_src bash
+#!/usr/bin/env bash
+#+end_src
+
+** Installer
+
+#+begin_src bash
+brew install tmux
+#+end_src
+
+Install TPM
+
+#+begin_src bash
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+#+end_src
+
+* Plugins
+
+** Emacs Pane
+
+Supports navigating tmux panes or emacs panes in emacs
+
+#+begin_src conf
+set -g @plugin 'laishulu/emacs-tmux-pane'
+#+end_src
+
+** TMUX Sensible
+
+A set of "sensible" defaults for tmux for common customizationes
+
+- Does the reattach-to-user-namespace on OSX
+- Sets the default terminal
+- Uses emacs keys in status =:= commands
+- Many other enhancements
+
+https://github.com/tmux-plugins/tmux-sensible
+
+#+begin_src conf
+set -g @plugin 'tmux-plugins/tmux-sensible'
+#+end_src
+
+** TMUX Yank
+
+Integrates tmux with the system clipboard
+https://tmux-plugins.github.io/tmux-yank/
+
+#+begin_src conf
+set -g @plugin 'tmux-plugins/tmux-yank'
+#+end_src
+
+** TMUX Plugin Manager
+
+System to install the above plugins
+https://github.com/tmux-plugins/tpm
+
+#+begin_src conf
+set -g @plugin 'tmux-plugins/tpm'
+#+end_src
+
+* Install Plugins
+
+#+begin_src conf
+run -b '~/.tmux/plugins/tpm/tpm'
+#+end_src
+
+* Base Config
+:PROPERTIES:
+:header-args:conf: :tangle base.conf
+:END:
+
+** Set default shell
+
+This determines which shell tmux will run when creating a session. Useful for
+keeping the system shell default to zsh and running fish on the terminals I'm
+using personally.
+
+#+begin_src conf
+set -g default-shell /usr/local/bin/fish
+#+end_src
+
+** XTerm Keys
+
+Set xterm-keys which allows me to press keys like C-k in emacs
+https://stackoverflow.com/questions/34084245/tmux-interfering-with-emacs-commands-windmove-default-keybindings
+
+#+begin_src conf
+set -g xterm-keys on
+#+end_src
+
+** Disable Auto-Renaming
+
+Prevents tmux from changing the window name. This respects the name I give it
+when creating the window.
+
+https://unix.stackexchange.com/questions/352066/disallowing-window-renaming-in-tmux
+
+#+begin_src conf
+set-option -g allow-rename off
+#+end_src
+
+** Mouse and Mouse Wheel Support
+
+#+begin_src conf
+set -g mouse on
+bind-key -T root WheelUpPane if-shell -F -t = "#{alternate_on}" "send-keys -M" "select-pane -t =; copy-mode -e; send-keys -M"
+bind-key -T root WheelDownPane if-shell -F -t = "#{alternate_on}" "send-keys -M" "select-pane -t =; send-keys -M"
+#+end_src
+
+** Key Bindings
+
+*** VIM Bindings
+
+General pane movement
+
+#+begin_src conf
+setw -g mode-keys vi
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+#+end_src
+
+Select windows
+
+#+begin_src conf
+bind-key -r C-h select-window -t :-
+bind-key -r C-l select-window -t :+
+#+end_src
+
+Make yank mode behave like visual or normal mode
+
+#+begin_src conf
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+bind-key -T copy-mode-vi V send-keys -X select-line
+bind-key -T copy-mode-vi C-V send-keys -X rectangle-toggle
+#+end_src
+
+*** Resizing Key Bindings
+
+#+begin_src conf
+bind-key -r Down resize-pane -D 5
+bind-key -r Up resize-pane -U 5
+bind-key -r Left resize-pane -L 20
+bind-key -r Right resize-pane -R 20
+#+end_src
+
+*** Splitting
+
+Provides key bindings to split the window either horizontally or vertically
+
+#+begin_src conf
+bind-key K split-window
+bind-key J split-window
+bind-key H split-window -h
+bind-key L split-window -h
+bind-key | split-window -h
+bind-key - split-window -v
+#+end_src
+
+** Support Nested Sessions
+
+Every once in a while I convince myself nested tmux-sessions will be fun
+
+#+begin_src conf
+bind-key b send-prefix
+#+end_src
+
+* Theme
+
+See possible themeing commands at the tmux manual
+
+https://www.man7.org/linux/man-pages/man1/tmux.1.html
+
+See this chart for color reference
+
+https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+
+** Message Style
+
+#+begin_quote
+Set status line message style.  This is used for messages and for the command
+prompt. For how to specify style, see the STYLES section.
+#+end_quote
+
+
+#+begin_src conf
+set-option -g message-style 'bold',bg=colour175,fg=colour236
+#+end_src
+
+** Mode Style
+
+#+begin_quote
+Set window modes style.  For how to specify style, see the STYLES section.
+#+end_quote
+
+
+#+begin_src conf
+set-option -g mode-style bg=colour204,fg=colour15
+#+end_src
+
+** Status Style
+
+#+begin_quote
+Display string (by default the session name) to the left of
+the status line.  string will be passed through
+strftime(3).  Also see the FORMATS and STYLES sections.
+
+For details on how the names and titles can be set see the
+NAMES AND TITLES section.
+
+Examples are:
+
+#(sysctl vm.loadavg)
+#[fg=yellow,bold]#(apm -l)%%#[default] [#S]
+
+The default is ‘[#S] ’.
+#+end_quote
+
+
+#+begin_src conf
+set-option -g status-left ' #S'
+set-option -g status-left-length 20
+set-option -g status-right '#[fg=colour15,bg=colour206,bold] %d/%m #[fg=colour15,bg=colour164,bold] %H:%M:%S '
+set-option -g status-right-length 50
+set-option -g status-style 'dim',bg=colour204
+set-option -g status-style bg=colour168,fg=colour255
+#+end_src
+
+** Pane Border
+
+#+begin_quote
+Set the pane border style for panes aside from the
+active pane.  For how to specify style, see the
+STYLES section.  Attributes are ignored.
+#+end_quote
+
+
+#+begin_src conf
+set-option -g pane-active-border-style bg=default,fg=colour205
+set-option -g pane-border-style bg=default,fg=colour244
+#+end_src
+
+** Window Status
+
+#+begin_quote
+Set the format in which the window is displayed in
+the status line window list.  See the FORMATS and
+STYLES sections.
+#+end_quote
+
+
+#+begin_src conf
+set-option -g window-status-bell-style 'bold',bg=colour1,fg=colour255
+set-option -g window-status-current-format ' #[fg=colour49,bg=colour24] #I#[fg=colour250]:#[fg=colour255]#W#[fg=colour49]#F '
+set-option -g window-status-current-style 'bold',bg=colour168,fg=colour255
+set-option -g window-status-format ' #[fg=colour255]#I #[fg=colour89]#W#F '
+set-option -g window-status-style 'none',bg=colour168,fg=colour255
+#+end_src
+
+
+
+
+* Source Configs
+
+Load the base and osx config files
+
+#+begin_src conf
+source-file /Users/j/dotfiles/tmux/base.conf
+#+end_src
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
+;; End:
