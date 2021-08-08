@@ -15,6 +15,13 @@
     (fn []
       (reset)))
 
+   ;; (it "Should prepend to tables using tables.insert"
+   ;;     (fn []
+   ;;       (let [tbl []]
+   ;;         (table.insert tbl 1 :a)
+   ;;         (table.insert tbl 1 :b)
+   ;;         (is.eq? (join " " tbl) "b a" "Prepending does not work"))))
+
    (it "Should call unadvised functions as-is"
        (fn []
          (let [test-func (make-advisable
@@ -84,6 +91,24 @@
            (is.eq? (test-func 1 2) "original 1 2" "Before-while test-func did not call original function")
            (is.eq? state.called true "Before-while test-func advice function was not called"))))
 
+   (it "Should not call orig if before-while returns false"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-5b
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :before-while
+                       (fn [...]
+                         (tset state :called true)
+                         false))
+           (is.eq? (test-func 1 2) false "Before-while test-func did call original function")
+           (is.eq? state.called true "Before-while test-func advice function was not called"))))
+
+
    (it "Should call orig if before-until returns falsey value"
        (fn []
          (let [state {:called false}
@@ -99,6 +124,24 @@
                          (tset state :called true)
                          false))
            (is.eq? (test-func 1 2) "original 1 2" "Before-until test-func did not call original function")
+           (is.eq? state.called true "Before-until test-func advice function was not called"))))
+
+
+   (it "Should not call orig if before-until returns truthy value"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-6b
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :before-until
+                       (fn [...]
+                         (tset state :called true)
+                         true))
+           (is.eq? (test-func 1 2) true "Before-until test-func did call original function")
            (is.eq? state.called true "Before-until test-func advice function was not called"))))
 
 
@@ -123,8 +166,109 @@
            (is.eq? state.calls 2 "After test-func did not call both the original and after fn")
            (is.eq? state.args "1 2 3 4" "After test-func did not call both the original and after with the same args"))))
 
-   
 
+   (it "Should call after-while if orig returns truthy"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-8
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :after-while
+                       (fn [...]
+                         (tset state :called true)
+                         true))
+           (is.eq? (test-func 1 2) true "After-while test-func did not call original function")
+           (is.eq? state.called true "After-while test-func advice function was not called"))))
+
+   (it "Should not call after-while if orig returns falsey"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-8b
+                          (fn [...]
+                            "Advisable test function"
+                            false))]
+
+           (add-advice test-func
+                       :after-while
+                       (fn [...]
+                         (tset state :called true)
+                         true))
+           (is.eq? (test-func 1 2) false "After-while test-func did not call original function")
+           (is.eq? state.called false "After-while test-func advice function was called"))))
+
+
+
+   (it "Should call after-until if orig returns falsey value"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-9
+                          (fn [...]
+                            "Advisable test function"
+                            false))]
+
+           (add-advice test-func
+                       :after-until
+                       (fn [...]
+                         (tset state :called true)
+                         false))
+           (is.eq? (test-func 1 2) false "After-until test-func did not call original function")
+           (is.eq? state.called true "After-until test-func advice function was not called"))))
+
+   (it "Should not call after-until if orig returns truthy value"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-9b
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :after-until
+                       (fn [...]
+                         (tset state :called true)
+                         false))
+           (is.eq? (test-func 1 2) "original 1 2" "After-until test-func did call advise function")
+           (is.eq? state.called false "After-until test-func advice function was called"))))
+
+   (it "Should filter args sent to orig function"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-10
+                          (fn [...]
+                            "Advisable test function"
+                            (.. "original " (join " " [...]))))]
+
+           (add-advice test-func
+                       :filter-args
+                       (fn [arg-1 arg-2]
+                         (tset state :called true)
+                         [ arg-2 ]))
+           (is.eq? (test-func 1 2) "original 2" "Filter-args test-func did call orig function with filtered-args")
+           (is.eq? state.called true "Filter-args test-func advice function was not called"))))
+
+   (it "Should filter the return value from orig function"
+       (fn []
+         (let [state {:called false}
+               test-func (make-advisable
+                          :test-func-11
+                          (fn [...]
+                            "Advisable test function"
+                            [ "original" (table.unpack [...])]))]
+
+           (add-advice test-func
+                       :filter-return
+                       (fn [[arg-1 arg-2 arg-3]]
+                         (tset state :called true)
+                         (.. "filtered " arg-2 " " arg-3)))
+           (is.eq? (test-func 1 2) "filtered 1 2" "Filter-return test-func did call advise with orig return")
+           (is.eq? state.called true "Filter-return test-func advice function was not called"))))
 
    ))
-
