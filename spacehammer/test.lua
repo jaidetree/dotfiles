@@ -5,7 +5,12 @@ package.path = package.path .. ";" .. os.getenv("HOME") .. "/.luarocks/share/lua
 package.cpath = package.cpath .. ";" .. os.getenv("HOME") .. "/.luarocks/lib/lua/5.4/?.so"
 
 fennel = require("fennel")
-table.insert(package.loaders or package.searchers, fennel.searcher)
+
+local searcher = fennel.makeSearcher({
+      useMetadata = true,
+})
+
+-- table.insert(package.loaders or package.searchers, searcher)
 
 local testRunner = require "test-runner"
 

@@ -18,19 +18,15 @@ Macros to create advisable functions or register advice for advisable functions
 ;; global function registry to support advice instead of doing the lookup on
 ;; every call
 
-(fn defn
+(fn afn
   [fn-name args docstr body1 ...]
   (assert (= (type docstr) :string) "A docstr required for advisable functions")
   (assert body1 "advisable function expected body")
-  `(local ,fn-name
-          (let [fn# (_G.advisable-fn
-                     ,(tostring fn-name)
-                     (fn ,fn-name ,args ,body1 ,...))]
-            (fn ,fn-name
-              [...]
-              ,docstr
-              (fn# (table.unpack [...]))))
-    ))
+  (let [fn-name-str (tostring fn-name)]
+    `(local ,fn-name
+            (let [adv# (require :advice)]
+              (adv#.make-advisable ,fn-name-str (fn ,args ,docstr ,body1 ,...))))))
+
 
 ;; (fn ,fn-name
 ;;       [...]
@@ -46,5 +42,5 @@ Macros to create advisable functions or register advice for advisable functions
   [advice-fn-name advice-args advice-type fn-name docstr body1 ...]
   nil)
 
-{:defn          defn
- :defadvice     defadvice}
+{: afn
+ : defadvice}

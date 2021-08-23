@@ -12,6 +12,7 @@ Advising API to register functions
 "
 
 (require-macros :lib.macros)
+(local fennel (require :fennel))
 (local {: contains?
         : compose
         : filter
@@ -164,6 +165,8 @@ Advising API to register functions
                              (dispatch-advice key [...]))
                    :__index (fn [tbl key]
                               (. tbl key))})
+    (each [k v (pairs (or (. fennel.metadata f) []))]
+      (: fennel.metadata :set ret k v))
     ret))
 
 (fn reset

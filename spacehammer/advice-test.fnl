@@ -1,19 +1,46 @@
-(local is (require :assert))
-(local {: join
-        : map} (require :lib.functional))
-
+(import-macros {: afn} :advice.macros)
 (local {: reset
         : make-advisable
         : add-advice
         : advisable-keys
         : print-advisable-keys} (require :advice))
 
+(local fennel (require :fennel))
+(local is (require :assert))
+(local {: join
+        : map} (require :lib.functional))
+
+(macrodebug
+ (afn some-func
+      []
+      "docstr"
+      (print "Hi")))
+
+(afn some-func
+     [x y z]
+     "docstr"
+     (print "Hi"))
+
+
+(some-func)
+
+;; (let [other-func (afn other-func
+;;                       [x y z]
+;;                       "docstr"
+;;                       (print "other"))]
+;;   (other-func))
+;;
+
+(macrodebug
+ (let [other-func (fn other-func
+                    [x y z]
+                    (print "other"))]
+   (other-func)))
+
 (describe
  "Advice"
  (fn []
-   (before
-    (fn []
-      (reset)))
+   (before reset)
 
    ;; (it "Should prepend to tables using tables.insert"
    ;;     (fn []
@@ -26,7 +53,7 @@
        (fn []
          (let [test-func (make-advisable
                           :test-func-1
-                          (fn [arg]
+                          (fn test-func-1 [arg]
                             "Advisable test function"
                             (.. "Hello " arg)))]
 
@@ -42,6 +69,14 @@
 
            (add-advice test-func :override (fn [...] (.. "Overrided " (join " " [...]))))
            (is.eq? (test-func "anchovie" "pizza") "Overrided anchovie pizza" "Override test-func did not return \"Overrided anchovie pizza\""))))
+
+   ;; (it "Should support afn macro"
+   ;;     (fn []
+   ;;       (afn :test-func-2a [arg]
+   ;;            "Advisable test function"
+   ;;            (.. "Hello " arg))
+   ;;       (is.eq? (test-func-2a "cat") "Hello cat" "Unadvised test-func did not return \"Hello cat\"")))
+
 
    (it "Should call around functions with orig"
        (fn []
@@ -272,3 +307,4 @@
            (is.eq? state.called true "Filter-return test-func advice function was not called"))))
 
    ))
+
