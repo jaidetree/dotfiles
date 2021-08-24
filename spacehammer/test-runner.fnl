@@ -13,8 +13,6 @@
          : describe
          : it} (require :testing))
 
-(print _G.describe)
-
 (local {: init
         : collect-tests
         : run-all-tests} (require :testing))

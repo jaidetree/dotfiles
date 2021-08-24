@@ -11,15 +11,18 @@
 Macros to create advisable functions or register advice for advisable functions
 "
 
-;; How do I generate a function here that can do the lookup without having to
-;; generate a new function every call?
-;;
-;; In the doom discord, mjbach + flat mentioned going the other way. Update the
-;; global function registry to support advice instead of doing the lookup on
-;; every call
-
-(fn afn
+(fn defn
   [fn-name args docstr body1 ...]
+  "
+  Define an advisable function, typically as a module-level function.
+  Can be advised with the defadvice macro or add-advice function
+
+  @example
+  (defn greeting
+    [name]
+    \"Advisable greeting function\"
+    (print \"Hello\" name))
+  "
   (assert (= (type docstr) :string) "A docstr required for advisable functions")
   (assert body1 "advisable function expected body")
   (let [fn-name-str (tostring fn-name)]
@@ -27,20 +30,41 @@ Macros to create advisable functions or register advice for advisable functions
             (let [adv# (require :advice)]
               (adv#.make-advisable ,fn-name-str (fn ,args ,docstr ,body1 ,...))))))
 
+(fn afn
+  [fn-name args body1 ...]
+  "
+  Define an advisable function in as a function expression. These should be used
+  with caution to support when an API function is created from another parent
+  function call.
 
-;; (fn ,fn-name
-;;       [...]
-;;       ,docstr
-;;       (_G.dispatch-advice
-;;        ,(tostring fn-name)
-;;        ""
-;;        (fn ,fn-name ,args ,body1 ,...)
-;;        [...]))
+  @example
+  (let [f (afn local-greeting
+            [name]
+            \"Advisable greeting but local to this scope\")
+            (print \"Hello\" name)]
+    (f))
+  "
+  (assert body1 "advisable function expected body")
+  (let [fn-name-str (tostring fn-name)]
+    `(let [adv# (require :advice)]
+       (adv#.make-advisable ,fn-name-str (fn ,args ,body1 ,...)))))
+
 
 
 (fn defadvice
-  [advice-fn-name advice-args advice-type fn-name docstr body1 ...]
-  nil)
+  [f-or-key args advice-type fn-name docstr body1 ...]
+  "
+  Define advice for an advisable function. Syntax sugar for calling
+  (add-advice key-or-advisable-fn (fn [] ...))
+
+  @example
+
+  "
+  (assert (= (type docstr) :string) "A docstr is required for defining advice")
+  (assert body1 "advisable function expected body")
+  `(let [adv# (require :advice)]
+     (adv#.add-advice ,f-or-key ,advice-type (fn ,fn-name ,args ,docstr ,body1 ,...))))
 
 {: afn
+ : defn
  : defadvice}

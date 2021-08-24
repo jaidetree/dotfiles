@@ -30,7 +30,7 @@ Advising API to register functions
 
 (fn add-advice
   [f advice-type advice-fn]
-  (let [key f.key
+  (let [key (or f.key f)
         advice-entry (. advice key)]
     (when advice-entry
       (table.insert advice-entry.advice {:type advice-type :f advice-fn}))))

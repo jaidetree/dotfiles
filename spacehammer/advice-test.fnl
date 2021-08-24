@@ -1,4 +1,6 @@
-(import-macros {: afn} :advice.macros)
+(import-macros {: defn
+                : afn
+                : defadvice} :advice.macros)
 (local {: reset
         : make-advisable
         : add-advice
@@ -10,44 +12,12 @@
 (local {: join
         : map} (require :lib.functional))
 
-(macrodebug
- (afn some-func
-      []
-      "docstr"
-      (print "Hi")))
-
-(afn some-func
-     [x y z]
-     "docstr"
-     (print "Hi"))
-
-
-(some-func)
-
-;; (let [other-func (afn other-func
-;;                       [x y z]
-;;                       "docstr"
-;;                       (print "other"))]
-;;   (other-func))
-;;
-
-(macrodebug
- (let [other-func (fn other-func
-                    [x y z]
-                    (print "other"))]
-   (other-func)))
 
 (describe
  "Advice"
  (fn []
    (before reset)
 
-   ;; (it "Should prepend to tables using tables.insert"
-   ;;     (fn []
-   ;;       (let [tbl []]
-   ;;         (table.insert tbl 1 :a)
-   ;;         (table.insert tbl 1 :b)
-   ;;         (is.eq? (join " " tbl) "b a" "Prepending does not work"))))
 
    (it "Should call unadvised functions as-is"
        (fn []
@@ -69,14 +39,6 @@
 
            (add-advice test-func :override (fn [...] (.. "Overrided " (join " " [...]))))
            (is.eq? (test-func "anchovie" "pizza") "Overrided anchovie pizza" "Override test-func did not return \"Overrided anchovie pizza\""))))
-
-   ;; (it "Should support afn macro"
-   ;;     (fn []
-   ;;       (afn :test-func-2a [arg]
-   ;;            "Advisable test function"
-   ;;            (.. "Hello " arg))
-   ;;       (is.eq? (test-func-2a "cat") "Hello cat" "Unadvised test-func did not return \"Hello cat\"")))
-
 
    (it "Should call around functions with orig"
        (fn []
@@ -306,5 +268,38 @@
            (is.eq? (test-func 1 2) "filtered 1 2" "Filter-return test-func did call advise with orig return")
            (is.eq? state.called true "Filter-return test-func advice function was not called"))))
 
-   ))
 
+   (it "Should support the defn macro for defining a function within a scope"
+       (fn []
+         (defn defn-func-1
+               [x y z]
+               "docstr"
+               (print "Hi"))
+
+         (add-advice defn-func-1 :override (fn [x y z] "over-it"))
+
+         (is.eq? (type defn-func-1) "table" "defn call did not result in a callable table")
+         (is.eq? (defn-func-1) "over-it" "defn function was not advised with override")))
+
+   (it "Should support the afn macro for defining inline functions"
+       (fn []
+         (let [priv-func (afn priv-func [x y z] "default")]
+           (add-advice priv-func :override (fn [x y z] "over-it"))
+
+           (is.eq? (type priv-func) "table" "afn did not result in a callable table")
+           (is.eq? (priv-func) "over-it" "afn function was not advised with override"))))
+
+   (it "Should support advice added with defadvice"
+       (fn []
+         (defn defn-func-2
+               [x y z]
+               "docstr"
+               (print "hi"))
+
+         (defadvice defn-func-2 [x y z]
+                    :override defn-override
+                    "Override defn-func-2 with this sweet, sweet syntax sugar"
+                    "This feature is done!")
+
+         (is.eq? (defn-func-2) "This feature is done!" "defadvice did not advise defn-func-2")))
+   ))

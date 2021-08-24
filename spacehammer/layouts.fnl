@@ -117,18 +117,22 @@ Window Layouts
   Returns previous state table
   "
   (let [prev (atom.deref state)
+        prev-duration hs.window.animationDuration
         current (current-state cell)
         index (if (repeated-update? prev current)
                   (next-screen-index prev.index (length current.screens))
                   (current-screen-index current.screen current.screens))
         next-screen (. current.screens index)]
+
+    (tset hs.window "animationDuration" 0)
     (hs.grid.set current.window cell next-screen)
     (update {:index index
              :cell cell
              :window current.window
              :frame (win->frame-str current.window)})
     (hs.timer.doAfter 0.5 (fn []
-                            (update {:frame (win->frame-str current.window)})))))
+                            (update {:frame (win->frame-str current.window)})
+                            (tset hs.window "animationDuration" prev-duration)))))
 
 (fn full-size
   []
