@@ -154,8 +154,26 @@ Advising API to register functions
         (do
           (entry.original (table.unpack args))))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Public API
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (fn make-advisable
   [fn-name f]
+  "
+  Registers a function name against the global advisable table that contains
+  advice registered for a function. Advice can be defined before a function is
+  defined making it a really safe way to extend behavior without exploding
+  config options.
+
+  Usage:
+  (make-advisable :some-func (fn some-func [] \"Some return string\"))
+
+  - Supports passing some-func directly into add-advice
+  - Supports passing in some-func.key directly into add-advice
+  - Supports passing in a string like :path/to/module/some-func to add-advice
+  "
   (let [module (get-module-name)
         key (.. module "/" fn-name)
         advice-reg (register-advisable key f)
@@ -173,6 +191,11 @@ Advising API to register functions
   []
   (set advice {})
   (set advisable []))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Exports
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 {: reset
  : make-advisable

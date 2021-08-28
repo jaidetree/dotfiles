@@ -6,12 +6,16 @@
 (tset fennel :path (.. customdir "/?.fnl;" fennel.path))
 (tset fennel :path (.. customdir "/?/init.fnl;" fennel.path))
 
+;; Setup some globals for test files and debugging
+
 (global pprint (fn [x] (print (fennel.view x))))
 
 (global {: after
          : before
          : describe
          : it} (require :testing))
+
+;; Pull in some locals from the testing library as well
 
 (local {: init
         : collect-tests
@@ -20,6 +24,10 @@
 (fn load-tests
   [args]
 
+  "
+  Takes a list of args starting with a directory
+  Runs each test file using fennel.dofile
+  "
   (init)
   (let [[dir & test-files] (slice 2 args)]
     (each [i test-file (ipairs test-files)]
