@@ -1,6 +1,9 @@
 #+title: Testing
 
 * Watching Tests
+:PROPERTIES:
+:ID:       e9805c0c-0b60-4493-b56f-6a4969d2a76b
+:END:
 
 #+begin_src bash :results none
 nodemon -e ".fnl" -x "./run-test" --delay 2 -- "./advice-test.fnl"
