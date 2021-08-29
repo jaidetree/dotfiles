@@ -3,16 +3,59 @@
         :logf logf
         :map map
         :merge merge
+        :reduce reduce
         :split split} (require :lib.functional))
 (local atom (require :lib.atom))
 
 (local session (atom.new nil))
 (local prev-window (atom.new nil))
 
+(fn focused-selected-text
+  []
+  "
+  Strategy to get selected text:
+
+  Get the selected text from the current OS X ui element
+  Does not work in browser or Electron apps
+  "
+  (when-let [el (hs.uielement.focusedElement)]
+            (: el :selectedText)))
+
+(fn clipboard-selected-text
+  []
+  "
+  Strategy to get selected text:
+
+  Invoke the copy-to-clipboard keystroke, get the contents, compare
+  the count, and if the count changed return the clipboard text.
+
+  Before the selected text is returned it restores the previous value
+  to the clipboard.
+  "
+  ;; Capture current clipboard contents
+  (let [prev (hs.pasteboard.getContents)
+        prev-count (hs.pasteboard.changeCount)]
+    ;; invoke the copy key combo
+    (hs.eventtap.keyStroke [:cmd] :c)
+    ;; Get the new pasteboard contents
+    (let [next (hs.pasteboard.getContents)
+          next-count (hs.pasteboard.changeCount)]
+      ;; If it changed, we have selected text!
+      (when (not (= prev-count next-count))
+        ;; Restore the clipboard contents
+        (hs.pasteboard.setContents prev)
+        ;; Return the captured text
+        next))))
+
 (fn selected-text
   []
-  (when-let [el (hs.uielement.focusedElement)]
-    (: el :selectedText)))
+  (reduce
+   (fn [prev next-strat]
+     (if prev
+         prev
+         (next-strat)))
+   nil
+   [focused-selected-text clipboard-selected-text]))
 
 (fn cmd
   [cmd-str f args]
@@ -84,6 +127,13 @@
   (fn [msg]
     (load-tmux-buffer #(continue msg) msg)))
 
+(fn commit-command
+  [continue]
+  (fn [msg]
+    (cmd "/usr/local/bin/tmux"
+         #(continue msg)
+         ["send-keys" "-t" msg.session "Enter"])))
+
 (fn delete-tmp-file
   [continue]
   (fn [msg]
@@ -112,6 +162,7 @@
                   select-tmux-session
                   save-tmp-file
                   send-file-to-tmux
+                  commit-command
                   delete-tmp-file
                   activate-terminal)
                  print))
