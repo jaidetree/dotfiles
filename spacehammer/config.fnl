@@ -333,7 +333,7 @@
          :key :r
          :action hs.reload}
         {:mods [:hyper]
-         :key :c
+         :key :p
          :action (fn []
                    (hs.eventtap.keyStroke [:cmd :ctrl :shift :alt] :c))}
         {:mods [:ctrl]
@@ -358,6 +358,9 @@
         {:mods [:hyper]
          :key :t
          :action "tmux:send-to-tmux"}
+        {:mods [:hyper]
+         :key :c
+         :action "tmux:send-to-tmux-repl"}
         {:mods [:hyper]
          :key :s
          :action "tmux:send-to-tmux-new-session"}])
@@ -535,9 +538,14 @@
         :vim {:enabled false}})
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup a nREPL server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;(require :advice-test)
+(global repl (require :repl))
+(local coroutine (require :coroutine))
+(global replserver (repl.start))
+(repl.run replserver)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
