@@ -170,7 +170,9 @@ numbers are disabled. For relative line numbers, set this to `relative'.
 #+END_SRC
 
 ** Theme Settings
+
 *** Introduction
+
 Doom exposes five (optional) variables for controlling fonts in Doom. Here are
 the three important ones:
 
@@ -190,11 +192,13 @@ There are two ways to load a theme. Both assume the theme is installed and
 available. You can either set =doom-theme= or manually load a theme with the
 
 *** Theme
+
 #+begin_src emacs-lisp
 (setq doom-theme 'doom-one)
 #+END_SRC
 
 **** Change a theme at runtime
+
 It's recommended to use doom-theme so Henrik can update how its used over time,
 but this should work for loading when needed.
 
@@ -203,12 +207,13 @@ but this should work for loading when needed.
 #+END_SRC
 
 *** Font
+
 Set default font
 
 #+begin_src emacs-lisp
 (setq!
- doom-font                (font-spec :family "operator mono" :size 14 :weight 'medium)
- doom-variable-pitch-font (font-spec :family "avenir next" :size 14 :weight 'medium :slant 'italic))
+ doom-font                (font-spec :family "operator mono" :size 18 :weight 'medium)
+ doom-variable-pitch-font "Bradley Hand-18:bold:normal")
 #+END_SRC
 
 Make line numbers brighter
@@ -224,10 +229,11 @@ Make line numbers brighter
 
 
 * General var Settings
+
 - What can I say? I'm fussy.
+
 #+begin_src emacs-lisp
 (setq
- tab-always-indent                   t
  make-backup-files                   nil
  create-lockfiles                    nil
  uniquify-buffer-name-style          'post-forward-angle-brackets
@@ -241,6 +247,7 @@ Make line numbers brighter
 
 
 * Org Initialization
+
 - If you use `org' and don't want your org files in the default location below,
   change `org-directory'. It must be set before org loads!
 
@@ -444,8 +451,11 @@ Make line numbers brighter
 #+END_SRC
 
 ** JavaScript
+
 *** Settings
+
 *NOTE:* Relies on editorconfig package
+
 #+begin_src emacs-lisp
 (use-package! js2-mode
   :config
@@ -455,29 +465,10 @@ Make line numbers brighter
     js-chain-indent t))
 #+END_SRC
 
-*** Indentation
-
-**** Multi-line expressions
-
-#+begin_src emacs-lisp :tangle no
-(defadvice! j/fix-js-multi-line-indent ()
-  "Indent expression declarations by 2 just like the rest of the code"
-  :after-while #'js--multi-line-declaration-indentation
-  (let ((beg (match-beginning 0)))
-    (when beg
-      (goto-char beg)
-      (+ js-indent-level (current-column)))))
-#+END_SRC
-
-***** Sample
-#+begin_src js :tangle no
-const x = myfunc().test;
-#+end_src
-**** TODO regular chaining
-
-
 ** Delete current buffer file
+
 Borrowed from spacemacs
+
 #+begin_src emacs-lisp
 (defun delete-current-buffer-file ()
   "Removes file connected to current buffer and kills buffer."
@@ -496,7 +487,9 @@ Borrowed from spacemacs
 #+END_SRC
 
 ** Rename current buffer file
+
 Borrowed this from spacemacs but uses current name as default
+
 #+begin_src emacs-lisp
 (defun rename-current-buffer-file ()
   "Renames current buffer and file it is visiting."
@@ -528,6 +521,7 @@ Borrowed this from spacemacs but uses current name as default
 #+END_SRC
 
 ** Copy project path
+
 #+begin_src emacs-lisp
 (defun copy-project-path ()
   "Copies the current buffer path from the project root to copy a relative path"
@@ -539,7 +533,9 @@ Borrowed this from spacemacs but uses current name as default
 #+END_SRC
 
 ** Zoom font size
+
 Based on the hydra demo zoom example
+
 #+begin_src emacs-lisp
 (map!
   :leader
@@ -547,6 +543,7 @@ Based on the hydra demo zoom example
 #+END_SRC
 
 ** Flycheck
+
 Make the flycheck messages easier to read\distinguish from surrounding code
 
 *** Font customization
@@ -713,7 +710,7 @@ Create a purple state color for the modeline when in lisp-state
 
 Color the cursor in evil-lisp-state
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun j/evil-state-fg (state)
   (let ((sym (intern (concat "doom-modeline-evil-" state "-state"))))
     (face-foreground sym nil t)))
@@ -771,8 +768,10 @@ fun surprise.
 #+END_SRC
 
 ** Indent guides
+
 *** Show only the active guide
-#+begin_src emacs-lisp
+
+#+begin_src emacs-lisp :tangle no
 (defun j/active-guide (level responsive display)
   (when (eq responsive 'top)
     (highlight-indent-guides--highlighter-default
@@ -780,7 +779,7 @@ fun surprise.
 #+END_SRC
 
 *** Settings
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (after! highlight-indent-guides
   (setq!
     highlight-indent-guides-auto-enabled         nil
@@ -793,7 +792,8 @@ fun surprise.
 #+END_SRC
 
 *** Hide guides in lisp and clojure modes
-#+begin_src emacs-lisp
+
+#+begin_src emacs-lisp :tangle no
 (add-hook! '(lisp-mode-hook emacs-lisp-mode-hook clojure-mode-hook)
     (defun +disable-indent-guides-in-lisp ()
       (highlight-indent-guides-mode -1)))
@@ -1239,9 +1239,9 @@ From https://tecosaur.github.io/emacs-config/config.html#org-mode
 
 *** Additional packages
 #+begin_src emacs-lisp :tangle packages.el
-(package! org-pretty-table-mode
-  :recipe (:host github :repo "Fuco1/org-pretty-table"))
-(package! org-pretty-tags)
+;; (package! org-pretty-table-mode
+;;  :recipe (:host github :repo "Fuco1/org-pretty-table"))
+;; (package! org-pretty-tags)
 (package! ox-gfm)
 (package! org-graph-view
   :recipe (:host github
@@ -1726,9 +1726,9 @@ I prefer SPC SPC to open the counsel-m-x menu to behave similar to when pressing
 CMD+P in Atom, Sublime, or VS Code
 
 #+begin_src emacs-lisp
-(map! :leader "SPC" #'counsel-M-x)
-(map! "s-P" #'counsel-M-x)
-(map! "s-p" #'counsel-find-file)
+(map! :leader "SPC" #'execute-extended-command)
+(map! "s-P" #'execute-extended-command)
+(map! "s-p" #'find-file)
 #+end_src
 
 ** Use tabs for indent :formatting:style:indent:
@@ -1749,7 +1749,7 @@ Buffers or projects can be overwritten with a .dir-locals.el file.
 
 Add defn macro to fn patterns
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (after! fennel-mode
   (setq! fennel-keywords
          '("require-macros" "eval-compiler" "defn" "doc" "lua" "hashfn" "macro" "macros"
@@ -1780,15 +1780,145 @@ Add defn macro to fn patterns
   (put 'defn 'fennel-indent-function 'defun))
 #+end_src
 
+Install monroe as a nrepl-client compatible with fennel-mode.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! monroe)
+#+end_src
+
 ** Format on save :format:lsp:
 
 According to https://github.com/hlissner/doom-emacs/tree/develop/modules/editor/format#disabling-the-lsp-formatter
 The LSP formatter will conflict with the format-on-save of the format module.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (setq +format-with-lsp nil)
 #+end_src
 
+** Fennel Execute :lang:org:
+
+#+begin_src emacs-lisp
+(defun org-babel-execute:fennel (body params)
+  "Execute a block of fennel code with Babel."
+  (org-babel-eval "fennel" body))
+#+end_src
+
+#+begin_src fennel :tangle no
+(print "hi")
+#+end_src
+
+** Reason for ReScript :lang:reason:
+
+Uses the Reason emacs mode to syntax highlight ReScript files https://rescript-lang.org/docs/manual/latest/editor-plugins
+Currently a ReScript mode does not exist.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! reason-mode)
+#+end_src
+
+Use reason-mode for .res and .resi files.
+
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.resi?$" . reason-mode))
+#+end_src
+
+** Magit Forge Config :tools:git:github:
+
+Configures magit forge, which supports managing PRs and connecting to git forges
+like Github, Gitlab, and Bit Bucket. Requires an API Token to authenticate.
+
+#+begin_src emacs-lisp
+(setq auth-sources '("~/.authinfo.gpg"))
+#+end_src
+
+** Corfu :tools:completion:lsp:
+
+A completion-at-point system that should be compatible with LSP, built on-top of
+the vertico pipeline. Thanks to Yeet from the doom discord for sharing the link,
+Minad, and MonadGauge for building this.
+
+https://github.com/minad/corfu
+
+Also of note, portions of this section are shamelessly ripped off from
+https://git.sr.ht/~gagbo/doom-config/tree/master/item/modules/completion/corfu
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! corfu)
+#+end_src
+
+Configure corfu. This sets the core bindings, config only kicks in when visiting
+the first interactively opened buffer.
+
+#+begin_src emacs-lisp
+(use-package corfu
+  :hook
+  (doom-first-buffer . corfu-global-mode)
+  :bind (:map corfu-map
+          ("TAB" . corfu-next)
+          ([tab] . corfu-next)
+          ("S-TAB" . corfu-previous)
+          ([backtab] . corfu-previous)))
+#+end_src
+
+Support cycling through completions with TAB if there are only a few candidates.
+
+#+begin_src emacs-lisp
+(setq completion-cycle-threshold 3)
+#+end_src
+
+Enable indentation+completion using the TAB key. Completion is often bound to M-TAB.
+
+#+begin_src emacs-lisp
+(setq tab-always-indent 'complete)
+#+end_src
+
+Gagbo's dirty hack to get c-completion running
+Taken from discussion in https://github.com/minad/corfu/issues/34
+
+#+begin_src emacs-lisp
+(when (equal tab-always-indent 'complete)
+  (map! :map c-mode-base-map
+        :i [remap c-indent-line-or-region] #'completion-at-point))
+#+end_src
+
+** Tailwind LSP :tools:css:lsp:
+
+Provide tailwind class name completions as an extra LSP package.
+
+Install the lsp-tailwindcss emacs package:
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! lsp-tailwindcss :recipe (:host github :repo "merrickluo/lsp-tailwindcss"))
+#+end_src
+
+Set add-on mode. This ensures both tailwind-lsp and the js or ts lsp servers run
+in parallel. Set =lsp-tailwindcss-add-on-mode= before the package loads.
+
+#+begin_src emacs-lisp
+(use-package! lsp-tailwindcss
+  :init
+  (setq! lsp-tailwindcss-add-on-mode t)
+  :custom
+  (lsp-tailwindcss-major-modes '(rjsx-mode web-mode html-mode css-mode typescript-mode typescript-tsx-mode)))
+#+end_src
+
+Lastly associate various template language files with html so that
+lsp-tailwindcss runs when editing .liquid files for example.
+
+#+begin_src emacs-lisp
+(add-to-list 'lsp-language-id-configuration '(".*\\.liquid" . "html"))
+#+end_src
+
+Make sure to add the ~+lsp~ flag to the ~:lang web~ module in [[./init.el][init.el]]!
+
+
+** Liquid :lang:html:liquid:
+
+Use web-mode when opening a .liquid file
+
+#+begin_src emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.liquid\\'" . web-mode))
+#+end_src
 
 * Distro Configs
 
@@ -1813,19 +1943,21 @@ Add support for the typical cmd-* ops like cmd-s -> save, cmd-v -> paste, cmd-c
 ** Setup
 
 *** Function to execute emacs-lisp src blocks
+
 #+begin_src emacs-lisp :results silent
 (defun org-babel-execute:emacs-lisp-config (body params)
   "Execute a block of emacs-lisp code with Babel."
   (cl-letf (((symbol-function 'current-window-configuration) #'ignore)
             ((symbol-function 'set-window-configuration) #'ignore))
     (org-babel-execute:emacs-lisp body params)))
-#+END_SRC
+#+end_src
 
 *** Added emacs-lisp-config to org-babel using emacs-lisp as base
+
 #+begin_src emacs-lisp :results silent
 (after! org
   (add-to-list 'org-src-lang-modes '("emacs-lisp-config" . emacs-lisp)))
-#+END_SRC
+#+end_src
 
 ** Demos
 :PROPERTIES:
@@ -1851,4 +1983,7 @@ Add support for the typical cmd-* ops like cmd-s -> save, cmd-v -> paste, cmd-c
 #+END_SRC
 
 * Local config
-    #+INCLUDE: ./local.org
+
+#+begin_src emacs-lisp
+(load! "local" doom-private-dir)
+#+end_src

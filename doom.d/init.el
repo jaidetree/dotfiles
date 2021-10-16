@@ -23,10 +23,11 @@
        ;tty
 
        :completion
-       (company +childframe) ; the ultimate code completion backend
-       helm                ; the *other* search engine for love and life
+       ;company  ; the ultimate code completion backend
+       ;helm                ; the *other* search engine for love and life
        ;;ido                 ; the other *other* search engine...
-       (ivy)     ; a search engine for love and life
+       ;(ivy)     ; a search engine for love and life
+       (vertico +icons)
 
        :ui
        ;;deft             ; notational velocity for Emacs
@@ -37,7 +38,7 @@
        ;; fill-column        ; a `fill-column' indicator
        ;;hl-todo            ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
        hydra
-       indent-guides      ; highlighted indent columns
+       ;; indent-guides      ; highlighted indent columns
        ;;ligatures
        ;;minimap          ; show a map of the code on the side
        modeline           ; snazzy, Atom-inspired modeline, plus API
@@ -58,7 +59,7 @@
        (evil +everywhere) ; come to the dark side, we have cookies
        ;; file-templates     ; auto-snippets for empty files
        fold               ; (nigh) universal code folding
-       (format) ; automated prettiness
+       (format +onsave) ; automated prettiness
        ;;god              ; run Emacs commands without modifier keys
        ;lispy              ; vim for lisp, for people who don't like vim
        multiple-cursors   ; editing in many places at once
@@ -97,7 +98,7 @@
        gist                ; interacting with github gists
        lookup              ; navigate your code and its documentation
        lsp
-       magit               ; a git porcelain for Emacs
+       (magit +forge)               ; a git porcelain for Emacs
        ;;make              ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
        ;;pdf               ; pdf enhancements
@@ -127,7 +128,6 @@
        emacs-lisp          ; drown in parentheses
        ;;erlang            ; an elegant language for a more civilized age
        ;;ess               ; emacs speaks statistics
-       fennel
        ;;faust             ; dsp, but you get to keep your soul
        ;;fsharp            ; ML stands for Microsoft's Language
        ;;fstar             ; (dependent) types and (monadic) effects and Z3
@@ -145,7 +145,7 @@
        ;;lean
        ;;factor
        ;;ledger            ; an accounting system in Emacs
-       ;;lua               ; one-based indices? one-based indices
+       (lua +fennel)               ; one-based indices? one-based indices
        markdown            ; writing docs for people to ignore
        ;;nim               ; python + lisp at the speed of c
        ;;nix               ; I hereby declare "nix geht mehr!"
@@ -169,7 +169,7 @@
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
-       (web)          ; the tubes
+       (web +lsp)          ; the tubes
        yaml                ; JSON, but readable
 
        :email
