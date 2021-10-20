@@ -1004,6 +1004,7 @@ but do not execute them."
                               default-directory)))
     (funcall toggle-vterm arg)))
 #+END_SRC
+
 *** vterm hooks
 #+begin_src emacs-lisp
 (after! vterm
@@ -1019,6 +1020,17 @@ but do not execute them."
   (add-hook! 'evil-insert-state-entry-hook #'vterm-buffer-change)
   (evil-set-initial-state 'vterm-mode 'vterm))
 #+END_SRC
+
+Decrease the font-size of vterm buffers using the text-scale so it's based off
+the =doom-font= setting.
+
+#+begin_src emacs-lisp
+(defun j/decrease-vterm-font-size ()
+  (text-scale-decrease 0.5))
+
+(after! vterm
+  (add-hook! 'vterm-mode-hook #'j/decrease-vterm-font-size))
+#+end_src
 
 
 ** Org-Roam
@@ -1786,14 +1798,47 @@ Install monroe as a nrepl-client compatible with fennel-mode.
 (package! monroe)
 #+end_src
 
-** Format on save :format:lsp:
+** Format Config :format:
+
+NOTE: The format module is currently on the do-not-bump list due to incompatible
+upstream changes. Going to disable format all on ts and js files in favor of
+prettier.el
 
 According to https://github.com/hlissner/doom-emacs/tree/develop/modules/editor/format#disabling-the-lsp-formatter
 The LSP formatter will conflict with the format-on-save of the format module.
 
 #+begin_src emacs-lisp
 (setq +format-with-lsp nil)
+(setq +format-on-save-enabled-modes
+      '(not emacs-lisp-mode
+            sql-mode
+            tex-mode
+            latex-mode
+            org-msg-edit-mode
+            js-mode
+            js2-mode
+            rjsx-mode
+            typescript-mode
+            typescript-tsx-mode))
 #+end_src
+
+*** Prettier
+Docs at https://github.com/jscheid/prettier.el
+
+Install the package:
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! prettier)
+#+end_src
+
+Enable global mode to format on save:
+
+#+begin_src emacs-lisp
+(add-hook 'after-init-hook #'global-prettier-mode)
+#+end_src
+
+Alternatively, could use dir-locals to enable prettier mode by project
+https://github.com/jscheid/prettier.el#enabling-per-file--per-directory
 
 ** Fennel Execute :lang:org:
 
@@ -1918,6 +1963,36 @@ Use web-mode when opening a .liquid file
 
 #+begin_src emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.liquid\\'" . web-mode))
+#+end_src
+
+** Simplify centaur-tabs buffer groups :ui:centaur:tabs:
+
+Currently centaur will only display buffers of the same file type in the tabs
+UI. However, I prefer it displays all open tabs of the project so it's easier to
+see what's actually opened.
+
+#+begin_src emacs-lisp
+(defadvice! j/centaur-tabs-buffer-groups ()
+  "Show all buffers within a project"
+  :override #'centaur-tabs-buffer-groups
+  (list (cond
+         ((string-equal "*" (substring (buffer-name) 0 1)) "Emacs")
+         (t (centaur-tabs-get-group-name (current-buffer))))))
+#+end_src
+
+
+
+
+** Janet Language :lang:lisp:janet:
+
+Add packages for the Janet lisp lang. Packages were linked from https://github.com/janet-lang/janet.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! janet-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! janet-mode)
 #+end_src
 
 * Distro Configs

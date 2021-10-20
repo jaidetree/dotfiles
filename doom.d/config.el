@@ -542,6 +542,14 @@ but do not execute them."
   (evil-set-initial-state 'vterm-mode 'vterm))
 ;; vterm hooks:1 ends here
 
+;; [[file:../dotfiles/doom.d/config.org::*vterm hooks][vterm hooks:2]]
+(defun j/decrease-vterm-font-size ()
+  (text-scale-decrease 0.5))
+
+(after! vterm
+  (add-hook! 'vterm-mode-hook #'j/decrease-vterm-font-size))
+;; vterm hooks:2 ends here
+
 ;; [[file:../dotfiles/doom.d/config.org::*Set mode hooks, customze directory, bind keys][Set mode hooks, customze directory, bind keys:1]]
 (use-package! org-roam
   :defer t
@@ -1041,9 +1049,24 @@ buffer or project with dir-locals.el.")
        indent-tabs-mode t)
 ;; Use tabs for indent:1 ends here
 
-;; [[file:../dotfiles/doom.d/config.org::*Format on save][Format on save:1]]
+;; [[file:../dotfiles/doom.d/config.org::*Format Config][Format Config:1]]
 (setq +format-with-lsp nil)
-;; Format on save:1 ends here
+(setq +format-on-save-enabled-modes
+      '(not emacs-lisp-mode
+            sql-mode
+            tex-mode
+            latex-mode
+            org-msg-edit-mode
+            js-mode
+            js2-mode
+            rjsx-mode
+            typescript-mode
+            typescript-tsx-mode))
+;; Format Config:1 ends here
+
+;; [[file:../dotfiles/doom.d/config.org::*Prettier][Prettier:2]]
+(add-hook 'after-init-hook #'global-prettier-mode)
+;; Prettier:2 ends here
 
 ;; [[file:../dotfiles/doom.d/config.org::*Fennel Execute][Fennel Execute:1]]
 (defun org-babel-execute:fennel (body params)
@@ -1099,6 +1122,19 @@ buffer or project with dir-locals.el.")
 ;; [[file:../dotfiles/doom.d/config.org::*Liquid][Liquid:1]]
 (add-to-list 'auto-mode-alist '("\\.liquid\\'" . web-mode))
 ;; Liquid:1 ends here
+
+;; [[file:../dotfiles/doom.d/config.org::*Simplify centaur-tabs buffer groups][Simplify centaur-tabs buffer groups:1]]
+(defadvice! j/centaur-tabs-buffer-groups ()
+  "Show all buffers within a project"
+  :override #'centaur-tabs-buffer-groups
+  (list (cond
+         ((string-equal "*" (substring (buffer-name) 0 1)) "Emacs")
+         (t (centaur-tabs-get-group-name (current-buffer))))))
+;; Simplify centaur-tabs buffer groups:1 ends here
+
+;; [[file:../dotfiles/doom.d/config.org::*Janet Language][Janet Language:2]]
+(use-package! janet-mode)
+;; Janet Language:2 ends here
 
 ;; [[file:../dotfiles/doom.d/config.org::*emacs-mac installation config][emacs-mac installation config:1]]
 (map!

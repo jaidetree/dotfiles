@@ -55,6 +55,10 @@
 (package! monroe)
 ;; Customize fennel:2 ends here
 
+;; [[file:../dotfiles/doom.d/config.org::*Prettier][Prettier:1]]
+(package! prettier)
+;; Prettier:1 ends here
+
 ;; [[file:../dotfiles/doom.d/config.org::*Reason for ReScript][Reason for ReScript:1]]
 (package! reason-mode)
 ;; Reason for ReScript:1 ends here
@@ -66,3 +70,7 @@
 ;; [[file:../dotfiles/doom.d/config.org::*Tailwind LSP][Tailwind LSP:1]]
 (package! lsp-tailwindcss :recipe (:host github :repo "merrickluo/lsp-tailwindcss"))
 ;; Tailwind LSP:1 ends here
+
+;; [[file:../dotfiles/doom.d/config.org::*Janet Language][Janet Language:1]]
+(package! janet-mode)
+;; Janet Language:1 ends here
