@@ -1615,7 +1615,12 @@ Shows a buffer logging key presses and resulting commands
 (package! command-log-mode)
 #+end_src
 
-** Display LSP breadcrumbs automatically :lsp:ui:
+** Language Server Protocol :lsp:ui:
+
+#+begin_src emacs-lisp :tangle packages.el
+(unpin! lsp-mode)
+#+end_src
+
 
 Displays a breadcrumbs of project, path, file, and symbols when working in LSP
 powered files.
@@ -1840,6 +1845,27 @@ Enable global mode to format on save:
 Alternatively, could use dir-locals to enable prettier mode by project
 https://github.com/jscheid/prettier.el#enabling-per-file--per-directory
 
+Configure enabled langs prettier is intended to format. Requires respective
+prettier plugins globally installed via yarn or npm:
+
+#+begin_src emacs-lisp
+(use-package! prettier
+  :config
+  (setq prettier-enabled-parsers '(babel-flow babel-ts json json5 json-stringify lua markdown postgresql python scss typescript yaml)))
+#+end_src
+
+Install the following plugins
+
+#+begin_src sh :tangle no
+yarn global add \
+    prettier-plugin-packagejson \
+    prettier-plugin-json-formats \
+    @prettier/plugin-lua \
+    prettier-plugin-pg \
+    @prettier/plugin-python \
+    @prettier/plugin-ruby
+#+end_src
+
 ** Fennel Execute :lang:org:
 
 #+begin_src emacs-lisp
@@ -1895,26 +1921,31 @@ Configure corfu. This sets the core bindings, config only kicks in when visiting
 the first interactively opened buffer.
 
 #+begin_src emacs-lisp
-(use-package corfu
+(use-package! corfu
   :hook
   (doom-first-buffer . corfu-global-mode)
   :bind (:map corfu-map
           ("TAB" . corfu-next)
           ([tab] . corfu-next)
           ("S-TAB" . corfu-previous)
-          ([backtab] . corfu-previous)))
+          ([backtab] . corfu-previous))
+  :config
+  (setq corfu-cycle t)
+  (setq corfu-auto  t)
+  (setq corfu-commit-predicate nil)
+  (setq corfu-quit-at-boundary t)
+  (setq corfu-quit-no-match t))
 #+end_src
 
 Support cycling through completions with TAB if there are only a few candidates.
 
 #+begin_src emacs-lisp
-(setq completion-cycle-threshold 3)
-#+end_src
-
-Enable indentation+completion using the TAB key. Completion is often bound to M-TAB.
-
-#+begin_src emacs-lisp
-(setq tab-always-indent 'complete)
+(use-package! emacs
+  :init
+  ;; TAB CYCLE if there are only a few candidates, otherwise show menu
+  (setq completion-cycle-threshold 3)
+  ;; Support using TAB key to complete, which uses M-TAB by default
+  (setq tab-always-indent 'complete))
 #+end_src
 
 Gagbo's dirty hack to get c-completion running
