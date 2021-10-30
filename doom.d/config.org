@@ -1839,7 +1839,7 @@ Install the package:
 Enable global mode to format on save:
 
 #+begin_src emacs-lisp
-(add-hook 'after-init-hook #'global-prettier-mode)
+(add-hook! '(json-mode typescript-tsx-mode typescript-mode rjsx-mode js2-mode js-mode) #'prettier-mode)
 #+end_src
 
 Alternatively, could use dir-locals to enable prettier mode by project
@@ -1931,20 +1931,19 @@ the first interactively opened buffer.
           ([backtab] . corfu-previous))
   :config
   (setq corfu-cycle t)
-  (setq corfu-auto  t)
+  ;; Disable autocomplete, otherwise press TAB to try completion candidates
+  (setq corfu-auto  nil)
   (setq corfu-commit-predicate nil)
-  (setq corfu-quit-at-boundary t)
+  (setq corfu-quit-at-boundary nil)
   (setq corfu-quit-no-match t))
 #+end_src
 
-Support cycling through completions with TAB if there are only a few candidates.
+Use the TAB key for autocomplete. Support cycling through completions with TAB if there are only a few candidates.
 
 #+begin_src emacs-lisp
 (use-package! emacs
   :init
-  ;; TAB CYCLE if there are only a few candidates, otherwise show menu
   (setq completion-cycle-threshold 3)
-  ;; Support using TAB key to complete, which uses M-TAB by default
   (setq tab-always-indent 'complete))
 #+end_src
 
