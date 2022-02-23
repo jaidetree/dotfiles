@@ -1,4 +1,5 @@
 (require-macros :lib.macros)
+(require-macros :lib.advice.macros)
 (local windows (require :windows))
 (local {:concat concat
         :filter filter
@@ -64,7 +65,16 @@
         frame (: screen :frame)
         w (/ frame._w 2)
         h (/ frame._h 2)]
-    (hs.mouse.setAbsolutePosition {:x w :y h})))
+    (hs.mouse.absolutePosition {:x w :y h})))
+
+(fn center-mouse-window
+  []
+  (let [window (hs.window.frontmostWindow)
+        frame (: window :frame)
+        w (+ (/ frame._w 2) frame._x)
+        h (+ (/ frame._h 2) frame._y)]
+    (pprint frame)
+    (hs.mouse.absolutePosition {:x w :y h})))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -265,6 +275,19 @@
 ;; Main Menu & Global Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(local hammerspoon-items
+       [{:key :r
+         :title "Reload Hammerspoon"
+         :action hs.reload}
+        {:key :c
+         :title "Console"
+         :action hs.toggleConsole}
+        {:key :k
+         :title "Clear Console"
+         :action hs.console.clearConsole}
+        ])
+
 (local menu-items
        [{:key :space
          :title "Alfred"
@@ -280,6 +303,9 @@
         {:key :j
          :title "Jump"
          :action jump}
+        {:key :h
+         :title "Hammerspoon"
+         :items hammerspoon-items}
         {:key :m
          :title "Media"
          ;; :enter (fn [menu]
@@ -300,9 +326,16 @@
          :action "lib.modal:activate-modal"}
         {:mods [:cmd :ctrl]
          :key :space}
+        ;; {:mods [:alt]
+        ;;  :key :n
+        ;;  :action "apps:next-app"}
+        ;; {:mods [:alt]
+        ;;  :key :p
+        ;;  :action "apps:prev-app"}
         {:mods [:hyper]
          :key :a
-         :action "zoom:mute-or-unmute-audio"}
+         :action (fn []
+                   (activate-modal :a))}
         {:mods [:hyper]
          :key :1
          :action "layouts:full-size"}
@@ -354,7 +387,7 @@
          :action toggle-console}
         {:mods [:hyper]
          :key :m
-         :action center-mouse}
+         :action center-mouse-window}
         {:mods [:hyper]
          :key :t
          :action "tmux:send-to-tmux"}
@@ -374,14 +407,15 @@
        [{:mods [:cmd :shift]
          :key :l
          :action "chrome:open-location"}
-        {:mods [:cmd]
-         :key :k
-         :action "chrome:prev-tab"
-         :repeat true}
-        {:mods [:cmd]
-         :key :j
-         :action "chrome:next-tab"
-         :repeat true}])
+        ;; {:mods [:cmd]
+        ;;  :key :k
+        ;;  :action "chrome:prev-tab"
+        ;;  :repeat true}
+        ;; {:mods [:cmd]
+        ;;  :key :j
+        ;;  :action "chrome:next-tab"
+        ;;  :repeat true}
+        ])
 
 (local brave-config
        {:key "Brave Browser"
@@ -509,6 +543,10 @@
         ;; :hyper {:key :F18}
         :hyper {:mods []
                 :key :F18}
+        :modules {:switcher {:filter (doto (hs.window.filter.new)
+                                       (: :setCurrentSpace true)
+                                       (: :setDefaultFilter {}))}
+                  :windows  {:center-ratio "50:60"}}
         :idle {:tasks [{:delay 1800
                         :idle (fn [state]
                                 (let [speaker (hs.audiodevice.defaultOutputDevice)
@@ -547,6 +585,27 @@
 (global replserver (repl.start))
 (repl.run replserver)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; General advice
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; (defadvice alert-all-screens
+;;            [str style seconds]
+;;            :override alert
+;;            "Displays an alert across all screens"
+;;            (each [key screen (ipairs (hs.screen.allScreens))]
+;;              (hs.alert.show str
+;;                             style
+;;                             screen
+;;                             seconds)))
+
+;; (defadvice red-alert
+;;            [str style seconds]
+;;            :before alert
+;;            "Customize the modal UI to make the text color red"
+;;            (tset style :textColor { :red 1 :alpha 1}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Exports
