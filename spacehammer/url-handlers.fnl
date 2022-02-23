@@ -23,11 +23,23 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 
 (fn cmd-str
   [args]
+  "
+  Joins a table list of args into a single space-separated string
+
+  Takes a table list of args
+  Returns a string
+  "
   (->> args
        (join " ")))
 
 (fn quo
   [unwrapped-str]
+  "
+  Quote an argument in double-quotes \"
+
+  Takes a string
+  Returns a string
+  "
   (.. "\"" unwrapped-str "\""))
 
 (local applications
@@ -56,7 +68,15 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 (defn open-url
       [full-url selected]
       "
-      Opens the given url in the selected application
+      Callback fired when an application is selected from the hs.chooser
+
+      Takes the full-url string and the selected application chooser option
+      table. The chosen value may be nil if no option was selected.
+
+      Returns nil, as this is exclusively a side-effect
+
+      Calls the application.cmd function with the full url to transform it
+      into an executable command that is then passed to hs.execute
       "
       (when selected
        (let [{:uuid application-id} selected
@@ -71,6 +91,14 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 
 (fn get-app-icon
   [app-name]
+  "
+  Get the application icon from an application name
+
+  Takes the name of an application like:
+  \"Brave Browser\" -> \"/Applications/Brave Browser.app\"
+
+  Returns an hs.image table containing a reference to the application icon
+  "
   (-?> app-name
        (hs.application.find)
        (: :bundleID)
@@ -80,7 +108,10 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 (defn url-handler
       [scheme host params full-url sender-pid]
       "
-      Handle url events
+      Displays a chooser UI for the user to select which application to open the
+      url in.
+
+      Applications are filtered by what they support in their :schemes table
       "
       (let [chooser (hs.chooser.new #(open-url full-url $1))]
         (chooser:choices (->> applications
