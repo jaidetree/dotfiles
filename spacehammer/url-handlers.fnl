@@ -127,9 +127,12 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
         (chooser:show)))
 
 ;; When hammerspoon is closed reset url handlers to brave
-
-(hs.urlevent.setDefaultHandler "https" "com.brave.Browser")
-(hs.urlevent.setDefaultHandler "mailto" "com.brave.Browser")
+;; NOTE: Displays an annoying pop up when restarting hs
+;;       so may need some thought to fire this on exit instead
+;;       of restart
+;; (hs.urlevent.setDefaultHandler "https" "com.brave.Browser")
+;; (hs.urlevent.setDefaultHandler "http" "com.brave.Browser")
+;; (hs.urlevent.setDefaultHandler "mailto" "com.brave.Browser")
 
 ;; Set the hs.urlevent httpCallback
 ;;
@@ -142,6 +145,7 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 ;; Tell hammerspoon to set hammerspoon app as the default handler
 ;; for both https:// http:// and mailto: urls
 (hs.urlevent.setDefaultHandler "https")
+(hs.urlevent.setDefaultHandler "http")
 (hs.urlevent.setDefaultHandler "mailto")
 
 ;; Override the default root callback once PR#3127 lands, this
