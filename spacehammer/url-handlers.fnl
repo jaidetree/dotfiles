@@ -47,7 +47,7 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
         {:title "Work"
          :app "Brave Browser"
          :subtext "Brave Browser"
-         :schemes ["https" "mailto"]
+         :schemes ["http" "https" "mailto"]
          :cmd (fn [url]
                 ["open" "-a" (quo "Brave Browser.app") "-n"
                  "--args"
@@ -58,7 +58,7 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
         {:title "Personal"
          :app "Brave Browser"
          :subtext "Brave Browser"
-         :schemes ["https" "mailto"]
+         :schemes ["http" "https" "mailto"]
          :cmd (fn [url]
                 ["open" "-a" (quo "Brave Browser.app") "-n"
                  "--args"
