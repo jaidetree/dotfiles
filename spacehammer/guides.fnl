@@ -13,6 +13,41 @@
 ;; Listening for mouse events
 ;; https://www.hammerspoon.org/docs/hs.eventtap.html
 ;;
+;; Possible hs.eventtap.events.types
+;;  - appKitDefined = 13,
+;;  - applicationDefined = 15,
+;;  - changeMode = 38,
+;;  - cursorUpdate = 17,
+;;  - directTouch = 37,
+;;  - flagsChanged = 12,
+;;  - gesture = 29,
+;;  - keyDown = 10,
+;;  - keyUp = 11,
+;;  - leftMouseDown = 1,
+;;  - leftMouseDragged = 6,
+;;  - leftMouseUp = 2,
+;;  - magnify = 30,
+;;  - mouseEntered = 8,
+;;  - mouseExited = 9,
+;;  - mouseMoved = 5,
+;;  - nullEvent = 0,
+;;  - otherMouseDown = 25,
+;;  - otherMouseDragged = 27,
+;;  - otherMouseUp = 26,
+;;  - periodic = 16,
+;;  - pressure = 34,
+;;  - quickLook = 33,
+;;  - rightMouseDown = 3,
+;;  - rightMouseDragged = 7,
+;;  - rightMouseUp = 4,
+;;  - rotate = 18,
+;;  - scrollWheel = 22,
+;;  - smartMagnify = 32,
+;;  - swipe = 31,
+;;  - systemDefined = 14,
+;;  - tabletPointer = 23,
+;;  - tabletProximity = 24
+;;
 ;; Drawing on the canvas
 ;; https://www.hammerspoon.org/docs/hs.canvas.html
 
@@ -97,13 +132,13 @@
         :effect nil
         :states {:ready    {:edit              ready->edit}
                  :edit     {:escape            edit->done
-                            :mouse-down-create edit->create
-                            :moue-down-guide   edit->move-guide}
+                            :create            edit->create
+                            :move              edit->move-guide}
                  :create   {;:mouse-move        create->move
-                            :mouse-up          create->done
+                            :done              create->done
                             :escape            create->cancel}
                  :move     {;:mouse-move        move->move
-                            :mouse-up          move->done
+                            :done              move->done
                             :escape            move->cancel}}
         :log :guide})
 
@@ -114,10 +149,46 @@
 ;; Effects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fn edit
-  [state extra]
-  (fn []
-    nil))
+(local events hs.eventtap.event.types)
+
+(fn do-xpc!
+  [f]
+  (let [(ok err) (xpcall f debug.traceback)]
+    (when (not ok)
+      (hs.showError err))
+    (values ok err)))
+
+(fn eventtap-effect
+  [{: events} handler]
+  (fn
+    [state extra]
+    (let [tap (hs.eventtap.new
+               events
+               (fn [event]
+                 (let [(ok err) (do-xpc! #(handler state event extra))]
+                   (if ok
+                       (values true [])
+                       (values false [])))))]
+      (tap:start)
+      (fn cleanup
+        []
+        (tap:stop)))))
+
+(local edit
+       (eventtap-effect
+        {:events [events.leftMouseDown]}
+        (fn [state event extra]
+          (let [point (event:location)
+                is-clicked (event:getButtonState 0)]
+            (if (and is-clicked (= point.x 0))
+                (do
+                  (print "\n\nAdd vertical line\n\n")
+                  (fsm.send :create :vertical))
+                (do
+                  (and is-clicked (= point.y 0))
+                  (print "\n\nAdd horizontal line\n\n")
+                  (fsm.send :create :horizontal))))
+          )))
 
 (fn exit
   [state extra]
