@@ -165,9 +165,15 @@
     (let [tap (hs.eventtap.new
                events
                (fn [event]
-                 (let [(ok err) (do-xpc! #(handler state event extra))]
+                 (let [state {:ret-value {}}
+                       (ok err) (do-xpc! #(tset state
+                                                :ret-values
+                                                (handler state event extra)))
+                       {: continue : post-events } (or state.ret-value
+                                                       {:drop-event false
+                                                        :post-events []} )]
                    (if ok
-                       (values true [])
+                       (values (not continue) (or post-events []))
                        (values false [])))))]
       (tap:start)
       (fn cleanup
@@ -183,11 +189,15 @@
             (if (and is-clicked (= point.x 0))
                 (do
                   (print "\n\nAdd vertical line\n\n")
-                  (fsm.send :create :vertical))
+                  (fsm.send :create :vertical)
+                  {:continue false
+                   :post-events []})
                 (do
                   (and is-clicked (= point.y 0))
                   (print "\n\nAdd horizontal line\n\n")
-                  (fsm.send :create :horizontal))))
+                  (fsm.send :create :horizontal)
+                  {:continue false
+                   :post-evnets []})))
           )))
 
 (fn exit
