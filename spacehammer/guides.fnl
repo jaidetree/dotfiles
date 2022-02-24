@@ -41,11 +41,16 @@
            :context state.context}
    :effect :move-guide})
 
-(fn create->move
-  [state actions extra]
-  {:state {:current-state state.current-state
-           :context       state.context}
-   :effect :move-guide})
+;; May not be needed?
+;; If we know when we are creating/moving then should be able to just set the
+;; eventtap and move the guide directly on mouse move events that way we're not
+;; constantly pushing move events, destroying the prev eventtap, and creating
+;; a new one
+;; (fn create->move
+;;   [state actions extra]
+;;   {:state {:current-state state.current-state
+;;            :context       state.context}
+;;    :effect :move-guide})
 
 (fn create->done
   [state actions extra]
@@ -59,11 +64,12 @@
            :context state.context}
    :effect :remove-guide})
 
-(fn move->move
-  [state actions extra]
-  {:state {:current-state state.current-state
-           :context       state.context}
-   :effect :move-guide})
+;; May not be needed?
+;; (fn move->move
+;;   [state actions extra]
+;;   {:state {:current-state state.current-state
+;;            :context       state.context}
+;;    :effect :move-guide})
 
 (fn move->done
   [state actions extra]
@@ -77,6 +83,11 @@
            :context       state.context}
    :effect :reset-guide})
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Define State Machine
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (local machine
        {:state {:current-state :ready
                 :context {:x 0
@@ -88,12 +99,13 @@
                  :edit     {:escape            edit->done
                             :mouse-down-create edit->create
                             :moue-down-guide   edit->move-guide}
-                 :create   {:mouse-move        create->move
+                 :create   {;:mouse-move        create->move
                             :mouse-up          create->done
                             :escape            create->cancel}
-                 :move     {:mouse-move        move->move
+                 :move     {;:mouse-move        move->move
                             :mouse-up          move->done
-                            :escape            move->cancel}}})
+                            :escape            move->cancel}}
+        :log :guide})
 
 (local fsm (statemachine.new machine))
 
@@ -155,9 +167,9 @@
 (local api {: fsm})
 
 
-(fn api.activate
+(fn api.edit
   []
-  (fsm.send :activate))
+  (fsm.send :edit))
 
 (tset api :unsubscribe (fsm.subscribe effect-handler))
 
