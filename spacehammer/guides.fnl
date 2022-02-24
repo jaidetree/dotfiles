@@ -1,7 +1,9 @@
-
 (require-macros :lib.macros)
 (require-macros :lib.advice.macros)
 (local statemachine (require :lib.statemachine))
+(local {: filter
+        : map
+        : merge} (require :lib.functional))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Relevant Docs
@@ -51,12 +53,31 @@
 ;; Drawing on the canvas
 ;; https://www.hammerspoon.org/docs/hs.canvas.html
 
+(fn create-canvas
+  []
+  "
+  Creates a canvas the size of the currently active screen
+  "
+  (let [screen (hs.screen.mainScreen)
+        frame (screen:fullFrame)]
+    (hs.canvas.new frame)))
 
 (fn ready->edit
   [state action extra]
   {:state  {:current-state :edit
-            :context state.context}
+            :context
+            (if state.context.canvas
+                state.context
+                (merge
+                 state.context
+                 {:canvas (create-canvas)}))}
    :effect :edit})
+
+(fn ready->clear
+  [state action extra]
+  {:state {:current-state :ready
+           :context state.context}
+   :effect :clear})
 
 (fn edit->done
   [state action extra]
@@ -90,8 +111,8 @@
 (fn create->done
   [state actions extra]
   {:state {:current-state :edit
-           :context state.current-state}
-   :effect :complete-guide})
+           :context state.context}
+   :effect :edit})
 
 (fn create->cancel
   [state actions extra]
@@ -130,16 +151,17 @@
                           :guide {}
                           :guides []}}
         :effect nil
-        :states {:ready    {:edit              ready->edit}
-                 :edit     {:escape            edit->done
-                            :create            edit->create
-                            :move              edit->move-guide}
-                 :create   {;:mouse-move        create->move
-                            :done              create->done
-                            :escape            create->cancel}
-                 :move     {;:mouse-move        move->move
-                            :done              move->done
-                            :escape            move->cancel}}
+        :states {:ready    {:edit        ready->edit
+                            :clear       ready->clear}
+                 :edit     {:done        edit->done
+                            :create      edit->create
+                            :move        edit->move-guide}
+                 :create   {;:mouse-move  create->move
+                            :done        create->done
+                            :escape      create->cancel}
+                 :move     {;:mouse-move  move->move
+                            :done        move->done
+                            :escape      move->cancel}}
         :log :guide})
 
 (local fsm (statemachine.new machine))
@@ -158,47 +180,78 @@
       (hs.showError err))
     (values ok err)))
 
-(fn eventtap-effect
+(fn tap-fx
   [{: events} handler]
-  (fn
-    [state extra]
-    (let [tap (hs.eventtap.new
-               events
-               (fn [event]
-                 (let [state {:ret-value {}}
-                       (ok err) (do-xpc! #(tset state
-                                                :ret-values
-                                                (handler state event extra)))
-                       {: continue : post-events } (or state.ret-value
-                                                       {:drop-event false
-                                                        :post-events []} )]
-                   (if ok
-                       (values (not continue) (or post-events []))
-                       (values false [])))))]
-      (tap:start)
-      (fn cleanup
-        []
-        (tap:stop)))))
+  (let [tap (hs.eventtap.new
+             events
+             (fn [event]
+               (let [state {:ret-value {}}
+                     (ok err) (do-xpc! #(tset state
+                                              :ret-values
+                                              (handler event)))
+                     {: continue : post-events } (or state.ret-value
+                                                     {:continue false
+                                                      :post-events []} )]
+                 (if ok
+                     (values (not continue) (or post-events []))
+                     (values false [])))))]
+    (tap:start)
+    (fn cleanup
+      []
+      (tap:stop))))
 
-(local edit
-       (eventtap-effect
-        {:events [events.leftMouseDown]}
-        (fn [state event extra]
-          (let [point (event:location)
-                is-clicked (event:getButtonState 0)]
-            (if (and is-clicked (= point.x 0))
-                (do
-                  (print "\n\nAdd vertical line\n\n")
-                  (fsm.send :create :vertical)
-                  {:continue false
-                   :post-events []})
-                (do
-                  (and is-clicked (= point.y 0))
-                  (print "\n\nAdd horizontal line\n\n")
-                  (fsm.send :create :horizontal)
-                  {:continue false
-                   :post-evnets []})))
-          )))
+(fn combine-fx
+  [...]
+  (let [unsubscribe-fns [...]]
+    (fn []
+      (each [i unsubscribe (ipairs unsubscribe-fns)]
+        (unsubscribe)))))
+
+(fn edit
+  [state extra]
+  (combine-fx
+   (tap-fx
+    {:events [events.leftMouseDown]}
+    (fn [event]
+      (let [point (event:location)
+            is-clicked (event:getButtonState 0)]
+        (print "mouse-down" (hs.inspect point))
+        (if (and is-clicked (= point.x 0))
+            (do
+              (print "\n\nAdd vertical line\n\n")
+              (fsm.send :create :vertical)
+              {:continue false
+               :post-events []})
+            (do
+              (and is-clicked (= point.y 0))
+              (print "\n\nAdd horizontal line\n\n")
+              (fsm.send :create :horizontal)
+              {:continue false
+               :post-evnets []})))))
+
+   (tap-fx
+    {:events [events.keyUp]}
+    (fn [event]
+      (let [key-code (event:getKeyCode)]
+        (pprint {:unicode (event:getUnicodeString)
+                 :key-code key-code
+                 :flags (event:getFlags)})
+        (if (= key-code hs.keycodes.map.escape)
+            (do
+              (fsm.send :done)
+              {:continue false
+               :post-events []})
+            (do
+              {:continue true
+               :post-events []})))))
+
+   ))
+
+(fn clear
+  [state extra]
+  (when state.context.canvas
+    (state.context.canvas:delete))
+  nil)
 
 (fn exit
   [state extra]
@@ -206,9 +259,44 @@
     nil))
 
 (fn create-guide
-  [state extra]
-  (fn []
-    nil))
+  [state direction]
+  (let [canvas state.context.canvas
+        screen (hs.screen.mainScreen)
+        frame (screen:fullFrame)]
+
+    (canvas:appendElements
+     {:action "fill"
+      :fillColor {:blue 1 :green 1 :alpha 1.0}
+      :frame (if (= direction :horizontal)
+                 {:x 0 :y 0 :w frame.w :h 1}
+                 (= direction :vertical)
+                 {:x 0 :y 0 :w 1 :h frame.h})
+      :type "rectangle"})
+
+    (canvas:show)
+
+    (combine-fx
+     (tap-fx
+      {:events [events.leftMouseDragged]}
+      (fn [event]
+        (let [last (length canvas)
+              point (event:location)
+              line (. canvas last)]
+          (if (= direction :horizontal)
+              (tset line :frame :y point.y)
+              (= direction :vertical)
+              (tset line :frame :x point.x))
+          {:continue false
+           :post-events []})))
+
+     (tap-fx
+      {:events [events.leftMouseUp]}
+      (fn [event]
+        (fsm.send :done)
+        {:continue false
+         :post-events []})))
+
+    ))
 
 (fn move-guide
   [state extra]
@@ -233,6 +321,7 @@
 (local effect-handler
        (statemachine.effect-handler
         {: edit
+         : clear
          : exit
          : create-guide
          : move-guide
