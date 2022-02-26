@@ -2,8 +2,15 @@
 (require-macros :lib.advice.macros)
 (local statemachine (require :lib.statemachine))
 (local {: filter
+        : first
+        : for-each
         : map
         : merge} (require :lib.functional))
+
+
+;; Create some concise aliases
+
+(local keycodes hs.keycodes.map)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Relevant Docs
@@ -60,7 +67,9 @@
   "
   (let [screen (hs.screen.mainScreen)
         frame (screen:fullFrame)]
-    (hs.canvas.new frame)))
+    (doto (hs.canvas.new frame)
+      ;; Ignore mouse interactions where there is not an element
+      (: :canvasMouseEvents false false false false))))
 
 (fn ready->edit
   [state action extra]
@@ -73,11 +82,17 @@
                  {:canvas (create-canvas)}))}
    :effect :edit})
 
-(fn ready->clear
+(fn ->clear
   [state action extra]
   {:state {:current-state :ready
            :context state.context}
    :effect :clear})
+
+(fn ->toggle
+  [state action]
+  {:state {:current-state :ready
+           :context state.context}
+   :effect :toggle})
 
 (fn edit->done
   [state action extra]
@@ -109,16 +124,17 @@
 ;;    :effect :move-guide})
 
 (fn create->done
-  [state actions extra]
+  [state actions {: point}]
   {:state {:current-state :edit
-           :context state.context}
+           :context (merge state.context
+                           {:last-point point})}
    :effect :edit})
 
 (fn create->cancel
   [state actions extra]
   {:state {:current-state :edit
            :context state.context}
-   :effect :remove-guide})
+   :effect :edit})
 
 ;; May not be needed?
 ;; (fn move->move
@@ -131,13 +147,13 @@
   [state actions extra]
   {:state {:current-state :edit
            :context       state.context}
-   :effect :complete-guide})
+   :effect :edit})
 
 (fn move->cancel
   [state actions extra]
   {:state {:current-state :edit
            :context       state.context}
-   :effect :reset-guide})
+   :effect :edit})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -152,10 +168,13 @@
                           :guides []}}
         :effect nil
         :states {:ready    {:edit        ready->edit
-                            :clear       ready->clear}
+                            :clear       ->clear
+                            :toggle      ->toggle}
                  :edit     {:done        edit->done
                             :create      edit->create
-                            :move        edit->move-guide}
+                            :move        edit->move-guide
+                            :clear       ->clear
+                            :toggle      ->toggle}
                  :create   {;:mouse-move  create->move
                             :done        create->done
                             :escape      create->cancel}
@@ -171,7 +190,19 @@
 ;; Effects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(local events hs.eventtap.event.types)
+(local colors {})
+
+(fn colors.cyan
+  []
+  {:red 0 :green 255 :blue 255 :alpha 1.0})
+
+(fn colors.magenta
+  []
+  {:red 255 :green 0 :blue 255 :alpha 1.0})
+
+(fn colors.black
+  []
+  {:red 0 :green 0 :blue 0 :alpha 1.0})
 
 (fn do-xpc!
   [f]
@@ -182,23 +213,66 @@
 
 (fn tap-fx
   [{: events} handler]
-  (let [tap (hs.eventtap.new
-             events
-             (fn [event]
-               (let [state {:ret-value {}}
-                     (ok err) (do-xpc! #(tset state
-                                              :ret-values
-                                              (handler event)))
-                     {: continue : post-events } (or state.ret-value
-                                                     {:continue false
-                                                      :post-events []} )]
-                 (if ok
-                     (values (not continue) (or post-events []))
-                     (values false [])))))]
-    (tap:start)
-    (fn cleanup
-      []
-      (tap:stop))))
+  (var tap {:start (fn [] nil)
+            :stop  (fn [] nil)})
+  (fn tap-handler
+    [event]
+    (let [state {:ret-value {}}
+          (ok err) (do-xpc! #(tset state
+                                   :ret-value
+                                   (handler event)))
+          {: continue : post-events } (or state.ret-value {})]
+      ;; Continue determines if the event handler chain should continue
+      ;; as it is possible to prevent other handlers from firing while
+      ;; still posting the original keyboard event
+      (match [ok continue post-events]
+        ;; No errors and continue event handler chain with post-events
+        [true true events]    (values false events)
+
+        ;; No errors don't continue and ignore post-events
+        [true false ?events]  (values true [])
+
+        ;; No errors but maybe nil continue and maybe nil events
+        [true ?cont ?events]  (values false [event])
+
+        ;; Caught error ignore continue and events
+        [false ?cont ?events] (do
+                                (tap:stop)
+                                (values false [event])))
+      ))
+
+  (set tap (hs.eventtap.new
+            (map #(. hs.eventtap.event.types $1) events)
+            tap-handler))
+  (tap:start)
+  (fn cleanup
+    []
+    (tap:stop)))
+
+
+(fn key-fx
+  [{: key} handler]
+  "
+  An effect handler for responding to a specific keyboard event like keyDown
+  or keyUp
+
+  Takes a map with a key string representing an entry of hs.keycodes.map and
+  an event handler function that receives the event
+
+  Returns a cleanup function to remove the eventtap
+  "
+  (tap-fx
+   {:events [:keyUp]}
+   (fn key-fx-handler
+     [event]
+     (let [keycode (event:getKeyCode)]
+       (if (= keycode (. keycodes key))
+           (do
+             (handler event)
+             {:continue false
+              :post-events []})
+           {:continue true
+            :post-events [event]})))))
 
 (fn combine-fx
   [...]
@@ -207,77 +281,154 @@
       (each [i unsubscribe (ipairs unsubscribe-fns)]
         (unsubscribe)))))
 
+(fn remove-at
+  [canvas index]
+  (print "Removing element at index" 1)
+  (: canvas :removeElement index))
+
+(fn remove-by-id
+  [canvas id]
+  (-?>> (canvas:canvasElements)
+        (map (fn [element index] [index element]))
+        (filter (fn [[ index element ]]
+                  (= element.id id)))
+        (first)
+        (first)
+        (remove-at canvas)))
+
+(fn create-mode-label
+  [canvas]
+  (canvas:appendElements
+   {:action :build
+    :id :mode-label
+    :type :text
+    :frame {:h 60 :w 300
+            :y 50
+            ;; :x 50
+            :x (-
+                (-> (hs.screen.mainScreen)
+                    (: :frame)
+                    (. :w))
+                340)
+
+            }
+    :textAlignment :right
+    :textColor (colors.cyan)
+    :textSize 30
+    :textFont "Helvetica"
+    :text ""}))
+
 (fn edit
   [state extra]
-  (combine-fx
-   (tap-fx
-    {:events [events.leftMouseDown]}
-    (fn [event]
-      (let [point (event:location)
-            is-clicked (event:getButtonState 0)]
-        (print "mouse-down" (hs.inspect point))
-        (if (and is-clicked (= point.x 0))
-            (do
-              (print "\n\nAdd vertical line\n\n")
-              (fsm.send :create :vertical)
-              {:continue false
-               :post-events []})
-            (do
+
+  (let [canvas state.context.canvas]
+
+    ;; Show the canvas
+    (canvas:show)
+    (canvas:clickActivating false)
+
+    ;; Create the mode label text element if it does not exist
+    (when (not canvas.mode-label)
+      (create-mode-label canvas))
+
+    (tset canvas :mode-label :text "edit guides")
+
+    ;; Set a callback for handling mouseDown, mouseEnter, and mouseExit events
+    ;; on individual elements.
+    (canvas:mouseCallback
+     (fn [canvas event-type element-id x y]
+       (let [element (?. canvas element-id)
+             frame element.frame
+             direction (if (= frame.h 1) :horizontal :vertical)]
+         (match {:type event-type :element element :x x :y y}
+           {:type :mouseDown : element}  (fsm.send :move
+                                              {: element
+                                               : direction
+                                               :point (hs.geometry.point x y)})
+           ;; Mouse is hovering over a guide, turn it magenta
+           {:type :mouseEnter : element} (tset element :fillColor (colors.magenta))
+           ;; Mouse exited a guide
+           {:type :mouseExit : element} (tset element :fillColor (colors.cyan))
+
+           ))))
+
+    (combine-fx
+     (tap-fx
+      {:events [:leftMouseDown]}
+      (fn [event]
+        (let [point (event:location)
+              is-clicked (event:getButtonState 0)]
+          (if (and is-clicked (= point.x 0))
+              (do
+                (fsm.send :create {:direction :vertical
+                                   :point point})
+                {:continue false
+                 :post-events []})
               (and is-clicked (= point.y 0))
-              (print "\n\nAdd horizontal line\n\n")
-              (fsm.send :create :horizontal)
-              {:continue false
-               :post-evnets []})))))
+              (do
+                (fsm.send :create {:direction :horizontal
+                                   :point point})
+                {:continue false
+                 :post-events []})))))
 
-   (tap-fx
-    {:events [events.keyUp]}
-    (fn [event]
-      (let [key-code (event:getKeyCode)]
-        (pprint {:unicode (event:getUnicodeString)
-                 :key-code key-code
-                 :flags (event:getFlags)})
-        (if (= key-code hs.keycodes.map.escape)
-            (do
-              (fsm.send :done)
-              {:continue false
-               :post-events []})
-            (do
-              {:continue true
-               :post-events []})))))
+     (key-fx
+      {:key :escape}
+      (fn [event]
+        (remove-by-id state.context.canvas :mode-label)
+        ;;(state.context.canvas:removeElement 1)
+        (fsm.send :done)))
 
-   ))
+     (fn cleanup []
+       (canvas:mouseCallback nil))
+     )))
 
 (fn clear
   [state extra]
-  (when state.context.canvas
-    (state.context.canvas:delete))
+  (match state.context.canvas
+    ;; for is recommended here given that deleting from 1 shifts all indexes
+    ;; so forms like (each) or (map) would not work here without either
+    ;; reversing the table list of elements or just using for
+    canvas (for [index (length (canvas:canvasElements)) 1 -1]
+             (remove-at canvas index))
+    _ nil))
+
+(fn toggle
+  [state extra]
+  (when-let [canvas state.context.canvas]
+            (if (canvas:isShowing)
+                (canvas:hide)
+                (canvas:show)))
   nil)
 
 (fn exit
   [state extra]
-  (fn []
-    nil))
+  (when-let [canvas state.context.canvas]
+            (canvas:mouseCallback nil))
+  nil)
 
 (fn create-guide
-  [state direction]
+  [state {: direction : point}]
   (let [canvas state.context.canvas
         screen (hs.screen.mainScreen)
         frame (screen:fullFrame)]
 
     (canvas:appendElements
-     {:action "fill"
-      :fillColor {:blue 1 :green 1 :alpha 1.0}
+     {:id "new-guide"
+      :action "fill"
+      :fillColor (colors.cyan)
+      :trackMouseEnterExit true
+      :trackMouseDown      true
       :frame (if (= direction :horizontal)
                  {:x 0 :y 0 :w frame.w :h 1}
                  (= direction :vertical)
                  {:x 0 :y 0 :w 1 :h frame.h})
       :type "rectangle"})
 
-    (canvas:show)
+    (tset canvas :mode-label :text "create guide")
 
     (combine-fx
      (tap-fx
-      {:events [events.leftMouseDragged]}
+      {:events [:leftMouseDragged]}
       (fn [event]
         (let [last (length canvas)
               point (event:location)
@@ -286,22 +437,63 @@
               (tset line :frame :y point.y)
               (= direction :vertical)
               (tset line :frame :x point.x))
-          {:continue false
+          {:continue true
            :post-events []})))
 
      (tap-fx
-      {:events [events.leftMouseUp]}
+      {:events [:leftMouseUp]}
       (fn [event]
-        (fsm.send :done)
+        (tset canvas :new-guide :id nil)
+        (fsm.send :done {:point (event:location)})
         {:continue false
-         :post-events []})))
+         :post-events []}))
 
-    ))
+     (key-fx
+      {:key :escape}
+      (fn [event]
+        (remove-by-id canvas :new-guide)
+        (fsm.send :escape)))
+
+     )))
 
 (fn move-guide
-  [state extra]
-  (fn []
-    nil))
+  [state {: element :point origin}]
+  (let [canvas state.context.canvas
+        frame element.frame
+        { : x : y : w : h } frame
+        direction (if (= h 1) :horizontal :vertical)]
+
+    (tset canvas :mode-label :text "move guide")
+
+    (combine-fx
+     (tap-fx
+      {:events [:leftMouseDragged]}
+      (fn [event]
+        (let [point (event:location)]
+          (if (= direction :horizontal)
+              (do
+                (tset frame :y point.y))
+              (do
+                (tset frame :x point.x))))))
+
+     (tap-fx
+      {:events [:leftMouseUp]}
+      (fn [event]
+        (tset element :fillColor (colors.cyan))
+        (fsm.send :done {:point (event:location)})
+        {:continue false
+         :post-events []}))
+
+     (key-fx
+      {:key :escape}
+      (fn [event]
+        (match direction
+          :horizontal (tset frame :y origin.y)
+          :vertical (tset frame :x origin.x))
+        (tset element :fillColor {:red 0 :green 255 :blue 255})
+        (fsm.send :escape)))
+
+     )))
 
 (fn remove-guide
   [state extra]
@@ -318,16 +510,108 @@
   (fn []
     nil))
 
-(local effect-handler
+(local primary-effects
        (statemachine.effect-handler
         {: edit
          : clear
+         : toggle
          : exit
          : create-guide
          : move-guide
          : remove-guide
          : reset-guide
          : complete-guide}))
+
+(fn format-coords
+  [{: current : origin}]
+  (if (not origin)
+      (.. (math.floor current.x) ", " (math.floor current.y))
+      (.. (math.floor current.x) ", "
+          (math.floor current.y)
+          "  Δ: "
+          (math.floor (- current.x origin.x)) ", "
+          (math.floor (- current.y origin.y)))))
+
+(fn show-pos
+  [state {: direction :point initial : element}]
+  (let [canvas state.context.canvas
+        last-point state.context.last-point
+        origin (if element initial
+                   last-point last-point)
+        pos-canvas (hs.canvas.new
+                    (match [direction origin]
+                      [:horizontal nil] {:x initial.x
+                                         :y (+ initial.y 10)
+                                         :w 140
+                                         :h 30}
+                      [:vertical nil]   {:x (+ initial.x 10)
+                                         :y initial.y
+                                         :w 140
+                                         :h 30}
+
+                      [:horizontal origin] {:x initial.x
+                                            :y (+ initial.y 10)
+                                            :w 200
+                                            :h 30}
+                      [:vertical   origin] {:x (+ initial.x 10)
+                                            :y initial.y
+                                            :w 200
+                                            :h 30}))]
+
+    (doto pos-canvas
+      (: :appendElements
+         {:action "strokeAndFill"
+          :strokeColor (colors.cyan)
+          :strokeWidth 1
+          :fillColor (merge (colors.black) {:alpha 0.4})
+          :frame {:x "0" :y "0" :w "1" :h "1"}
+          :type "rectangle"}
+         {:action "build"
+          :id "label"
+          :textColor (colors.cyan)
+          :textAlignment :center
+          :padding 0
+          :frame {:x "0.0" :y "0.1" :w "1" :h "1"}
+          :textFont "Helvetica"
+          :textSize 18
+          :text (format-coords
+                 {:current initial
+                  :origin  origin})
+          :type "text"})
+      (: :show))
+
+    (combine-fx
+     (tap-fx
+      {:events [:leftMouseDragged]}
+      (fn [event]
+        (let [point (event:location)]
+          (tset pos-canvas :label :text
+                (format-coords
+                 {:current point
+                  :origin  origin}))
+          (pos-canvas:topLeft
+           (match direction
+             :horizontal {:x point.x
+                          :y (+ point.y 10)}
+             :vertical {:x (+ point.x 10)
+                        :y point.y}))
+          {:continue true
+           :post-events []})))
+
+     (fn cleanup
+       []
+       (pos-canvas:delete)
+       ))))
+
+(local secondary-effects
+       (statemachine.effect-handler
+        {:create-guide show-pos
+         :move-guide   show-pos})
+       ;; (fn [{: next-state : effect : extra}]
+       ;;   (match effect
+       ;;     :create-guide (show-pos next-state extra)
+       ;;     :move-guide   (show-pos next-state extra)))
+       )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -341,7 +625,18 @@
   []
   (fsm.send :edit))
 
-(tset api :unsubscribe (fsm.subscribe effect-handler))
+(fn api.clear
+  []
+  (fsm.send :clear))
+
+(fn api.toggle
+  []
+  (fsm.send :toggle))
+
+(tset api :unsubscribe
+      (combine-fx
+       (fsm.subscribe primary-effects)
+       (fsm.subscribe secondary-effects)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
