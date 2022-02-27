@@ -612,31 +612,71 @@
           (math.floor (- current.x origin.x)) ", "
           (math.floor (- current.y origin.y)))))
 
+(fn create-pos-canvas
+  [direction point]
+  (match [direction point]
+    [:horizontal nil] {:x point.x
+                       :y (+ point.y 10)
+                       :w 140
+                       :h 30}
+    [:vertical nil]   {:x (+ point.x 10)
+                       :y point.y
+                       :w 140
+                       :h 30}
+
+    [:horizontal point] {:x point.x
+                         :y (+ point.y 10)
+                         :w 200
+                         :h 30}
+    [:vertical   point] {:x (+ point.x 10)
+                         :y point.y
+                         :w 200
+                         :h 30})
+  )
+
+(fn calc-coords-pos
+  [coords-box direction point]
+  "
+  Determines where to position the coordinates label box.
+  If the user gets close to the right edge or bottom edge place the coords box
+  to the left and/or above the guide.
+
+  Takes a canvas that contains the coordinates text, direction of the guide, and
+  a point hs.geometry tbl where the mouse is currently
+
+  Returns a table with x and y coordinates
+  "
+  (let [coords (coords-box:frame)
+        screen (-> (hs.screen.mainScreen) (: :frame))
+        bottom-edge (- screen.h coords.h 10)
+        right-edge (- screen.w coords.w 10)]
+    (match direction
+      :horizontal
+      {:x (if (< point.x right-edge)
+              point.x
+              (- point.x coords.w 10))
+       :y (if (< point.y bottom-edge)
+              (+ point.y 10)
+              (- point.y coords.h 10))}
+
+      :vertical
+      {:x (if (< point.x right-edge)
+              (+ point.x 10)
+              (- point.x coords.w 10))
+       :y (if (< point.y bottom-edge)
+              point.y
+              (- point.y coords.h 10))}
+      )))
+
 (fn show-pos
   [state {: direction :point initial : element}]
   (let [canvas state.context.canvas
         last-point state.context.last-point
         origin (if element initial
                    last-point last-point)
-        pos-canvas (hs.canvas.new
-                    (match [direction origin]
-                      [:horizontal nil] {:x initial.x
-                                         :y (+ initial.y 10)
-                                         :w 140
-                                         :h 30}
-                      [:vertical nil]   {:x (+ initial.x 10)
-                                         :y initial.y
-                                         :w 140
-                                         :h 30}
+        pos-canvas (hs.canvas.new (create-pos-canvas direction initial))]
 
-                      [:horizontal origin] {:x initial.x
-                                            :y (+ initial.y 10)
-                                            :w 200
-                                            :h 30}
-                      [:vertical   origin] {:x (+ initial.x 10)
-                                            :y initial.y
-                                            :w 200
-                                            :h 30}))]
+    (pprint pos-canvas.attributes)
 
     (doto pos-canvas
       (: :appendElements
@@ -664,17 +704,13 @@
      (tap-fx
       {:events [:leftMouseDragged]}
       (fn [event]
-        (let [point (event:location)]
+        (let [point (event:location)
+              pos (calc-coords-pos pos-canvas direction point)]
           (tset pos-canvas :label :text
                 (format-coords
                  {:current point
                   :origin  origin}))
-          (pos-canvas:topLeft
-           (match direction
-             :horizontal {:x point.x
-                          :y (+ point.y 10)}
-             :vertical {:x (+ point.x 10)
-                        :y point.y}))
+          (pos-canvas:topLeft pos)
           {:continue true
            :post-events []})))
 
