@@ -270,6 +270,19 @@
          :title "Toggle shadow shutdown blocker"
          :action "shadow:keep-awake"}])
 
+(local guides-items
+       [return
+        {:key :g
+         :title "Guides"
+         :action "guides:edit"}
+        {:key :c
+         :title "Clear"
+         :action "guides:clear"}
+        {:key ";"
+         :title "Toggle"
+         :action "guides:toggle"}
+        ])
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main Menu & Global Key Bindings
@@ -282,7 +295,7 @@
          :action hs.reload}
         {:key :c
          :title "Console"
-         :action hs.toggleConsole}
+         :action toggle-console}
         {:key :k
          :title "Clear Console"
          :action hs.console.clearConsole}
@@ -300,6 +313,9 @@
         {:key :a
          :title "Apps"
          :items app-items}
+        {:key :g
+         :title "Guides"
+         :items guides-items}
         {:key :j
          :title "Jump"
          :action jump}
@@ -580,10 +596,10 @@
 ;; Setup a nREPL server
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global repl (require :repl))
-(local coroutine (require :coroutine))
-(global replserver (repl.start))
-(repl.run replserver)
+;; (global repl (require :repl))
+;; (local coroutine (require :coroutine))
+;; (global replserver (repl.start))
+;; (repl.run replserver)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

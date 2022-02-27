@@ -4,13 +4,17 @@
 (local {: filter
         : first
         : for-each
+        : last
         : map
-        : merge} (require :lib.functional))
+        : merge
+        : reduce} (require :lib.functional))
 
 
 ;; Create some concise aliases
 
+(local fu hs.fnutils)
 (local keycodes hs.keycodes.map)
+(local event-types hs.eventtap.event.types)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Relevant Docs
@@ -242,7 +246,7 @@
       ))
 
   (set tap (hs.eventtap.new
-            (map #(. hs.eventtap.event.types $1) events)
+            (map #(. event-types $1) events)
             tap-handler))
   (tap:start)
   (fn cleanup
@@ -318,6 +322,67 @@
     :textFont "Helvetica"
     :text ""}))
 
+(fn sort
+  [f xs]
+  (let [tbl []]
+    (each [_k v (ipairs xs)]
+      (table.insert tbl v))
+    (table.sort tbl f)
+    tbl))
+
+(fn asc
+  [f]
+  (fn [v1 v2]
+    (< (f v1) (f v2))))
+
+(fn desc
+  [f]
+  (fn [v1 v2]
+    (> (f v1) (f v2))))
+
+(fn intersect?
+  [point guide]
+  (let [{: x : y : w : h} guide.frame
+        point (hs.geometry.new point)
+        guide-rect (hs.geometry.new (- x 5) (- y 5)
+                                    (+ w 15) (+ h 15))]
+    (point:inside guide-rect)
+    ))
+
+(fn near-guide?
+  [point guide]
+  (and (= guide.type "rectangle")
+       (intersect? point guide)))
+
+(fn distance
+  [point guide]
+  (let [{: x : y : w : h} guide.frame]
+    (math.min (math.abs (- y point.y))
+              (math.abs (- x point.x)))))
+
+(fn guide->direction
+  [guide]
+  (match (?. guide :frame)
+    {:h 1} :horizontal
+    {:w 1} :vertical))
+
+(fn find-nearest-guide
+  [canvas point]
+  (->> (canvas:canvasElements)
+       (reduce
+        (fn [tbl element index]
+          (when (near-guide? point element)
+            (table.insert
+             tbl
+             {:index index
+              :distance (distance point element)
+              :element   element}))
+          tbl)
+        [])
+       (sort (asc #(. $1 :distance)))
+       (first)
+       ))
+
 (fn edit
   [state extra]
 
@@ -335,41 +400,63 @@
 
     ;; Set a callback for handling mouseDown, mouseEnter, and mouseExit events
     ;; on individual elements.
-    (canvas:mouseCallback
-     (fn [canvas event-type element-id x y]
-       (let [element (?. canvas element-id)
-             frame element.frame
-             direction (if (= frame.h 1) :horizontal :vertical)]
-         (match {:type event-type :element element :x x :y y}
-           {:type :mouseDown : element}  (fsm.send :move
-                                              {: element
-                                               : direction
-                                               :point (hs.geometry.point x y)})
-           ;; Mouse is hovering over a guide, turn it magenta
-           {:type :mouseEnter : element} (tset element :fillColor (colors.magenta))
-           ;; Mouse exited a guide
-           {:type :mouseExit : element} (tset element :fillColor (colors.cyan))
+    ;; (canvas:mouseCallback
+    ;;  (fn [canvas event-type element-id x y]
+    ;;    (let [element (?. canvas element-id)
+    ;;          direction (guide->direction element)]
+    ;;      (match {:type event-type :element element :x x :y y}
+    ;;        ;; Mouse is hovering over a guide, turn it magenta
+    ;;        {:type :mouseEnter : element} (tset element :fillColor (colors.magenta))
+    ;;        ;; Mouse exited a guide
+    ;;        {:type :mouseExit : element} (tset element :fillColor (colors.cyan))
 
-           ))))
+    ;;        ))))
 
     (combine-fx
      (tap-fx
       {:events [:leftMouseDown]}
       (fn [event]
         (let [point (event:location)
-              is-clicked (event:getButtonState 0)]
-          (if (and is-clicked (= point.x 0))
-              (do
-                (fsm.send :create {:direction :vertical
-                                   :point point})
-                {:continue false
-                 :post-events []})
-              (and is-clicked (= point.y 0))
-              (do
-                (fsm.send :create {:direction :horizontal
-                                   :point point})
-                {:continue false
-                 :post-events []})))))
+              is-clicked (event:getButtonState 0)
+              near-guide (find-nearest-guide canvas point)]
+          (if
+           near-guide
+           (let [element (. canvas near-guide.index)]
+             (fsm.send :move
+                       {: element
+                        : point
+                        :direction (guide->direction element)})
+             {:continue false
+              :post-events []})
+
+           (and is-clicked (= point.x 0))
+           (do
+             (fsm.send :create {:direction :vertical
+                                :point point})
+             {:continue false
+              :post-events []})
+
+           (and is-clicked (= point.y 0))
+           (do
+             (fsm.send :create {:direction :horizontal
+                                :point point})
+             {:continue false
+              :post-events []})))))
+
+     (tap-fx
+      {:events [:mouseMoved]}
+      (fn [event]
+        (var hover-target nil)
+        (let [point (event:location)]
+          ;; Going old-school on this one, performance is important here
+          (each [index element (ipairs (canvas:canvasElements))]
+            (when (= element.type "rectangle")
+              (if (and (intersect? point element) (not hover-target))
+                  (do
+                    (tset canvas index :fillColor (colors.magenta))
+                    (set hover-target index))
+                  (tset canvas index :fillColor (colors.cyan)))
+              )))))
 
      (key-fx
       {:key :escape}
@@ -457,11 +544,10 @@
      )))
 
 (fn move-guide
-  [state {: element :point origin}]
+  [state {: element :point origin : direction}]
   (let [canvas state.context.canvas
         frame element.frame
-        { : x : y : w : h } frame
-        direction (if (= h 1) :horizontal :vertical)]
+        { : x : y : w : h } frame]
 
     (tset canvas :mode-label :text "move guide")
 

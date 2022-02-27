@@ -12,6 +12,7 @@
 (local idle (require :idle))
 (local config (require :config))
 (local url-handlers (require :url-handlers))
+(global guides (require :guides))
 
 
 (require :console)
