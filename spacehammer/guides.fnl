@@ -398,20 +398,6 @@
 
     (tset canvas :mode-label :text "edit guides")
 
-    ;; Set a callback for handling mouseDown, mouseEnter, and mouseExit events
-    ;; on individual elements.
-    ;; (canvas:mouseCallback
-    ;;  (fn [canvas event-type element-id x y]
-    ;;    (let [element (?. canvas element-id)
-    ;;          direction (guide->direction element)]
-    ;;      (match {:type event-type :element element :x x :y y}
-    ;;        ;; Mouse is hovering over a guide, turn it magenta
-    ;;        {:type :mouseEnter : element} (tset element :fillColor (colors.magenta))
-    ;;        ;; Mouse exited a guide
-    ;;        {:type :mouseExit : element} (tset element :fillColor (colors.cyan))
-
-    ;;        ))))
-
     (combine-fx
      (tap-fx
       {:events [:leftMouseDown]}
@@ -530,7 +516,7 @@
      (tap-fx
       {:events [:leftMouseUp]}
       (fn [event]
-        (tset canvas :new-guide :id nil)
+        (tset canvas :new-guide :id (.. "guide-" (math.random 100 999)))
         (fsm.send :done {:point (event:location)})
         {:continue false
          :post-events []}))
@@ -565,10 +551,14 @@
      (tap-fx
       {:events [:leftMouseUp]}
       (fn [event]
-        (tset element :fillColor (colors.cyan))
-        (fsm.send :done {:point (event:location)})
-        {:continue false
-         :post-events []}))
+        (let [point (event:location)]
+          (match {:x point.x :y point.y : direction}
+            {:direction :horizontal :y 0} (remove-by-id canvas element.id)
+            {:direction :vertical :x 0} (remove-by-id canvas element.id)
+            _ (tset element :fillColor (colors.cyan)))
+          (fsm.send :done {:point point})
+          {:continue false
+           :post-events []})))
 
      (key-fx
       {:key :escape}
@@ -693,10 +683,6 @@
        (statemachine.effect-handler
         {:create-guide show-pos
          :move-guide   show-pos})
-       ;; (fn [{: next-state : effect : extra}]
-       ;;   (match effect
-       ;;     :create-guide (show-pos next-state extra)
-       ;;     :move-guide   (show-pos next-state extra)))
        )
 
 
