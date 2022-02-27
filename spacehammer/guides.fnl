@@ -516,10 +516,14 @@
      (tap-fx
       {:events [:leftMouseUp]}
       (fn [event]
-        (tset canvas :new-guide :id (.. "guide-" (math.random 100 999)))
-        (fsm.send :done {:point (event:location)})
-        {:continue false
-         :post-events []}))
+        (let [point (event:location)]
+          (match {:x point.x :y point.y : direction}
+            {:direction :horizontal :y 0} (remove-by-id canvas :new-guide)
+            {:direction :vertical :x 0} (remove-by-id canvas :new-guide)
+            _ (tset canvas :new-guide :id (.. "guide-" (math.random 100 999))))
+          (fsm.send :done {:point point})
+          {:continue false
+           :post-events []})))
 
      (key-fx
       {:key :escape}
