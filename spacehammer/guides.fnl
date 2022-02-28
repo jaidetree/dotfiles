@@ -68,7 +68,6 @@
   [tbl screen]
   (let [screen-id (screen:id)
         frame (screen:fullFrame)]
-    (pprint frame)
     (tset tbl screen-id
           (doto (hs.canvas.new frame)
             (: :canvasMouseEvents false false false false)))
@@ -326,7 +325,6 @@
 
 (fn remove-at
   [canvas index]
-  (print "Removing element at index" 1)
   (: canvas :removeElement index))
 
 (fn remove-by-id
@@ -636,28 +634,6 @@
           (math.floor (- current.x origin.x)) ", "
           (math.floor (- current.y origin.y)))))
 
-(fn create-pos-canvas
-  [direction point]
-  (match [direction point]
-    [:horizontal nil] {:x point.x
-                       :y (+ point.y 10)
-                       :w 140
-                       :h 30}
-    [:vertical nil]   {:x (+ point.x 10)
-                       :y point.y
-                       :w 140
-                       :h 30}
-
-    [:horizontal point] {:x point.x
-                         :y (+ point.y 10)
-                         :w 200
-                         :h 30}
-    [:vertical   point] {:x (+ point.x 10)
-                         :y point.y
-                         :w 200
-                         :h 30})
-  )
-
 (fn calc-coords-pos
   [coords-box direction point]
   "
@@ -692,14 +668,31 @@
               (- point.y coords.h 10))}
       )))
 
-(fn show-pos
-  [state {: direction :point initial : element}]
-  (let [canvas state.context.canvas
-        last-point state.context.last-point
-        origin (if element initial
-                   last-point last-point)
-        pos-canvas (hs.canvas.new (create-pos-canvas direction initial))]
+(fn pos-canvas-frame
+  [direction point]
+  (match [direction point]
+    [:horizontal nil] {:x point.x
+                       :y (+ point.y 10)
+                       :w 140
+                       :h 30}
+    [:vertical nil]   {:x (+ point.x 10)
+                       :y point.y
+                       :w 140
+                       :h 30}
 
+    [:horizontal point] {:x point.x
+                         :y (+ point.y 10)
+                         :w 200
+                         :h 30}
+    [:vertical   point] {:x (+ point.x 10)
+                         :y point.y
+                         :w 200
+                         :h 30})
+  )
+
+(fn create-pos-canvas
+  [{: direction : initial : origin}]
+  (let [pos-canvas (hs.canvas.new (pos-canvas-frame direction initial))]
     (doto pos-canvas
       (: :appendElements
          {:action "strokeAndFill"
@@ -720,7 +713,18 @@
                  {:current initial
                   :origin  origin})
           :type "text"})
-      (: :show))
+      (: :show))))
+
+(fn show-pos
+  [state {: direction :point initial : element}]
+  (let [canvas state.context.canvas
+        last-point state.context.last-point
+        origin (if element initial
+                   last-point last-point)
+        pos-canvas (create-pos-canvas
+                    {: direction
+                     : initial
+                     : origin})]
 
     (combine-fx
      (tap-fx
