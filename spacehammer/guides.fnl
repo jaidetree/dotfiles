@@ -426,6 +426,7 @@
         watcher (hs.screen.watcher.newWithActiveScreen
                  (fn [active-changed]
                    (when active-changed
+                     (remove-by-id state.context.canvas :mode-label)
                      (fsm.send :screen nil))))]
 
     (watcher:start)
