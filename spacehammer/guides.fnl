@@ -458,6 +458,8 @@
       (fn [event point]
         (let [is-clicked (event:getButtonState 0)
               near-guide (find-nearest-guide canvas point)]
+          (pprint {: point
+                   : near-guide})
           (if
            near-guide
            (let [element (. canvas near-guide.index)]
@@ -468,14 +470,14 @@
              {:continue false
               :post-events []})
 
-           (and is-clicked (= point.x 0))
+           (and is-clicked (>= point.x 0) (< point.x 3))
            (do
              (fsm.send :create {:direction :vertical
                                 :point point})
              {:continue false
               :post-events []})
 
-           (and is-clicked (= point.y 0))
+           (and is-clicked (>= point.x 0) (< point.y 3))
            (do
              (fsm.send :create {:direction :horizontal
                                 :point point})
@@ -542,7 +544,7 @@
     (canvas:appendElements
      {:id "new-guide"
       :action "fill"
-      :fillColor (colors.cyan)
+      :fillColor (colors.magenta)
       :frame (if (= direction :horizontal)
                  {:x 0 :y 0 :w frame.w :h 1}
                  (= direction :vertical)
@@ -571,7 +573,8 @@
         (match {:x point.x :y point.y : direction}
           {:direction :horizontal :y 0} (remove-by-id canvas :new-guide)
           {:direction :vertical :x 0} (remove-by-id canvas :new-guide)
-          _ (tset canvas :new-guide :id (.. "guide-" (math.random 100 999))))
+          _ (do (tset canvas :new-guide :fillColor (colors.cyan))
+                (tset canvas :new-guide :id (.. "guide-" (math.random 100 999)))))
         (fsm.send :done {:point point})
         {:continue false
          :post-events []}))
@@ -766,6 +769,7 @@
 (fn show-hints
   [state extra]
   (let [canvas state.context.canvas
+        canvas-frame (canvas:frame)
         cyan (colors.cyan)
         magenta (colors.magenta)]
     (print "Showing hints")
@@ -774,12 +778,12 @@
       :action "fill"
       :type "rectangle"
       :fillColor cyan
-      :frame {:x 2 :y 0 :w "1.0" :h 1}}
+      :frame {:x 2 :y 0 :w canvas-frame.w :h 2}}
      {:id "hint-left"
       :action "fill"
       :type "rectangle"
       :fillColor cyan
-      :frame {:x 0 :y 2 :w 1 :h "1.0"}})
+      :frame {:x 0 :y 2 :w 2 :h canvas-frame.h }})
 
     (combine-fx
      (mouse-fx
@@ -788,8 +792,8 @@
       (fn [event point]
         (let [top-color (color->tbl canvas.hint-top.fillColor)
               left-color (color->tbl canvas.hint-left.fillColor)
-              at-left (= point.x 0)
-              at-top (= point.y 0)]
+              at-left (and (>= point.x 0) (< point.x 3))
+              at-top (and (>= point.x 0) (< point.y 3))]
           (if at-top
               (when (eq? top-color cyan)
                 (tset canvas :hint-top :fillColor magenta))
