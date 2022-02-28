@@ -1,7 +1,8 @@
 (require-macros :lib.macros)
 (require-macros :lib.advice.macros)
 (local statemachine (require :lib.statemachine))
-(local {: filter
+(local {: eq?
+        : filter
         : first
         : for-each
         : last
@@ -185,6 +186,12 @@
            :context       (select-canvas state.context)}
    :effect :edit})
 
+(fn ->error
+  [state actions err]
+  {:state {:current-state :ready
+           :context       (select-canvas state.context)}
+   :effect :exit})
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define State Machine
@@ -205,13 +212,16 @@
                             :move        edit->move-guide
                             :clear       ->clear
                             :toggle      ->toggle
-                            :screen      edit->edit}
+                            :screen      edit->edit
+                            :error       ->error}
                  :create   {;:mouse-move  create->move
                             :done        create->done
-                            :escape      create->cancel}
+                            :escape      create->cancel
+                            :error       ->error}
                  :move     {;:mouse-move  move->move
                             :done        move->done
-                            :escape      move->cancel}}
+                            :escape      move->cancel
+                            :error       ->error}}
         :log :guide})
 
 (local fsm (statemachine.new machine))
@@ -225,11 +235,11 @@
 
 (fn colors.cyan
   []
-  {:red 0 :green 255 :blue 255 :alpha 1.0})
+  {:red 0.0 :green 1.0 :blue 1.0 :alpha 1.0})
 
 (fn colors.magenta
   []
-  {:red 255 :green 0 :blue 255 :alpha 1.0})
+  {:red 1.0 :green 0.0 :blue 1.0 :alpha 1.0})
 
 (fn colors.black
   []
@@ -249,9 +259,9 @@
   (fn tap-handler
     [event]
     (let [state {:ret-value {}}
-          (ok err) (do-xpc! #(tset state
-                                   :ret-value
-                                   (handler event)))
+          (ok err) (do-xpc! (fn tap-handler-cb
+                              []
+                              (tset state :ret-value (handler event))))
           {: continue : post-events } (or state.ret-value {})]
       ;; Continue determines if the event handler chain should continue
       ;; as it is possible to prevent other handlers from firing while
@@ -269,6 +279,7 @@
         ;; Caught error ignore continue and events
         [false ?cont ?events] (do
                                 (tap:stop)
+                                (fsm:send :error err)
                                 (values false [event])))
       ))
 
@@ -387,6 +398,7 @@
 (fn near-guide?
   [point guide]
   (and (= guide.type "rectangle")
+       (string.find guide.id "guide-" 1 true)
        (intersect? point guide)))
 
 (fn distance
@@ -477,7 +489,8 @@
         (var hover-target nil)
         ;; Going old-school on this one, performance is important here
         (each [index element (ipairs (canvas:canvasElements))]
-          (when (= element.type "rectangle")
+          (when (and (= element.type "rectangle")
+                     (string.find element.id "guide" 1 true))
             (if (and (intersect? point element) (not hover-target))
                 (do
                   (tset canvas index :fillColor (colors.magenta))
@@ -530,8 +543,6 @@
      {:id "new-guide"
       :action "fill"
       :fillColor (colors.cyan)
-      :trackMouseEnterExit true
-      :trackMouseDown      true
       :frame (if (= direction :horizontal)
                  {:x 0 :y 0 :w frame.w :h 1}
                  (= direction :vertical)
@@ -745,9 +756,67 @@
        (pos-canvas:delete)
        ))))
 
+(fn color->tbl
+  [color]
+  {:red color.red
+   :blue color.blue
+   :green color.green
+   :alpha color.alpha})
+
+(fn show-hints
+  [state extra]
+  (let [canvas state.context.canvas
+        cyan (colors.cyan)
+        magenta (colors.magenta)]
+    (print "Showing hints")
+    (canvas:appendElements
+     {:id "hint-top"
+      :action "fill"
+      :type "rectangle"
+      :fillColor cyan
+      :frame {:x 2 :y 0 :w "1.0" :h 1}}
+     {:id "hint-left"
+      :action "fill"
+      :type "rectangle"
+      :fillColor cyan
+      :frame {:x 0 :y 2 :w 1 :h "1.0"}})
+
+    (combine-fx
+     (mouse-fx
+      {: canvas
+       :events [:mouseMoved]}
+      (fn [event point]
+        (let [top-color (color->tbl canvas.hint-top.fillColor)
+              left-color (color->tbl canvas.hint-left.fillColor)
+              at-left (= point.x 0)
+              at-top (= point.y 0)]
+          (if at-top
+              (when (eq? top-color cyan)
+                (tset canvas :hint-top :fillColor magenta))
+
+              at-left
+              (when (eq? left-color cyan)
+                (tset canvas :hint-left :fillColor magenta))
+
+              (do
+                (when (eq? top-color magenta)
+                  (tset canvas :hint-top :fillColor cyan))
+
+                (when (eq? left-color magenta)
+                  (tset canvas :hint-left :fillColor cyan))))
+
+        )))
+
+     (fn cleanup-hints
+       []
+       (remove-by-id canvas :hint-top)
+       (remove-by-id canvas :hint-left))))
+)
+
 (local secondary-effects
        (statemachine.effect-handler
-        {:create-guide show-pos
+        {:edit         show-hints
+         :create-guide show-pos
          :move-guide   show-pos})
        )
 
