@@ -745,7 +745,6 @@
       (fn [event point]
         (let [current (event:location)
               pos (calc-coords-pos pos-canvas direction current)]
-          (pprint point)
           (tset pos-canvas :label :text
                 (format-coords
                  {:current point
@@ -772,7 +771,6 @@
         canvas-frame (canvas:frame)
         cyan (colors.cyan)
         magenta (colors.magenta)]
-    (print "Showing hints")
     (canvas:appendElements
      {:id "hint-top"
       :action "fill"
