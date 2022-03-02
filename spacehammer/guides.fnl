@@ -297,7 +297,7 @@
    {: events}
    (fn [event]
      (let [point (event:location)
-           frame (canvas:frame)
+           frame (-> (hs.screen.mainScreen) (: :fullFrame))
            relative (hs.geometry.point
                      (- point.x frame.x)
                      (- point.y frame.y))]
@@ -458,8 +458,6 @@
       (fn [event point]
         (let [is-clicked (event:getButtonState 0)
               near-guide (find-nearest-guide canvas point)]
-          (pprint {: point
-                   : near-guide})
           (if
            near-guide
            (let [element (. canvas near-guide.index)]
@@ -662,8 +660,8 @@
   "
   (let [coords (coords-box:frame)
         screen (-> (hs.screen.mainScreen) (: :frame))
-        bottom-edge (- screen.h coords.h 10)
-        right-edge (- screen.w coords.w 10)]
+        bottom-edge (+ screen.y (- screen.h coords.h 10))
+        right-edge (+ screen.x (- screen.w coords.w 10))]
     (match direction
       :horizontal
       {:x (if (< point.x right-edge)
@@ -741,15 +739,17 @@
                      : origin})]
 
     (combine-fx
-     (tap-fx
-      {:events [:leftMouseDragged]}
-      (fn [event]
-        (let [point (event:location)
-              pos (calc-coords-pos pos-canvas direction point)]
+     (mouse-fx
+      {: canvas
+       :events [:leftMouseDragged]}
+      (fn [event point]
+        (let [current (event:location)
+              pos (calc-coords-pos pos-canvas direction current)]
+          (pprint point)
           (tset pos-canvas :label :text
                 (format-coords
                  {:current point
-                  :origin  origin}))
+                  : origin}))
           (pos-canvas:topLeft pos)
           {:continue true
            :post-events []})))
@@ -830,7 +830,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (local api {: fsm})
-
 
 (fn api.edit
   []
