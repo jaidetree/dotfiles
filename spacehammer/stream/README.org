@@ -1,0 +1,7 @@
+#+title: Spacehammer Stream library
+
+* Testing
+
+#+begin_src shell
+npx nodemon -e ".fnl" -x "~/.hammerspoon/run-test" --delay 2 -- *-test.fnl
+#+end_src
