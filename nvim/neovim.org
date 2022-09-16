@@ -1,0 +1,25 @@
+#+title: Neo Vim Configuration
+
+* Context
+
+After using spacemacs for a year, then doom emacs for 2+ years, I find myself a little frustrated with emacs. Conceptually I really like it, but to go from 80% of what I want to that 100% lies a arduous journey learning all the inner workings. This config is me taking a break to setup a standard pretty-solid editor experience for myself, where I spend the time to read docs and learn the APIs.
+
+When this config is stable, I'll probably switch back to emacs and start over to better learn its inner workings without sacrificing productivity by relying on this config for my day-to-day work. From then on, I can hopefully jump between neovim and emacs as I please.
+
+** Why Neovim?
+
+I've used VS Code off-and-on for a few years now, occasionally hopping back into it for TypeScript specific needs. That said, it has so much I'd like to change but is not really possible. Additionally, I'd rather just have a programming language to customize it with than every plugin author implementing conditionals in some constrainted JSON syntax. Using emacs taught me the value of being able to really express what you want out of an editor.
+
+Neovim feels like a solid middleground between providing a high level of customization leveraging languages like lua (or in my case fennel) which I'm already familiar with. It's also been exploding with cool plugins and enhancements in the past few years and I am impressed with the momentum it has.
+
+** Fennel
+
+The majority of customization will be done with the [[https://fennel-lang.org/][Fennel]] lisp compiled at runtime to lua. There is a startup performance penalty but I don't anticipate closing and reopening neovim that often. With embedding the runtime, I have the opportunity to setup a REPL environment so I can evaluate fennel as I write it to customize my neovim editor. This feels much more productive to me than restarting, sourcing, or relying on a reloading plugin since I can try out ideas line-by-line or var by var without even having to save a file. I am a huge fan of Clojure and other lisp languages so working with fennel feels great to me and combined with a parinfer, paredit, and similar structural editing plugins the code can sometimes feel like it writes itself.
+
+* Config
+
+** Bootstrapping Fennel
+
+#+begin_src fennel :tangle init.fnl
+ (print "hi")
+#+end_src
