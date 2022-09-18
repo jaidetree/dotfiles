@@ -47,6 +47,7 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
   - [ ] Update file_browser and find_files to use even smarter tab function
   - [x] Install comment library
   - [x] Install {https://github.com/williamboman/mason.nvim}[mason]
+  - [ ] Bind <C-c><C-c> to neogit commit in neogit commit buffer
 
 * References
 
@@ -83,6 +84,87 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
    @code
    :vert help vim-sexp
    @end
+
+* Issues
+
+** project.nvim is not picking up the correct project root
+
+   Given:
+
+   - In one tab is views.cljs in a Clojure project
+   - Another tab is ~/.config/nvim/fnl/config/core.fnl
+   - project.nvim is installed which automatically sets the cd to the project root
+
+   Expected:
+
+   - When editing config/core.fnl and using something like `:Telescope git_files`
+     to search project files, I expect it to be searching project containing
+     core.fnl (dotfiles)
+   - Running `:pwd` returns the root project containing  `config/core.fnl`
+
+   Actual:
+
+   - Trying to search project files near my dotfiles only prompts for searching
+     the clojure project in the other tab.
+   - `:pwd` returns the root of the clojure project instead of the root of the
+     file I'm working on
+   - Using neogit also uses the project path instead of the dofiles project
+
+   What have I tried?:
+
+   - Tried logging `lua.lsp.buf_get_clients()`. What is returned is:
+
+   @code fennel
+   [{:name "null-ls" :root "/Users/j/projects/crunchy-price-calc"}]
+   @end
+
+   - This suggests null-ls is reusing the client and pointing to the project 
+     root instead of current file root.
+
+   - Have not seen topics on this in null-ls gh issues and docs, #neovim irc,
+     or neovim discourse. 
+
+   - Looked at some `:help lsp` docs but nothing jumped out as the cause
+
+   - Looked up the code for how project.nvim picks the root, it mostly calls
+     out to lsp and falls back to pattern matching
+
+** vim-cmp completes too eagerly
+
+   When typing text, spelling corrections can come up automatically. The 
+   problem is if I'm trying to insert a line break after pressing backspace,
+   it applies the correction.
+
+   Try updating vim-cmp to use explicit confirm.
+
+** Not entirely sure vim-cmp is setup correctly
+
+   While I do seem to get spelling suggestions from null-ls, not sure if I'm getting 
+   codespell suggestions, or even lsp suggestions in say a clojure project buffer.
+
+** Theming hover?
+
+   Got vim.lsp.buf.hover to work, but the UI is kinda ugly, and I don't like 
+   that it takes up the full width. Would be nice to make it look better with config
+   or a UI package.
+
+   I've tried hover.nvim but that was throwing an error 
+   https://github.com/lewis6991/hover.nvim/issues/2
+
+   Thinking it might be better to try configuring the native hover UI or copying some
+   config from hover.nvim.
+
+** Don't like Telescope file_browser UX
+
+   The Telescope file_browser is really nice, but I don't like using it as much 
+   as doom emacs' find file.
+
+   Thinking it would be cool to make a fork or alternative that uses Telescope 
+   to display the current buffer path, supports tab completion and lists the files 
+   adjacent to current file.
+
+   Defaults to cwd of current buffer
+
 
 
 * Bootstrapping Fennel

@@ -61,7 +61,7 @@
                                                      :.exrc]))})
                                (use :ahmedkhalf/project.nvim
                                     {:config #(let [project-nvim (require :project_nvim)]
-                                                (project-nvim.setup))})
+                                                (project-nvim.setup {}))})
                                (use :gbprod/yanky.nvim
                                     {:config #(let [yanky (require :yanky)]
                                                 (yanky.setup))})
@@ -154,8 +154,7 @@
                                (use :neovim/nvim-lspconfig
                                     {:after [:mason.nvim
                                              :mason-lspconfig.nvim
-                                             :nvim-cmp
-                                             :hover.nvim]
+                                             :nvim-cmp]
                                      :config #(require :config.plugins.lsp)})
                                (use :TimUntersberger/neogit
                                     {:requires [:nvim-lua/plenary.nvim]
@@ -203,12 +202,6 @@
                                     {:require [:kyazdani42/nvim-web-devicons]
                                      :config #(let [trouble (require :trouble)]
                                                 (trouble.setup))})
-                               (use :lewis6991/hover.nvim
-                                    {:config #(let [hover (require :hover)]
-                                                (hover.setup {:init #(do
-                                                                       (require :hover.providers.lsp)
-                                                                       (require :hover.providers.gh))
-                                                              :title true}))})
                                ;; TODO: Install trouble to show diagnostics
                                ;; Automatically set up your configuration after cloning packer.nvim
                                ;; Put this at the end after all plugins
