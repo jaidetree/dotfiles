@@ -5,33 +5,72 @@
        (cmp-nvim-lsp.update_capabilities (vim.lsp.protocol.make_client_capabilities)))
 
 (local wk (require :which-key))
+(local async (require :plenary.async))
+(local util (require :vim.lsp.util))
+(local notify (require :notify))
+
+(comment (notify :test))
+
+(fn parse-markdown-links []
+  nil)
+
+(fn hover-handler [_ result ctx config]
+  "Duplicates original implementation"
+  (let [config (or config {})
+        client (vim.lsp.get_client_by_id ctx.client_id)]
+    (set config.focus_id ctx.method)
+    (and result result.contents (print (vim.inspect result.contents)))
+    (if (not (and result result.contents))
+        (do
+          ;; Soft-log this. For example hover when clojure and tailwindcss
+          ;; clients are active
+          (print (.. "lsp.hover[" (?. client :config :name)
+                     "]: No information available")))
+        (let [markdown-lines (-> result.contents
+                                 (util.convert_input_to_markdown_lines)
+                                 (util.trim_empty_lines))]
+          (if (vim.tbl_isempty markdown-lines)
+              (notify "No information available")
+              (util.open_floating_preview (parse-markdown-links markdown-lines)
+                                          :markdown config))))
+    nil))
+
+(comment ;; Trying lspsaga instead -- may switch back to hover.nvim
+  (tset vim.lsp.handlers :textDocument/hover
+        (vim.lsp.with hover-handler
+                      {:border :single
+                       :width 80
+                       :opts {:offset_y 2}
+                       :stylize_markdown true})))
 
 (fn on-attach [client bufnr]
   (let [bufopts {:noremap true :silent true :buffer bufnr}]
-    (fn map [lhs rhs ...]
-      (let [args [...]
-            opts (or (. args 1) {})]
-        (vim.keymap.set :n (.. :<leader>c lhs) rhs
-                        (vim.tbl_extend :force bufopts opts))))
-
-    (map :d vim.lsp.buf.definition {:desc "Goto definition"})
-    (map :D vim.lsp.buf.references {:desc "Goto references"})
-    (map :i vim.lsp.buf.implementation {:desc "Goto implementation"})
-    (map :h vim.lsp.buf.signature_help {:desc "Signature help"})
-    (map :t vim.lsp.buf.type_definition {:desc "Goto type definition"})
-    (map :r vim.lsp.buf.rename {:desc :Rename})
-    (map :K vim.lsp.buf.hover {:desc :Documentation})
-    ;; (map :K hover.hover {:desc :Documentation})
-    ;; TODO: Replace with telescope UI command
-    (map :a vim.lsp.buf.code_action {:desc "Code Actions"})
-    (map :f vim.lsp.buf.format {:desc :Format})
-    (map :wa vim.lsp.buf.add_workspace_folder {:desc "Create folder"})
-    (map :wr vim.lsp.buf.remove_workspace_folder {:desc "Remove folder"})
-    (map :wl #(print (vim.inspect (vim.lsp.buf.list_workspace_folders))))
     nil))
 
 (local flags {:debounce_text_changes 150})
 (local opts {:noremap true :silent true})
+
+(fn map [lhs rhs ...]
+  (let [args [...]
+        custom-opts (or (. args 1) {})]
+    (vim.keymap.set :n (.. :<leader>c lhs) rhs
+                    (vim.tbl_extend :force opts custom-opts))))
+
+(map :h "<cmd>Lspsaga lsp_finder<cr>" {:desc "Goto definition"})
+(map :d "<cmd>Lspsaga peek_definition<cr>" {:desc "Goto definition"})
+(map :D vim.lsp.buf.references {:desc "Goto references"})
+(map :i vim.lsp.buf.implementation {:desc "Goto implementation"})
+(map :h vim.lsp.buf.signature_help {:desc "Signature help"})
+(map :t vim.lsp.buf.type_definition {:desc "Goto type definition"})
+(map :r "<cmd>Lspsaga rename<cr>" {:desc :Rename})
+(map :K "<cmd>Lspsaga hover_doc<cr>" {:desc :Documentation})
+;; (map :K hover.hover {:desc :Documentation})
+;; TODO: Replace with telescope UI command
+(map :a "<cmd>Lspsaga code_action<cr>" {:desc "Code Actions"})
+(map :f vim.lsp.buf.format {:desc :Format})
+(map :wa vim.lsp.buf.add_workspace_folder {:desc "Create folder"})
+(map :wr vim.lsp.buf.remove_workspace_folder {:desc "Remove folder"})
+(map :wl #(print (vim.inspect (vim.lsp.buf.list_workspace_folders))))
 
 (wk.register {:<leader>l {:name :+lsp}})
 
@@ -78,4 +117,6 @@
                            :filetypes (vim.list_extend [:clojure]
                                                        twcfg.default_config.filetypes)})
 
-(comment (vim.inspect twcfg))
+(comment (vim.inspect twcfg)
+  (lsp.buf_is_attached 0)
+  nil)

@@ -19,7 +19,7 @@ When this config is stable, I'll probably switch back to emacs and start over to
 
 ** Why Neovim?
 
-I've used VS Code off-and-on for a few years now, occasionally hopping back into it for TypeScript specific needs. That said, it has so much I'd like to change but is not really possible. Additionally, I'd rather just have a programming language to customize it with than every plugin author implementing conditionals in some constrainted JSON syntax. Using emacs taught me the value of being able to really express what you want out of an editor.
+I've used VS Code off-and-on for a few years now, occasionally hopping back into it for TypeScript specific needs. That said, it has so much I'd like to change but is not really possible. Additionally, I'd rather just have a programming language to customize it with than every plugin author implementing conditionals in some constrained JSON syntax. Using emacs taught me the value of being able to really express what you want out of an editor.
 
 Neovim feels like a solid middleground between providing a high level of customization leveraging languages like lua (or in my case fennel) which I'm already familiar with. It's also been exploding with cool plugins and enhancements in the past few years and I am impressed with the momentum it has.
 
@@ -29,7 +29,7 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
 
 * Todos
 
-  - [ ] Setup vim-sexp bindings
+  - [x] Setup vim-sexp bindings
   - [x] Configure LSP (at least for clojure/clojurescript)
   - [x] Try out a completion engine like coc, ctrl-x mode, nvim-cmp, ddc (nvim-cmp)
   - [-] Setup clj-kondo + maybe Ale? (clojure-lsp might already do this)
@@ -37,17 +37,24 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
   - [ ] Try {https://github.com/rohit-px2/nvui }
   - [x] Upstream pr for conjure to generalize comment-form?
   - [x] Upstream pr for aniseed to update fennel {https://libera.ems.host/_matrix/media/r0/download/matrix.org/gPKSgUSyRobtvtAMRnITvJjm/Screen%20Shot%202022-09-17%20at%207.49.26%20am.png}
-  - [ ] Improve command palette to include builtin commands
-  - [ ] Install {https://github.com/rmagatti/auto-session}[auto-session] and {https://github.com/rmagatti/session-lens}[session-lens]
+  - [-] Install {https://github.com/rmagatti/auto-session}[auto-session] and {https://github.com/rmagatti/session-lens}[session-lens]
   - [ ] Install {https://github.com/jose-elias-alvarez/nvim-lsp-ts-utils}
-  - [ ] Install vim-surround or updated equivalent with cs, ds, ys bindings
-  - [ ] Install a formatter library(null-lsp might do this)?
+  - [x] Install vim-surround or updated equivalent with cs, ds, ys bindings
+  - [x] Install a formatter library(null-lsp might do this)?
   - [x] Install {https://github.com/TimUntersberger/neogit}[neogit]
   - [x] Install Octo
   - [ ] Update file_browser and find_files to use even smarter tab function
   - [x] Install comment library
   - [x] Install {https://github.com/williamboman/mason.nvim}[mason]
   - [ ] Bind <C-c><C-c> to neogit commit in neogit commit buffer
+  - [ ] Update Conjure log bindings to use - and |
+  - [ ] Bind <leader>w{hjkl} movements using tmux navigation
+  - [ ] Configure terminal settings
+  - [ ] Find a plugin for common file operations like renaming, moving, deleting
+  - [ ] Research hard wrapping settings or plugins
+  - [ ] Setup a quickfix binding for LSP + spellchecking
+  - [x] Move lsp bindings to permanent bindings
+  - [x] Install a statusline
 
 * References
 
@@ -85,9 +92,24 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
    :vert help vim-sexp
    @end
 
+** How do I see the syntax hl groups under cursor?
+
+   Source from {https://neovim.discourse.group/t/synstack-equivalent-for-extmarks-based-highlighting/1373}
+
+   @code vim
+   let l:syn_ids = synstack(row('.'), col('.'))
+   let l:syn_names = map(syn_ids, {i,s -> hlIDattr(s, 'name')})
+   @end
+
+** How do I tangle with nvim-orgmode?
+
+   - {https://github.com/OrgTangle/org-babel-tangle.py/blob/master/org-babel-tangle}
+   - {https://github.com/nvim-orgmode/orgmode/discussions/275}
+
 * Issues
 
 ** project.nvim is not picking up the correct project root
+   #status work-around-found
 
    Given:
 
@@ -129,6 +151,13 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
    - Looked up the code for how project.nvim picks the root, it mostly calls
      out to lsp and falls back to pattern matching
 
+   Workaround:
+
+   - Can configure project.nvim to ignore certain lsp clients, so added null-ls
+     for now
+
+   - Created a discussion question {https://github.com/jose-elias-alvarez/null-ls.nvim/discussions/1120}
+
 ** vim-cmp completes too eagerly
 
    When typing text, spelling corrections can come up automatically. The 
@@ -137,12 +166,20 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
 
    Try updating vim-cmp to use explicit confirm.
 
+   Results:
+
+   - [x] Editing the settings for the <cr> binding seems to have worked! But now
+     I may need to fix some settings to explicitly select. 
+   - [x] Use TAB for selecting completions
+
+
 ** Not entirely sure vim-cmp is setup correctly
 
    While I do seem to get spelling suggestions from null-ls, not sure if I'm getting 
    codespell suggestions, or even lsp suggestions in say a clojure project buffer.
 
 ** Theming hover?
+   #status fixed
 
    Got vim.lsp.buf.hover to work, but the UI is kinda ugly, and I don't like 
    that it takes up the full width. Would be nice to make it look better with config
@@ -153,6 +190,12 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
 
    Thinking it might be better to try configuring the native hover UI or copying some
    config from hover.nvim.
+
+   Results:
+
+   - Found the APIs to customize the sizing of the hover float window
+   - [ ] Parse markdown links better or pr for {https://github.com/neovim/neovim/issues/20246}
+   - Installed Lspsaga which also has a nice hover ui
 
 ** Don't like Telescope file_browser UX
 
@@ -165,6 +208,11 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
 
    Defaults to cwd of current buffer
 
+** Command Palette only displays user commands
+
+   Would like it if the command palette allowed me to search all commands
+   instead of just custom modes. Maybe dressing with an enhanced command mode
+   would do the trick?
 
 
 * Bootstrapping Fennel
@@ -231,7 +279,7 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
   Load the core configuration file from ./fnl/config/core.fnl
 
   #tangle ./fnl/bootstrap.fnl
-  @code fennel
+  @code fennelc
   (local cfg (require :config.core))
   @end
 
@@ -242,4 +290,51 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
   cfg
   @end
 
+
 * Config
+
+* Project Ideas
+
+** A hiccup-inspired statusline framework
+
+   While feline is pretty nice, I would prefer if I could define each component
+   as a function and render it like a tree similar to Clojure's hiccup library or JSX
+
+   #tangle none
+   @code fennel
+   (fn git-branch 
+     []
+     (with-state 
+       [branch (git-branch)]
+       [slant-left
+        {:fg "#0055cc" :bg "#19192a"}
+        [:text icon]
+        [:text " "]
+        [:text branch]]))
+
+   (fn active-statusline 
+     []
+     [sections 
+      [section 
+       [git-branch]]])
+
+   (hiccup-status-line.setup my-statusline)   
+   @end
+
+   What makes this concept better than feline?
+
+   - Feline's components concept requires functions for particular parts like
+     the hl, enabling it, and the provider (source)
+   - Would rather have a function that represents each entry than defining
+     parts of each component as functions
+   - Want composability
+
+   - Looking through the source at 
+     {https://github.com/feline-nvim/feline.nvim/blob/496975425a28ef1f974e90e9664fe3409738f071/lua/feline/init.lua#L205} 
+     it's really just setting the statusline to a string that call the generate
+     function that returns a string. It's autocmds and groups seem to be centered around reloading.
+   - Not sure if a hiccup or component system is really needed.
+   - Maybe each part could be represented by a function that returns a string
+     with some utils around coloring
+
+   This is a really long line with a lot of garbage text for no real reason. Blah blah blah

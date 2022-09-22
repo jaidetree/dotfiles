@@ -28,3 +28,4 @@
 (ts.load_extension :file_browser)
 (ts.load_extension :projects)
 (ts.load_extension :yank_history)
+(ts.load_extension :notify)
