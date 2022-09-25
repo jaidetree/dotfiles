@@ -179,15 +179,33 @@
     (slant-right {:bg color.bg :fg color.fg :next-bg (if branch "#303050" "#19192a")} mode)))
 
 (fn git-branch
-  [{: branch}]
+  [{: branch : readonly}]
   (when branch
     (slant-right
-      {:bg "#303050" :fg "#ffffff" :next-bg "#19192a"}
-      " " branch "  ")))
+      {:bg "#303050" :fg "#ffffff" :next-bg (if readonly
+                                              "#4b4b68"
+                                              "#19192a")}
+      "" branch " ")))
+
+(fn readonly
+  [{: readonly}]
+  (when readonly
+    (..
+      (hl {:fg "#f6deb0" :bg "#4b4b68"} " ")
+      (slant-right 
+        {:bg "#4b4b68" :fg "#ffffff" :next-bg "#19192a"}
+        "RO"))))
 
 (fn file
   [_state]
-  (hl {:bg "#19192a"} " %f "))
+  (let [dev-icons (require :nvim-web-devicons) 
+        (icon-str  icon-color) (dev-icons.get_icon_color (vim.fn.expand "%:t"))]
+    (..
+      (hl {:fg icon-color} " " icon-str)
+      (hl {:bg "#19192a"} " %<%f "))))
+
+(comment
+  (vim.fn.expand "%:t"))
 
 (fn lsp-formatters
   [{:formatters {: list : active : enabled}}]
@@ -198,7 +216,9 @@
           (slant-left {:fg "#19192a" :bg status-color} "")
           (slant-left {:fg "#ffffff" :bg status-color} ""))
         (slant-left {:prev-bg status-color :fg "#ffffff" :bg "#303050"}
-                    (table.concat list " "))))))
+                    " "
+                    (table.concat list " ")
+                    " ")))))
 
 (fn file-type
   [{: file-type : formatters}]
@@ -209,7 +229,6 @@
    (slant-left 
      {:prev-bg "#19192a" :fg "#ffffff" :bg "#c36892"}
      file-type)))
-  
 
 (fn file-loc
   [_state]
@@ -223,23 +242,28 @@
   (let [[line col] cursor]
     (hl
       {:fg "#8ac0fe"}
-      (string.format " %d:%d" line col))))
+      " %03l:%02v")))
 
 (fn scrollbar
   [{: cursor}]
   (let [[current _] cursor
         total   (vim.api.nvim_buf_line_count 0)
-        icon-index (- 8 (math.floor (* (/ current total) 7)))]
+        icon-index (math.floor (* (/ current total) 8))]
     (..
       (if 
-        (= current 1)
-        " TOP "
-        (= current total)
-        " BOT "
-        (string.format " %2d%%%% " (math.ceil (* (/ current total) 99))))
+       (= current 1)
+       " TOP "
+       (= current total)
+       " BOT "
+       " %p%% ")
+       
       (hl
-        {:fg "#444470" :bg "#a4e7a7"}
-        (string.rep (. scroll-icons icon-index) 2)))))
+        {:fg "#a4e7a7"}
+        (string.rep "▰" icon-index))
+      (hl
+        {:fg "#444470"}
+        (string.rep "▰" (- 8 icon-index))
+        " "))))
       
 (fn section 
   [state element-fns]
@@ -253,11 +277,13 @@
   []
   (str
     (let [state {:mode (. mode-alias (. (vim.api.nvim_get_mode) :mode))
-                 :branch vim.b.gitsigns_head}]
+                 :branch vim.b.gitsigns_head
+                 :readonly vim.bo.readonly}]
      (section 
        state
        [vi-mode
         git-branch
+        readonly
         file]))
     "%="
     (let [formatters (get-formatters)
@@ -277,11 +303,12 @@
 (fn inactive-statusline 
   []
   (str 
-    "%>"
-    (section {} [(fn []
-                  "%f")]) 
+    (section {} [(fn [] "%<%f")]) 
     "%="
-    (section {} [])))
+    (section {} [(fn [] "%h ")
+                 (fn [] (let [ft vim.bo.filetype]
+                          (when (not= ft "help")
+                            ft)))])))
 
 (fn M.render 
   []
