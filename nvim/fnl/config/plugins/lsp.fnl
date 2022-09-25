@@ -45,7 +45,8 @@
 
 (fn on-attach [client bufnr]
   (let [bufopts {:noremap true :silent true :buffer bufnr}]
-    nil))
+    (if (vim.tbl_contains client.server_capabilities)
+      {})))
 
 (local flags {:debounce_text_changes 150})
 (local opts {:noremap true :silent true})
@@ -107,7 +108,18 @@
 (vim.keymap.set :n :<leader>ce "<cmd>TroubleToggle document_diagnostics<cr>"
                 (vim.tbl_extend :force opts {:desc :Diagnostics}))
 
-(lspcfg.tsserver.setup {:on_attach on-attach : capabilities : flags})
+(lspcfg.tsserver.setup {:on_attach on-attach
+                        : capabilities
+                        : flags
+                        :init_options {:hostInfo :neovim
+                                       :preferences {:quotePreference :single
+                                                     :includeCompletionsForModuleExports true
+                                                     :includeCompletionsForImportStatements true
+                                                     :includeCompletionsWithInsertText false
+                                                     :includeAutomaticOptionalChainCompletions true
+                                                     :importModuleSpecifierPreference :shortest
+                                                     :importModuleSpecifierEnding :minimal
+                                                     :allowRenameOfImportPath true}}})
 
 (lspcfg.clojure_lsp.setup {:on_attach on-attach : capabilities : flags})
 
@@ -118,5 +130,5 @@
                                                        twcfg.default_config.filetypes)})
 
 (comment (vim.inspect twcfg)
-  (lsp.buf_is_attached 0)
-  nil)
+ (lsp.buf_is_attached 0)
+ nil)

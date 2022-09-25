@@ -214,6 +214,16 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
    instead of just custom modes. Maybe dressing with an enhanced command mode
    would do the trick?
 
+** Improving typescript experience
+
+   - Every possible formatter is listed in my feline statusline
+   - Does not appear to be formatting on save
+   - Running formatter manually results in changed whitespace, possibly not 
+     using prettier.
+   - [ ] Display hover hint automatically
+   - [ ] Display type hint for item under cursor with `C-Space`
+   - [ ] Prioritize lsp completions above spelling ones
+
 
 * Bootstrapping Fennel
 

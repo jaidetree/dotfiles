@@ -45,199 +45,201 @@
   (fn [use]
     (f #(use (pkg $...)))))
 
-(packer.startup (fnl->packer (fn [use]
-                               (use :wbthomason/packer.nvim)
-                               (use :catppuccin/nvim
-                                    {:as :catppuccin
-                                     :config #(let [catppuccin (require :catppuccin)]
-                                                (set vim.g.catppuccin_flavour
-                                                     :mocha)
-                                                (catppuccin.setup)
-                                                ;; TODO: Replace with vim.colorscheme when upgrading to 0.8
-                                                (vim.cmd "colorscheme catppuccin"))})
-                               (use :jenterkin/vim-autosource
-                                    {:config (fn []
-                                               (set vim.g.autosource_conf_names
-                                                    [:.exrc.fnl
-                                                     :.exrc.lua
-                                                     :.exrc.vim
-                                                     :.exrc]))})
-                               (use :ahmedkhalf/project.nvim
-                                    {:config #(let [project-nvim (require :project_nvim)]
-                                                ;; Ignoring null-ls as it seems attached to main project
-                                                (project-nvim.setup {:ignore_lsp [:null-ls]}))})
-                               (use :gbprod/yanky.nvim
-                                    {:config #(let [yanky (require :yanky)]
-                                                (yanky.setup))})
-                               (use :nvim-telescope/telescope.nvim
-                                    {:requires [:nvim-lua/plenary.nvim
-                                                :nvim-telescope/telescope-file-browser.nvim
-                                                :kyazdani42/nvim-web-devicons]
-                                     :after [:yanky.nvim]
-                                     :config #(require :config.plugins.telescope)})
-                               (use :shoumodip/nvim-literate)
-                               (use :alexghergh/nvim-tmux-navigation
-                                    {:config #(let [tmux (require :nvim-tmux-navigation)]
-                                                (tmux.setup {:disable_when_zoomed true})
-                                                (vim.keymap.set :n :<C-h>
-                                                                tmux.NvimTmuxNavigateLeft)
-                                                (vim.keymap.set :n :<C-j>
-                                                                tmux.NvimTmuxNavigateDown)
-                                                (vim.keymap.set :n :<C-k>
-                                                                tmux.NvimTmuxNavigateUp)
-                                                (vim.keymap.set :n :<C-l>
-                                                                tmux.NvimTmuxNavigateRight)
-                                                (vim.keymap.set :n :<C-Bslash>
-                                                                tmux.NvimTmuxNavigateLastActive)
-                                                (vim.keymap.set :n :<C-Space>
-                                                                tmux.NvimTmuxNavigateNext))})
-                               (use :nvim-treesitter/nvim-treesitter
-                                    {:requires [:p00f/nvim-ts-rainbow
-                                                :nvim-treesitter/nvim-treesitter-context]
-                                     :run ":TSUpdate"
-                                     :config #(let [ts-cfg (require :nvim-treesitter.configs)
-                                                    ts-ctx (require :treesitter-context)
-                                                    parsers (require :nvim-treesitter.parsers)
-                                                    parser-cfg (parsers.get_parser_configs)]
-                                                (ts-cfg.setup {:sync_install true
-                                                               :auto_install true
-                                                               :highlight {:enable true}
-                                                               :rainbow {:enable true}})
-                                                (ts-ctx.setup)
-                                                (set parser-cfg.markdown.filetype_to_parsername
-                                                     :octo))})
-                               (use :nvim-orgmode/orgmode
-                                    {:after [:nvim-treesitter]
-                                     :config #(let [orgmode (require :orgmode)
-                                                    tscfg (require :nvim-treesitter.configs)]
-                                                (orgmode.setup_ts_grammar)
-                                                (tscfg.setup {:highlight {:enable true
-                                                                          :additional_vim_regex_highlighting [:org]}
-                                                              :ensure_installed [:org]})
-                                                (orgmode.setup))})
-                               (use :gpanders/nvim-parinfer)
-                               (use :uga-rosa/ccc.nvim
-                                    {:config #(let [ccc (require :ccc)]
-                                                (ccc.setup {:bar_char "█"
-                                                            :default_color "#00ffcc"
-                                                            :toggle_alpha true
-                                                            :inputs [ccc.input.hsl
-                                                                     ccc.input.rgb
-                                                                     ccc.input.cmyk]
-                                                            :outputs [ccc.output.css_rgb
-                                                                      ccc.output.hex
-                                                                      ccc.output.css_hsl]}))})
-                               (use :folke/which-key.nvim
-                                    {:config #(let [which-key (require :which-key)]
-                                                (which-key.setup {}))})
-                               (use :AndrewRadev/bufferize.vim)
-                               ;; Language specific
-                               (use :jaawerth/fennel.vim)
-                               (use "~/projects/conjure")
-                               (use :guns/vim-sexp
-                                    {:config #(set vim.g.sexp_filetypes "")})
-                               (use :nvim-neorg/neorg
-                                    {:requires [:nvim-neorg/neorg-telescope
-                                                :max397574/neorg-contexts
-                                                :nvim-lua/plenary.nvim]
-                                     :after [:nvim-treesitter]
-                                     :config #(let [neorg (require :neorg)
-                                                    tscfg (require :nvim-treesitter.configs)]
-                                                (tscfg.setup {:ensure_installed [:norg]
-                                                              :highlight {:enable true}})
-                                                (neorg.setup {:load {:core.defaults {}
-                                                                     :core.norg.dirman {:config {:workspaces {:work "~/neorg/work"
-                                                                                                              :personal "~/neorg/personal"}}}
-                                                                     :core.norg.concealer {}
-                                                                     :core.integrations.telescope {}
-                                                                     :external.context {}}}))})
-                               (use :numToStr/Comment.nvim
-                                    {:config #(let [cmnt (require :Comment)]
-                                                (cmnt.setup {:padding true
-                                                             :sticky true
-                                                             :mappings {:basic true
-                                                                        :extra true
-                                                                        :extended true}}))})
-                               (use :williamboman/mason.nvim
-                                    {:config #(let [mason (require :mason)]
-                                                (mason.setup))})
-                               (use :williamboman/mason-lspconfig.nvim
-                                    {:after [:mason.nvim]
-                                     :config #(let [masonlsp (require :mason-lspconfig)]
-                                                (masonlsp.setup {:automatic_installation true}))})
-                               (use :neovim/nvim-lspconfig
-                                    {:after [:mason.nvim
-                                             :mason-lspconfig.nvim
-                                             :nvim-cmp
-                                             :nvim-notify
-                                             :lspsaga.nvim
-                                             :null-ls.nvim]
-                                     :config #(require :config.plugins.lsp)})
-                               (use :TimUntersberger/neogit
-                                    {:requires [:nvim-lua/plenary.nvim]
-                                     :config #(let [neogit (require :neogit)]
-                                                (neogit.setup))})
-                               (use :pwntester/octo.nvim
-                                    {:requires [:nvim-lua/plenary.nvim
-                                                :nvim-telescope/telescope.nvim
-                                                :kyazdani42/nvim-web-devicons]
-                                     :after [:telescope.nvim]
-                                     :config #(let [octo (require :octo)]
-                                                (octo.setup))})
-                               (use :hrsh7th/nvim-cmp
-                                    {:requires [:hrsh7th/cmp-nvim-lsp
-                                                :hrsh7th/cmp-buffer
-                                                :hrsh7th/cmp-path
-                                                :hrsh7th/cmp-cmdline
-                                                :hrsh7th/cmp-git
-                                                :onsails/lspkind.nvim
-                                                (pkg :L3MON4D3/LuaSnip
-                                                     {:tag :v1.*})
-                                                :nvim-lua/plenary.nvim]
-                                     :config #(require :config.plugins.cmp)})
-                               (use :lewis6991/gitsigns.nvim
-                                    {:config #(let [gitsigns (require :gitsigns)]
-                                                (gitsigns.setup))})
-                               (use :jose-elias-alvarez/null-ls.nvim
-                                    {:requires [:lewis6991/gitsigns.nvim]
-                                     :config #(require :config.plugins.null-ls)})
-                               (use :folke/trouble.nvim
-                                    {:require [:kyazdani42/nvim-web-devicons]
-                                     :config #(let [trouble (require :trouble)]
-                                                (trouble.setup))})
-                               (use :stevearc/dressing.nvim
-                                    {:config #(let [dressing (require :dressing)]
-                                                (dressing.setup))})
-                               (use :rcarriga/nvim-notify
-                                    {:config #(set vim.notify (require :notify))})
-                               (use :glepnir/lspsaga.nvim
-                                    {:branch :main
-                                     :config #(let [lsp-saga (require :lspsaga)]
-                                                (lsp-saga.init_lsp_saga))})
-                               (use :AckslD/nvim-FeMaco.lua
-                                    {:config #(let [femaco (require :femaco)]
-                                                (femaco.setup))})
-                               (use :feline-nvim/feline.nvim
-                                    {:config #(require :config.plugins.feline)})
-                               (use :sakhnik/nvim-gdb {:cmd :!./install.sh})
-                               (use :tpope/vim-repeat)
-                               (use :kylechui/nvim-surround
-                                    {:config #(let [surround (require :nvim-surround)]
-                                                (surround.setup))})
-                               (use "lcheylus/overlength.nvim"
-                                    {:config #(let [overlength (require :overlength)]
-                                                (overlength.setup
-                                                  {:textwidth_mode 1
-                                                   :default_overlength 80
-                                                   :grace_length 1
-                                                   :highlight_to_eol true
-                                                   :bg "#201818"}))})
+(packer.startup 
+  (fnl->packer 
+    (fn [use]
+      (use :wbthomason/packer.nvim)
+      (use :catppuccin/nvim
+           {:as :catppuccin
+            :config #(let [catppuccin (require :catppuccin)]
+                       (set vim.g.catppuccin_flavour
+                            :mocha)
+                       (catppuccin.setup)
+                       ;; TODO: Replace with vim.colorscheme when upgrading to 0.8
+                       (vim.cmd "colorscheme catppuccin"))})
+      (use :jenterkin/vim-autosource
+           {:config (fn []
+                      (set vim.g.autosource_conf_names
+                           [:.exrc.fnl
+                            :.exrc.lua
+                            :.exrc.vim
+                            :.exrc]))})
+      (use :ahmedkhalf/project.nvim
+           {:config #(let [project-nvim (require :project_nvim)]
+                       ;; Ignoring null-ls as it seems attached to main project
+                       (project-nvim.setup {:ignore_lsp [:null-ls]}))})
+      (use :gbprod/yanky.nvim
+           {:config #(let [yanky (require :yanky)]
+                       (yanky.setup))})
+      (use :nvim-telescope/telescope.nvim
+           {:requires [:nvim-lua/plenary.nvim
+                       :nvim-telescope/telescope-file-browser.nvim
+                       :kyazdani42/nvim-web-devicons]
+            :after [:yanky.nvim]
+            :config #(require :config.plugins.telescope)})
+      (use :shoumodip/nvim-literate)
+      (use :alexghergh/nvim-tmux-navigation
+           {:config #(let [tmux (require :nvim-tmux-navigation)]
+                       (tmux.setup {:disable_when_zoomed true})
+                       (vim.keymap.set :n :<C-h>
+                                       tmux.NvimTmuxNavigateLeft)
+                       (vim.keymap.set :n :<C-j>
+                                       tmux.NvimTmuxNavigateDown)
+                       (vim.keymap.set :n :<C-k>
+                                       tmux.NvimTmuxNavigateUp)
+                       (vim.keymap.set :n :<C-l>
+                                       tmux.NvimTmuxNavigateRight)
+                       (vim.keymap.set :n :<C-Bslash>
+                                       tmux.NvimTmuxNavigateLastActive)
+                       (vim.keymap.set :n :<C-Space>
+                                       tmux.NvimTmuxNavigateNext))})
+      (use :nvim-treesitter/nvim-treesitter
+           {:requires [:p00f/nvim-ts-rainbow
+                       :nvim-treesitter/nvim-treesitter-context]
+            :run ":TSUpdate"
+            :config #(let [ts-cfg (require :nvim-treesitter.configs)
+                           ts-ctx (require :treesitter-context)
+                           parsers (require :nvim-treesitter.parsers)
+                           parser-cfg (parsers.get_parser_configs)]
+                       (ts-cfg.setup {:sync_install true
+                                      :auto_install true
+                                      :highlight {:enable true}
+                                      :rainbow {:enable true}})
+                       (ts-ctx.setup)
+                       (set parser-cfg.markdown.filetype_to_parsername
+                            :octo))})
+      (use :nvim-orgmode/orgmode
+           {:after [:nvim-treesitter]
+            :config #(let [orgmode (require :orgmode)
+                           tscfg (require :nvim-treesitter.configs)]
+                       (orgmode.setup_ts_grammar)
+                       (tscfg.setup {:highlight {:enable true
+                                                 :additional_vim_regex_highlighting [:org]}
+                                     :ensure_installed [:org]})
+                       (orgmode.setup))})
+      (use :gpanders/nvim-parinfer)
+      (use :uga-rosa/ccc.nvim
+           {:config #(let [ccc (require :ccc)]
+                       (ccc.setup {:bar_char "█"
+                                   :default_color "#00ffcc"
+                                   :toggle_alpha true
+                                   :inputs [ccc.input.hsl
+                                            ccc.input.rgb
+                                            ccc.input.cmyk]
+                                   :outputs [ccc.output.css_rgb
+                                             ccc.output.hex
+                                             ccc.output.css_hsl]}))})
+      (use :folke/which-key.nvim
+           {:config #(let [which-key (require :which-key)]
+                       (which-key.setup {}))})
+      (use :AndrewRadev/bufferize.vim)
+      ;; Language specific
+      (use :jaawerth/fennel.vim)
+      (use "~/projects/conjure")
+      (use :guns/vim-sexp
+           {:config #(set vim.g.sexp_filetypes "")})
+      (use :nvim-neorg/neorg
+           {:requires [:nvim-neorg/neorg-telescope
+                       :max397574/neorg-contexts
+                       :nvim-lua/plenary.nvim]
+            :after [:nvim-treesitter]
+            :config #(let [neorg (require :neorg)
+                           tscfg (require :nvim-treesitter.configs)]
+                       (tscfg.setup {:ensure_installed [:norg]
+                                     :highlight {:enable true}})
+                       (neorg.setup {:load {:core.defaults {}
+                                            :core.norg.dirman {:config {:workspaces {:work "~/neorg/work"
+                                                                                     :personal "~/neorg/personal"}}}
+                                            :core.norg.concealer {}
+                                            :core.integrations.telescope {}
+                                            :external.context {}}}))})
+      (use :numToStr/Comment.nvim
+           {:config #(let [cmnt (require :Comment)]
+                       (cmnt.setup {:padding true
+                                    :sticky true
+                                    :mappings {:basic true
+                                               :extra true
+                                               :extended true}}))})
+      (use :williamboman/mason.nvim
+           {:config #(let [mason (require :mason)]
+                       (mason.setup))})
+      (use :williamboman/mason-lspconfig.nvim
+           {:after [:mason.nvim]
+            :config #(let [masonlsp (require :mason-lspconfig)]
+                       (masonlsp.setup {:automatic_installation true}))})
+      (use :neovim/nvim-lspconfig
+           {:after [:mason.nvim
+                    :mason-lspconfig.nvim
+                    :nvim-cmp
+                    :nvim-notify
+                    :lspsaga.nvim
+                    :null-ls.nvim]
+            :config #(require :config.plugins.lsp)})
+      (use :TimUntersberger/neogit
+           {:requires [:nvim-lua/plenary.nvim]
+            :config #(let [neogit (require :neogit)]
+                       (neogit.setup))})
+      (use :pwntester/octo.nvim
+           {:requires [:nvim-lua/plenary.nvim
+                       :nvim-telescope/telescope.nvim
+                       :kyazdani42/nvim-web-devicons]
+            :after [:telescope.nvim]
+            :config #(let [octo (require :octo)]
+                       (octo.setup))})
+      (use :hrsh7th/nvim-cmp
+           {:requires [:hrsh7th/cmp-nvim-lsp
+                       :hrsh7th/cmp-buffer
+                       :hrsh7th/cmp-path
+                       :hrsh7th/cmp-cmdline
+                       :hrsh7th/cmp-git
+                       :onsails/lspkind.nvim
+                       (pkg :L3MON4D3/LuaSnip
+                            {:tag :v1.*})
+                       :nvim-lua/plenary.nvim]
+            :config #(require :config.plugins.cmp)})
+      (use :lewis6991/gitsigns.nvim
+           {:config #(let [gitsigns (require :gitsigns)]
+                       (gitsigns.setup))})
+      (use :jose-elias-alvarez/null-ls.nvim
+           {:requires [:lewis6991/gitsigns.nvim]
+            :config #(require :config.plugins.null-ls)})
+      (use :folke/trouble.nvim
+           {:require [:kyazdani42/nvim-web-devicons]
+            :config #(let [trouble (require :trouble)]
+                       (trouble.setup))})
+      (use :stevearc/dressing.nvim
+           {:config #(let [dressing (require :dressing)]
+                       (dressing.setup))})
+      (use :rcarriga/nvim-notify
+           {:config #(set vim.notify (require :notify))})
+      (use :glepnir/lspsaga.nvim
+           {:branch :main
+            :config #(let [lsp-saga (require :lspsaga)]
+                       (lsp-saga.init_lsp_saga))})
+      (use :AckslD/nvim-FeMaco.lua
+           {:config #(let [femaco (require :femaco)]
+                       (femaco.setup))})
+      (use :feline-nvim/feline.nvim
+           {:config #(require :config.plugins.feline)})
+      (use :sakhnik/nvim-gdb {:cmd :!./install.sh})
+      (use :tpope/vim-repeat)
+      (use :kylechui/nvim-surround
+           {:config #(let [surround (require :nvim-surround)]
+                       (surround.setup))})
+      (use "lcheylus/overlength.nvim"
+           {:config #(let [overlength (require :overlength)]
+                       (overlength.setup
+                         {:textwidth_mode 1
+                          :default_overlength 80
+                          :grace_length 1
+                          :highlight_to_eol true
+                          :bg "#201818"}))})
 
-                               ;; TODO: Install trouble to show diagnostics
-                               ;; Automatically set up your configuration after cloning packer.nvim
-                               ;; Put this at the end after all plugins
-                               (when packer.bootstrap
-                                 (packer.sync)))))
+      ;; TODO: Install trouble to show diagnostics
+      ;; Automatically set up your configuration after cloning packer.nvim
+      ;; Put this at the end after all plugins
+      (when packer.bootstrap
+        (packer.sync)))))
 
 ;; Advanced setup
 
@@ -274,6 +276,14 @@
 (vim.api.nvim_create_user_command :ReloadFeline reload-feline
                                   {:desc "Restart feline statusline"})
 
+(fn reload-statusline
+  []
+  (tset package.loaded :config.statusline nil)
+  (let [sl (require :config.statusline)]
+    (sl.setup)))
+
+(vim.api.nvim_create_user_command :ReloadStatusLine reload-statusline {})
+
 (fn reload-config []
   (each [module-name exports (pairs package.loaded)]
     (when (s.starts-with? module-name :config)
@@ -284,7 +294,9 @@
 
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
 
-(fn fnlfile [{:fargs [filepath]}]
+
+(fn fnlfile 
+  [{:fargs [filepath]}]
   (fennel.dofile filepath))
 
 (vim.api.nvim_create_user_command :FnlFile fnlfile {:nargs 1 :complete :file})
@@ -380,6 +392,10 @@
 (vim.keymap.set :n :<Leader>hv "<cmd>vert Bufferize vmap<cr>"
                 {:desc "visual bindings"})
 
+(vim.keymap.set :n :<Leader>hs "<cmd>ReloadStatusLine<cr>"
+                {:desc "Reload statusline"
+                 :noremap true})
+
 ;; Help > Plugins
 
 (wk.register {:<leader>hp :+plugins})
@@ -461,7 +477,7 @@
 (vim.keymap.set :n :<Leader>w- :<cmd>split<cr>
                 {:silent true :desc "Split Horizontal"})
 
-(vim.keymap.set :n :<Leader>w<Bar> :<cmd>vsplit!<cr>
+(vim.keymap.set :n :<Leader>w<BSlash> :<cmd>vsplit!<cr>
                 {:silent true :desc "Split Vertical"})
 
 (vim.keymap.set :n :<Leader>wd :<cmd>q<cr> {:silent true :desc "Quit Window"})

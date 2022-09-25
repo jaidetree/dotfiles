@@ -5,7 +5,7 @@
   (= client.name :null-ls))
 
 (fn format-buf [bufnr]
-  (print "vim.b.noformat" vim.b.noformat)
+  (print :vim.b.noformat vim.b.noformat)
   (when (not vim.b.noformat)
     (vim.lsp.buf.format {: bufnr :filter null-ls-client?})))
 
@@ -19,7 +19,9 @@
 
 (null-ls.setup {:debug true
                 :on_attach on-attach
-                :sources [null-ls.builtins.formatting.fnlfmt
+                :sources [;; TODO - Not loving the formatting decisions
+                          ;;        this tool makes atm
+                          ; null-ls.builtins.formatting.fnlfmt
                           null-ls.builtins.formatting.zprint
                           null-ls.builtins.formatting.codespell
                           null-ls.builtins.diagnostics.checkmake
@@ -33,8 +35,7 @@
     (if disabled
         (do
           (set vim.b.noformat false)
-          (vim.notify "Formatting on save enabled" :info
-                      {:title :Formatting}))
+          (vim.notify "Formatting on save enabled" :info {:title :Formatting}))
         (do
           (set vim.b.noformat true)
           (vim.notify "Formatting on save disabled" :warn {:title :Formatting})))))
@@ -43,4 +44,11 @@
                                   {:desc "Toggle auto null-ls formatting"})
 
 (comment vim.b.noformat
-  vim.log.levels)
+  vim.log.levels
+  (let [clients (vim.lsp.buf_get_clients)]
+    (icollect [_ client (ipairs clients)]
+      [client.name client.server_capabilities])))
+
+(global dbg_client_info
+        (fn []
+          (fennel.view (vim.lsp.buf_get_clients))))

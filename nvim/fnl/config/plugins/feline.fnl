@@ -54,8 +54,7 @@
                     " " "#000000"
                     :COMMAND "#000000"
                     :REPLACE "#000000"
-                    :SELECT "#000000"
-                    :TERMINAL "#000000"})
+                    :SELECT "#000000"})
 
 (fn formatting-clients []
   (let [sources (require :null-ls.sources)
@@ -189,7 +188,8 @@
                            :provider #(let [formatters (formatting-clients)]
                                         (if (> (length formatters) 0)
                                             (string.format " %s "
-                                                           (table.concat formatters " "))
+                                                           (table.concat formatters
+                                                                         " "))
                                             " nofmt "))
                            :hl {:bg "#3a3b5d"}
                            :enabled (with-formatters #(> (length $1) 0))}
