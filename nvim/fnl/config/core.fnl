@@ -219,8 +219,6 @@
       (use :AckslD/nvim-FeMaco.lua
            {:config #(let [femaco (require :femaco)]
                        (femaco.setup))})
-      (use :feline-nvim/feline.nvim
-           {:config #(require :config.plugins.feline)})
       (use :sakhnik/nvim-gdb {:cmd :!./install.sh})
       (use :tpope/vim-repeat)
       (use :kylechui/nvim-surround
@@ -242,6 +240,10 @@
         (packer.sync)))))
 
 ;; Advanced setup
+
+(local statusline (require :config.statusline))
+
+(statusline.setup)
 
 (local wk (require :which-key))
 
@@ -266,16 +268,6 @@
 
 ;; Custom commands
 
-(fn reload-feline []
-  (tset package.loaded :config.plugins.feline nil)
-  (each [module-name v (pairs package.loaded)]
-    (when (string.find module-name :^feline)
-      (tset package.loaded module-name nil)))
-  (require :config.plugins.feline))
-
-(vim.api.nvim_create_user_command :ReloadFeline reload-feline
-                                  {:desc "Restart feline statusline"})
-
 (fn reload-statusline
   []
   (tset package.loaded :config.statusline nil)
@@ -289,7 +281,6 @@
     (when (s.starts-with? module-name :config)
       (tset package.loaded module-name nil)))
   (require :config.core)
-  (reload-feline)
   (print "Reloaded config"))
 
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
@@ -469,6 +460,12 @@
 (wk.register {:<leader>t {:name :+toggle}})
 (vim.keymap.set :n :<Leader>tf :<cmd>ToggleFormatting<cr>
                 {:silent true :remap false :desc :Auto-formatting})
+(vim.keymap.set :n :<Leader>tr 
+                (fn []
+                  (if vim.bo.readonly 
+                     (set vim.bo.readonly false)
+                     (set vim.bo.readonly true)))
+                {:silent true :remap false :desc :Readonly})
 
 ;; Window
 
@@ -476,14 +473,13 @@
 
 (vim.keymap.set :n :<Leader>w- :<cmd>split<cr>
                 {:silent true :desc "Split Horizontal"})
-
 (vim.keymap.set :n :<Leader>w<BSlash> :<cmd>vsplit!<cr>
                 {:silent true :desc "Split Vertical"})
-
 (vim.keymap.set :n :<Leader>wd :<cmd>q<cr> {:silent true :desc "Quit Window"})
-
 (vim.keymap.set :n :<Leader>wx :<cmd>bdelete<cr><cmd>q<cr>
                 {:desc "Kill window"})
+(vim.keymap.set :n :<Leader>w= "<cmd>wincmd =<cr>"
+                {:desc "Equalize"})
 
 ;; Yank
 

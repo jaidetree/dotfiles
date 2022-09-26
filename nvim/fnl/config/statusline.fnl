@@ -71,7 +71,11 @@
   :left_rounded_thin  ""
   :right_rounded      ""
   :right_rounded_thin ""
-  :circle             "●"})
+  :circle             "●"
+  :error              ""
+  :warn               ""
+  :info               ""
+  :hint               ""})
 
 
 ;; Borrowed from 
@@ -86,14 +90,12 @@
   []
   (let [sources (require :null-ls.sources)
         ft vim.bo.filetype
-        methods (sources.get_supported ft)]
-    (accumulate [formatters {} method names (pairs methods)]
-      (doto formatters
-        (when (= method :formatting)
-          (vim.list_extend formatters names))))))
-
-(comment 
-  (get-formatters))
+        sources (sources.get_available ft)]
+    (accumulate [formatters {} _ source (ipairs sources)]
+      (do
+        (when (and source.methods.NULL_LS_FORMATTING (not= source.name "codespell"))
+          (table.insert formatters source.name))
+        formatters))))
 
 (fn count-diagnostics
   [severity]
@@ -102,19 +104,19 @@
 
 (fn diagnostic-errors
   []
-  (values (count-diagnostics vim.diagnostic.severity.ERROR) "  "))
+  (count-diagnostics vim.diagnostic.severity.ERROR))
 
 (fn diagnostic-warnings
   []
-  (values (count-diagnostics vim.diagnostic.severity.WARN) "  "))
+  (count-diagnostics vim.diagnostic.severity.WARN))
 
 (fn diagnostic-info
   []
-  (values (count-diagnostics vim.diagnostic.severity.INFO) "  "))
+  (count-diagnostics vim.diagnostic.severity.INFO))
 
 (fn diagnostic-hints
   []
-  (values (count-diagnostics vim.diagnostic.severity.HINT) "  "))
+  (count-diagnostics vim.diagnostic.severity.HINT))
 
 (fn active? []
   (= (vim.api.nvim_get_current_win) (tonumber vim.g.actual_curwin)))
@@ -130,7 +132,10 @@
 
 (fn str 
   [head ...]
-  (table.concat [head (unpack [...])] ""))
+  (let [args [...]]
+    (accumulate [result (or head "")
+                 _ s (ipairs args)]
+      (.. result s))))
 
 (fn hl 
   [{: bg : fg} content ...]
@@ -146,16 +151,14 @@
     (..
      (hl 
        {: fg : bg} 
-       " " content " " (unpack args)))))
+       content (unpack args)))))
 
 (fn slant-left 
   [{: fg : bg : prev-bg} content ...]
   (let [args [...]]
     (..
      (hl {:fg bg :bg prev-bg} icons.slant_left)
-     (hl 
-       {: fg : bg} 
-       " " content " " (unpack args)))))
+     (hl {: fg : bg} content (unpack args)))))
 
 (fn slant-right 
   [{: fg : bg : next-bg} content ...]
@@ -163,49 +166,133 @@
     (..
      (hl 
        {: fg : bg} 
-       " " content " " (unpack args))
+       content (unpack args))
      (hl {:fg bg :bg next-bg} icons.slant_right))))
 
 (fn filled-left
   [{: fg : bg : prev-bg} content ...]
   (let [args [...]]
     (..
-       (hl {:fg bg :bg prev-bg} icons.left_filled)
-       (hl {: fg : bg} " " content " " (unpack args)))))
+      (hl {:fg bg :bg prev-bg} icons.left_filled)
+      (hl {: fg : bg} content (unpack args)))))
+
+(fn filled-right
+  [{: fg : bg : next-bg} content ...]
+  (let [args [...]]
+    (..
+       (hl {: fg : bg} content (unpack args))
+       (hl {:fg bg :bg next-bg} icons.right_filled))))
+
+(fn bubble
+  [{: fg : bg : next-bg : prev-bg} content ...]
+  (let [args [...]]
+    (..
+      " "
+      (hl {:fg bg :bg prev-bg} icons.left_rounded)
+      (hl {: fg : bg} content (unpack args))
+      (hl {:fg bg :bg next-bg} icons.right_rounded)
+      " ")))
+
+(fn pos?
+  [x]
+  (if (= x nil) 
+    false
+    (> x 0)))
 
 (fn vi-mode 
-  [{: mode : branch}]
+  [{: mode : branch : readonly}]
   (let [color (. mode-colors mode)]
-    (slant-right {:bg color.bg :fg color.fg :next-bg (if branch "#303050" "#19192a")} mode)))
+    (slant-right {:bg color.bg :fg color.fg 
+                  :next-bg (if branch   "#5b5ba5" 
+                               readonly "#303050"
+                               "#19192a")} 
+                 " " mode " ")))
 
 (fn git-branch
   [{: branch : readonly}]
   (when branch
-    (slant-right
-      {:bg "#303050" :fg "#ffffff" :next-bg (if readonly
-                                              "#4b4b68"
-                                              "#19192a")}
-      "" branch " ")))
-
+    (let [changed (. vim.b.gitsigns_status_dict "changed")
+          added   (. vim.b.gitsigns_status_dict "added")
+          removed (. vim.b.gitsigns_status_dict "removed")
+          updated (or (pos? changed) (pos? added) (pos? removed))
+          bg "#404080"
+          entries []
+          insert #(table.insert entries $1)]
+      (when updated
+        (when (pos? changed) (insert (hl {:fg "#ffb78e" :bg bg} "±" changed)))
+        (when (pos? added) (insert (hl {:fg "#a5e8a7" :bg bg} "+" added)))
+        (when (pos? removed) (insert (hl {:fg "#e85b00" :bg bg} "−" removed))))
+       
+      (str
+        (filled-right
+          {:bg "#5b5ba5" :fg "#ffffff" 
+           :next-bg (if 
+                      updated bg
+                      readonly "#303050" 
+                      "#19192a")}
+          "  " branch " ")
+        (if updated
+          (slant-right
+            {:bg bg :fg "#ffffff"
+             :next-bg (if readonly "#303050")}
+            (.. " " (table.concat entries " ") " "))
+          " ")))))
+ 
 (fn readonly
   [{: readonly}]
   (when readonly
     (..
-      (hl {:fg "#f6deb0" :bg "#4b4b68"} " ")
+      (hl {:fg "#f6deb0" :bg "#303050"} "  ")
       (slant-right 
-        {:bg "#4b4b68" :fg "#ffffff" :next-bg "#19192a"}
-        "RO"))))
+        {:bg "#303050" :fg "#ffffff" :next-bg "#19192a"}
+        "RO "))))
 
 (fn file
   [_state]
-  (let [dev-icons (require :nvim-web-devicons) 
+  (let [modified vim.bo.modified
+        dev-icons (require :nvim-web-devicons) 
         (icon-str  icon-color) (dev-icons.get_icon_color (vim.fn.expand "%:t"))]
     (..
       (hl {:fg icon-color} " " icon-str)
-      (hl {:bg "#19192a"} " %<%f "))))
+      (hl {:bg "#19192a" :fg (if modified "#ffb78e" "fg")} 
+          " %<%f"
+          (if modified (.. " " icons.circle) ""))
+      " ")))
 
-(comment
-  (vim.fn.expand "%:t"))
+(fn lsp-diagnostics
+  []
+  (let [errors (diagnostic-errors)
+        warnings (diagnostic-warnings)
+        infos    (diagnostic-info)
+        hints (diagnostic-hints)
+        bg "#303050"
+        entries []
+        insert #(table.insert entries $1)]
+    (when (or (pos? errors) (pos? warnings) (pos? infos) (pos? hints))
+      (when (pos? hints)
+         (insert 
+           (hl 
+             {:bg bg :fg "#8ee8da"}
+             (string.format "%s %s" icons.hint hints))))
+      (when (pos? infos)
+         (insert
+           (hl
+             {:bg bg :fg "#81b1ea"}
+             (string.format "%s %s" icons.info infos))))
+      (when (pos? warnings)
+        (insert
+          (hl
+            {:bg bg :fg "#fde4b5"}
+            (string.format "%s %s" icons.warn warnings))))
+      (when (pos? errors)
+        (insert
+          (hl
+            {:bg bg :fg "#e10014"}
+            (string.format "%s %s" icons.error errors)))
+       (bubble
+         {:bg "#303050" :fg "#ffffff"}
+         (table.concat entries " "))))))
+        
 
 (fn lsp-formatters
   [{:formatters {: list : active : enabled}}]
@@ -213,28 +300,30 @@
     (let [status-color (if enabled "#a1eaac" "#e10014")]
       (str
         (if enabled
-          (slant-left {:fg "#19192a" :bg status-color} "")
-          (slant-left {:fg "#ffffff" :bg status-color} ""))
-        (slant-left {:prev-bg status-color :fg "#ffffff" :bg "#303050"}
-                    " "
-                    (table.concat list " ")
-                    " ")))))
+          (slant-left {:fg "#19192a" :bg status-color} "  ")
+          (slant-left {:fg "#ffffff" :bg status-color} "  "))
+        (slant-left 
+                  {:prev-bg status-color :fg "#ffffff" :bg "#303050"}
+                  "   "
+                  (table.concat list " ")
+                  " ")))))
 
 (fn file-type
   [{: file-type : formatters}]
-  (if formatters.active
-   (filled-left 
-     {:prev-bg "#303050" :fg "#ffffff" :bg "#c36892"}
-     file-type)
-   (slant-left 
-     {:prev-bg "#19192a" :fg "#ffffff" :bg "#c36892"}
-     file-type)))
+  (let [file-type (.. " " (if (= file-type "") "scratch" file-type) " ")]
+    (if formatters.active
+     (filled-left 
+       {:prev-bg "#303050" :fg "#ffffff" :bg "#c36892"}
+       file-type)
+     (slant-left 
+       {:prev-bg "#19192a" :fg "#ffffff" :bg "#c36892"}
+       file-type))))
 
 (fn file-loc
   [_state]
   (filled-left
     {:prev-bg "#c36892" :fg "#ffffff" :bg "#aa4473"}
-    "%L lines"
+    " %L lines "
     (hl {:fg "#aa4473" :bg "#19192a"} icons.slant_right_2)))
 
 (fn cursor-pos
@@ -294,7 +383,8 @@
                  :file-type  vim.bo.filetype}]
       (section 
         state
-        [lsp-formatters
+        [lsp-diagnostics
+         lsp-formatters
          file-type
          file-loc
          cursor-pos
@@ -312,7 +402,6 @@
 
 (fn M.render 
   []
-  ;; "%f %=%h%m%r [%l,%c] %p%% | %L loc "
   (if (active?)
       (active-statusline)
       (inactive-statusline)))
