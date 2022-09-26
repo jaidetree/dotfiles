@@ -78,16 +78,11 @@
   :hint               ""})
 
 
-;; Borrowed from 
-;; https://github.com/feline-nvim/feline.nvim/blob/496975425a28ef1f974e90e9664fe3409738f071/lua/feline/providers/cursor.lua#L5
-
-;; (local scroll-icons ["▁" "▂" "▃" "▄" "▅" "▆" "▇" "█"])
-
-(local scroll-icons ["▏" "▎" "▍" "▌" "▋" "▊" "▉" "█"])
-
-
 (fn get-formatters
   []
+  "
+  Return list of active formatter null-lsp clients
+  "
   (let [sources (require :null-ls.sources)
         ft vim.bo.filetype
         sources (sources.get_available ft)]
@@ -99,7 +94,11 @@
 
 (fn count-diagnostics
   [severity]
-  (let [count (vim.tbl_count (vim.diagnostic.get 0 (and severity {:severity severity})))]
+  "
+  Helper to query and count diagnostics given a severity filter
+  "
+  (let [count (->> (vim.diagnostic.get 0 (and severity {:severity severity}))
+                   (vim.tbl_count))]
     count))
 
 (fn diagnostic-errors
@@ -121,13 +120,20 @@
 (fn active? []
   (= (vim.api.nvim_get_current_win) (tonumber vim.g.actual_curwin)))
 
+(local state {:highlights {}})
+
+(fn hl-exists?
+  [hl-name attrs]
+  (let [entry (. state.highlights hl-name)]
+    (if entry
+      (and (= entry.bg attrs.bg) (= entry.fg attrs.fg))
+      false)))
+
 (fn get-or-create-hl
-  [group hl-name attrs]
-  ;; (when (not (pick-values 1 (pcall vim.api.nvim_get_hl_by_name hl-name false)))
-  ;;   (let [ns (vim.api.nvim_create_namespace group)]
-  ;;     (vim.api.nvim_set_hl ns hl-name attrs)))
-  (let [ns (vim.api.nvim_create_namespace group)]
-    (vim.api.nvim_set_hl 0 hl-name attrs))
+  [hl-name attrs]
+  (when (hl-exists? hl-name attrs)
+    (tset state.highlights hl-name attrs))
+  (vim.api.nvim_set_hl 0 hl-name attrs)
   hl-name)
 
 (fn str 
@@ -141,8 +147,7 @@
   [{: bg : fg} content ...]
   (let [args [...]
         name (str :StatusX (or bg "bg") :X (or fg "fg"))
-        hl-name (get-or-create-hl :JStatusLine (string.gsub name "#" "")
-                                  {: fg : bg})]
+        hl-name (get-or-create-hl (string.gsub name "#" "") {: fg : bg})]
     (str "%#" hl-name "#" content (unpack args))))
 
 (fn rect
@@ -189,7 +194,7 @@
     (..
       " "
       (hl {:fg bg :bg prev-bg} icons.left_rounded)
-      (hl {: fg : bg} content (unpack args))
+      (hl {:   fg : bg} content (unpack args))
       (hl {:fg bg :bg next-bg} icons.right_rounded)
       " ")))
 
@@ -265,20 +270,20 @@
         warnings (diagnostic-warnings)
         infos    (diagnostic-info)
         hints (diagnostic-hints)
-        bg "#303050"
+        bg "#484B8E"
         entries []
         insert #(table.insert entries $1)]
     (when (or (pos? errors) (pos? warnings) (pos? infos) (pos? hints))
       (when (pos? hints)
-         (insert 
-           (hl 
-             {:bg bg :fg "#8ee8da"}
-             (string.format "%s %s" icons.hint hints))))
+        (insert 
+          (hl 
+            {:bg bg :fg "#8ee8da"}
+            (string.format "%s %s" icons.hint hints))))
       (when (pos? infos)
-         (insert
-           (hl
-             {:bg bg :fg "#81b1ea"}
-             (string.format "%s %s" icons.info infos))))
+        (insert
+          (hl
+            {:bg bg :fg "#81b1ea"}
+            (string.format "%s %s" icons.info infos))))
       (when (pos? warnings)
         (insert
           (hl
@@ -288,11 +293,13 @@
         (insert
           (hl
             {:bg bg :fg "#e10014"}
-            (string.format "%s %s" icons.error errors)))
+            (string.format "%s %s" icons.error errors))))
+      (..
+       "%@v:lua.require'config.functions'.OpenTrouble@"
        (bubble
-         {:bg "#303050" :fg "#ffffff"}
-         (table.concat entries " "))))))
-        
+         {:bg bg :fg "#ffffff" :prev-bg "#19192a" :next-bg "#19192a"}
+         (table.concat entries " "))
+       "%X"))))
 
 (fn lsp-formatters
   [{:formatters {: list : active : enabled}}]
@@ -330,7 +337,7 @@
   [{: cursor}]
   (let [[line col] cursor]
     (hl
-      {:fg "#8ac0fe"}
+      {:fg "#8ee8da" :bg "#19192a"}
       " %03l:%02v")))
 
 (fn scrollbar
@@ -347,10 +354,10 @@
        " %p%% ")
        
       (hl
-        {:fg "#a4e7a7"}
+        {:fg "#a4e7a7" :bg "#19192a"}
         (string.rep "▰" icon-index))
       (hl
-        {:fg "#444470"}
+        {:fg "#444470" :bg "#19192a"}
         (string.rep "▰" (- 8 icon-index))
         " "))))
       
@@ -373,7 +380,8 @@
        [vi-mode
         git-branch
         readonly
-        file]))
+        file
+        (fn [] "%=")]))
     "%="
     (let [formatters (get-formatters)
           state {:cursor     (vim.api.nvim_win_get_cursor 0)
