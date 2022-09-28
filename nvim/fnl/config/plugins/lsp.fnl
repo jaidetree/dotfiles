@@ -14,40 +14,7 @@
 (fn parse-markdown-links []
   nil)
 
-(fn hover-handler [_ result ctx config]
-  "Duplicates original implementation"
-  (let [config (or config {})
-        client (vim.lsp.get_client_by_id ctx.client_id)]
-    (set config.focus_id ctx.method)
-    (and result result.contents (print (vim.inspect result.contents)))
-    (if (not (and result result.contents))
-        (do
-          ;; Soft-log this. For example hover when clojure and tailwindcss
-          ;; clients are active
-          (print (.. "lsp.hover[" (?. client :config :name)
-                     "]: No information available")))
-        (let [markdown-lines (-> result.contents
-                                 (util.convert_input_to_markdown_lines)
-                                 (util.trim_empty_lines))]
-          (if (vim.tbl_isempty markdown-lines)
-              (notify "No information available")
-              (util.open_floating_preview (parse-markdown-links markdown-lines)
-                                          :markdown config))))
-    nil))
-
-(comment ;; Trying lspsaga instead -- may switch back to hover.nvim
-  (tset vim.lsp.handlers :textDocument/hover
-        (vim.lsp.with hover-handler
-                      {:border :single
-                       :width 80
-                       :opts {:offset_y 2}
-                       :stylize_markdown true})))
-
-(fn on-attach [client bufnr]
-  (let [bufopts {:noremap true :silent true :buffer bufnr}]
-    (if (vim.tbl_contains client.server_capabilities)
-      {})))
-
+                   
 (local flags {:debounce_text_changes 150})
 (local opts {:noremap true :silent true})
 
@@ -63,11 +30,11 @@
 (map :i vim.lsp.buf.implementation {:desc "Goto implementation"})
 (map :h vim.lsp.buf.signature_help {:desc "Signature help"})
 (map :t vim.lsp.buf.type_definition {:desc "Goto type definition"})
-(map :r "<cmd>Lspsaga rename<cr>" {:desc :Rename})
-(map :K "<cmd>Lspsaga hover_doc<cr>" {:desc :Documentation})
+(map :r vim.lsp.buf.rename {:desc :Rename})
+(map :K vim.lsp.buf.hover {:desc :Documentation})
 ;; (map :K hover.hover {:desc :Documentation})
 ;; TODO: Replace with telescope UI command
-(map :a "<cmd>Lspsaga code_action<cr>" {:desc "Code Actions"})
+(map :a vim.lsp.buf.code_action {:desc "Code Actions"})
 (map :f vim.lsp.buf.format {:desc :Format})
 (map :wa vim.lsp.buf.add_workspace_folder {:desc "Create folder"})
 (map :wr vim.lsp.buf.remove_workspace_folder {:desc "Remove folder"})
@@ -75,21 +42,14 @@
 
 (wk.register {:<leader>l {:name :+lsp}})
 
-(vim.keymap.set :n :<leader>le :<cmd>TroubleToggle<cr>
-                (vim.tbl_extend :force opts {:desc "Open diganostics"}))
+(vim.keymap.set 
+  :n :<leader>le :<cmd>TroubleToggle<cr>
+  (vim.tbl_extend :force opts {:desc "Open diganostics"}))
 
-(vim.keymap.set :n :<leader>lq "<cmd>TroubleToggle loclist<cr>"
-                (vim.tbl_extend :force opts {:desc "Location list"}))
+(vim.keymap.set 
+  :n :<leader>lq "<cmd>TroubleToggle loclist<cr>"
+  (vim.tbl_extend :force opts {:desc "Location list"}))
 
-(vim.keymap.set :n :<leader>lc
-                (fn []
-                  (print (vim.inspect (icollect [_ v (ipairs (vim.lsp.buf_get_clients))]
-                                        [v.config.name v.config.root_dir]))))
-                {:desc "Print clients"})
-
-(comment (icollect [_ v (ipairs (vim.lsp.buf_get_clients))]
-           {:name v.config.name :root v.config.root_dir})
-  nil)
 
 ;; Other Bindings
 
@@ -108,26 +68,95 @@
 (vim.keymap.set :n :<leader>ce "<cmd>TroubleToggle document_diagnostics<cr>"
                 (vim.tbl_extend :force opts {:desc :Diagnostics}))
 
-(lspcfg.tsserver.setup {:on_attach on-attach
-                        : capabilities
-                        : flags
-                        :init_options {:hostInfo :neovim
-                                       :preferences {:quotePreference :single
-                                                     :includeCompletionsForModuleExports true
-                                                     :includeCompletionsForImportStatements true
-                                                     :includeCompletionsWithInsertText false
-                                                     :includeAutomaticOptionalChainCompletions true
-                                                     :importModuleSpecifierPreference :shortest
-                                                     :importModuleSpecifierEnding :minimal
-                                                     :allowRenameOfImportPath true}}})
+(fn quiet-hover-handler 
+  [_ result ctx config]
+  "Duplicates original implementation but is quieter about errors as this is
+  displayed automatically when moving the cursor."
+  (let [config (or config {})
+        client (vim.lsp.get_client_by_id ctx.client_id)]
+    (set config.focus_id ctx.method)
+    (when (and result result.contents)
+      (let [markdown-lines (-> result.contents
+                               (util.convert_input_to_markdown_lines)
+                               (util.trim_empty_lines))]
+        (when (not (vim.tbl_isempty markdown-lines))
+          (util.open_floating_preview markdown-lines :markdown config
+              nil))))))
 
-(lspcfg.clojure_lsp.setup {:on_attach on-attach : capabilities : flags})
+;; Update global handlers
+(local handlers
+  {:textDocument/hover 
+   (vim.lsp.with 
+     vim.lsp.handlers.hover
+     {:border :rounded
+      :width 80
+      :opts {:offset_y 2}
+      :stylize_markdown true})
 
-(lspcfg.tailwindcss.setup {:on_attach on-attach
-                           : capabilities
-                           : flags
-                           :filetypes (vim.list_extend [:clojure]
-                                                       twcfg.default_config.filetypes)})
+   :textDocument/signatureHelp
+   (vim.lsp.with
+     vim.lsp.handlers.signature_help
+     {:border :rounded
+      :width 80
+      :stylize_markdown true})})
+
+;; Create a quieter handler for hover when automating
+
+(fn quiet-hover
+  []
+  (let [params (util.make_position_params)]
+    (vim.lsp.buf_request 0 :textDocument/hover params 
+                         (vim.lsp.with 
+                           quiet-hover-handler
+                           {:border :rounded
+                            :width 80
+                            :stylize_markdown true}))))
+        
+(fn on-attach 
+  [client bufnr]
+  (set vim.opt.updatetime 400)
+  (vim.api.nvim_create_augroup :JLspAutoSignature {:clear true})
+  (vim.api.nvim_create_autocmd 
+    "CursorHold"
+    {:group  :JLspAutoSignature
+     :buffer bufnr
+     :callback 
+     (fn []
+       (quiet-hover)
+       (comment
+         (let [lspsaga-hover (require :lspsaga.hover)]
+           (lspsaga-hover:render_hover_doc))))}))    
+
+(lspcfg.tsserver.setup 
+  {: capabilities
+   : flags
+   : handlers
+   :on_attach on-attach
+   :init_options {:hostInfo :neovim
+                  :preferences {:quotePreference :single
+                                :includeCompletionsForModuleExports true
+                                :includeCompletionsForImportStatements true
+                                :includeCompletionsWithInsertText false
+                                :includeAutomaticOptionalChainCompletions true
+                                :importModuleSpecifierPreference :shortest
+                                :importModuleSpecifierEnding :minimal
+                                :allowRenameOfImportPath true}}})
+
+(lspcfg.clojure_lsp.setup 
+  {: capabilities 
+   : flags
+   : handlers
+   :on_attach on-attach}) 
+
+(lspcfg.tailwindcss.setup 
+  {: capabilities
+   : flags
+   : handlers
+   :on_attach on-attach
+   :filetypes (vim.list_extend [:clojure]
+                               twcfg.default_config.filetypes)})
+
+
 
 (comment (vim.inspect twcfg)
  (lsp.buf_is_attached 0)

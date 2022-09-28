@@ -77,7 +77,6 @@
   :info               ""
   :hint               ""})
 
-
 (fn get-formatters
   []
   "
@@ -88,7 +87,7 @@
         sources (sources.get_available ft)]
     (accumulate [formatters {} _ source (ipairs sources)]
       (do
-        (when (and source.methods.NULL_LS_FORMATTING (not= source.name "codespell"))
+        (when (and source.methods.NULL_LS_FORMATTING (not= source.name "cspell"))
           (table.insert formatters source.name))
         formatters))))
 
@@ -239,7 +238,7 @@
         (if updated
           (slant-right
             {:bg bg :fg "#ffffff"
-             :next-bg (if readonly "#303050")}
+             :next-bg (if readonly "#303050" "#19192a")}
             (.. " " (table.concat entries " ") " "))
           " ")))))
  
@@ -248,7 +247,7 @@
   (when readonly
     (..
       (hl {:fg "#f6deb0" :bg "#303050"} "  ")
-      (slant-right 
+      (slant-right  
         {:bg "#303050" :fg "#ffffff" :next-bg "#19192a"}
         "RO "))))
 
@@ -258,7 +257,7 @@
         dev-icons (require :nvim-web-devicons) 
         (icon-str  icon-color) (dev-icons.get_icon_color (vim.fn.expand "%:t"))]
     (..
-      (hl {:fg icon-color} " " icon-str)
+      (hl {:bg "#19192a" :fg icon-color} " " icon-str)
       (hl {:bg "#19192a" :fg (if modified "#ffb78e" "fg")} 
           " %<%f"
           (if modified (.. " " icons.circle) ""))
@@ -380,8 +379,7 @@
        [vi-mode
         git-branch
         readonly
-        file
-        (fn [] "%=")]))
+        file]))
     "%="
     (let [formatters (get-formatters)
           state {:cursor     (vim.api.nvim_win_get_cursor 0)
@@ -420,13 +418,9 @@
 
 (comment ;; dbg
   highlights
-  (vim.api.nvim_set_hl (vim.api.nvim_create_namespace :JStatusLine) :Statusxff0000xffffff {:bg "#ff0000" :fg "#ffffff"})
-  (vim.api.nvim_get_hl_by_name :Statusxff0000xffffff true)
-  (pcall vim.api.nvim_get_hl_by_name :Statusxff0000xffffff true)
-  (vim.keymap.del :n "iÞ")
   (hl {:fg "#ffffff" :bg "#000000"} :test " hello " :world)
+  (vi-mode {:mode "NORMAL" :branch nil})
   (active-statusline)
-  (vi-mode)
   (print (unpack [:1 :2 :3]))
   (tonumber vim.g.actual_curwin)
   (tonumber :5)

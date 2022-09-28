@@ -26,7 +26,7 @@
 (set vim.opt.clipboard :unnamedplus)
 (set vim.opt.splitright true)
 (set vim.opt.splitbelow true)
-(set vim.opt.guifont ["OperatorMono Nerd Font:h15"])
+(set vim.opt.guifont ["OperatorMono Nerd Font:h15"]) 
 
 ;; Replacing this with project nvim
 ;; (set vim.opt.autochdir true)
@@ -74,6 +74,7 @@
       (use :nvim-telescope/telescope.nvim
            {:requires [:nvim-lua/plenary.nvim
                        :nvim-telescope/telescope-file-browser.nvim
+                       :nvim-telescope/telescope-ui-select.nvim
                        :kyazdani42/nvim-web-devicons]
             :after [:yanky.nvim]
             :config #(require :config.plugins.telescope)})
@@ -126,8 +127,8 @@
                                    :inputs [ccc.input.hsl
                                             ccc.input.rgb
                                             ccc.input.cmyk]
-                                   :outputs [ccc.output.css_rgb
-                                             ccc.output.hex
+                                   :outputs [ccc.output.hex
+                                             ccc.output.css_rgb
                                              ccc.output.css_hsl]}))})
       (use :folke/which-key.nvim
            {:config #(let [which-key (require :which-key)]
@@ -139,19 +140,22 @@
       (use :guns/vim-sexp
            {:config #(set vim.g.sexp_filetypes "")})
       (use :nvim-neorg/neorg
-           {:requires [:nvim-neorg/neorg-telescope
-                       :max397574/neorg-contexts
-                       :nvim-lua/plenary.nvim]
-            :after [:nvim-treesitter]
+           {:requires [:max397574/neorg-contexts
+                       :nvim-lua/plenary.nvim
+                       :nvim-neorg/neorg-telescope]
+            :after [:nvim-treesitter 
+                    :telescope.nvim]
             :config #(let [neorg (require :neorg)
                            tscfg (require :nvim-treesitter.configs)]
                        (tscfg.setup {:ensure_installed [:norg]
                                      :highlight {:enable true}})
                        (neorg.setup {:load {:core.defaults {}
-                                            :core.norg.dirman {:config {:workspaces {:work "~/neorg/work"
-                                                                                     :personal "~/neorg/personal"}}}
+                                            :core.norg.dirman 
+                                            {:config 
+                                             {:workspaces 
+                                              {:work "~/neorg/work"
+                                               :personal "~/neorg/personal"}}}
                                             :core.norg.concealer {}
-                                            :core.integrations.telescope {}
                                             :external.context {}}}))})
       (use :numToStr/Comment.nvim
            {:config #(let [cmnt (require :Comment)]
@@ -207,9 +211,9 @@
            {:require [:kyazdani42/nvim-web-devicons]
             :config #(let [trouble (require :trouble)]
                        (trouble.setup))})
-      (use :stevearc/dressing.nvim
-           {:config #(let [dressing (require :dressing)]
-                       (dressing.setup))})
+      ;; (use :stevearc/dressing.nvim
+      ;;      {:config #(let [dressing (require :dressing)]
+      ;;                  (dressing.setup))})
       (use :rcarriga/nvim-notify
            {:config #(set vim.notify (require :notify))})
       (use :glepnir/lspsaga.nvim
@@ -231,7 +235,11 @@
                           :default_overlength 80
                           :grace_length 1
                           :highlight_to_eol true
-                          :bg "#201818"}))})
+                          :bg "#0f0b0b"
+                          :disable_ft ["" "qf" "help" "man" "packer" "NvimTree" "Telescope" "WhichKey"]}))})
+      (use "stevearc/dressing.nvim"
+           {:config #(let [dressing (require :dressing)]
+                       (dressing.setup {:select {:enabled false}}))})
 
       ;; TODO: Install trouble to show diagnostics
       ;; Automatically set up your configuration after cloning packer.nvim
@@ -259,7 +267,8 @@
 
 ;; Utils
 
-(fn lisp-filetype? [filetype]
+(fn lisp-filetype? 
+  [filetype]
   (let [filetypes (. vim.g "conjure#filetypes")]
     (vim.tbl_contains filetypes filetype)))
 
@@ -473,8 +482,8 @@
 
 (vim.keymap.set :n :<Leader>w- :<cmd>split<cr>
                 {:silent true :desc "Split Horizontal"})
-(vim.keymap.set :n :<Leader>w<BSlash> :<cmd>vsplit!<cr>
-                {:silent true :desc "Split Vertical"})
+(vim.keymap.set :n :<Leader>w/ :<cmd>vsplit!<cr>
+                {:silent true :desc "Split Vertical" :noremap true})
 (vim.keymap.set :n :<Leader>wd :<cmd>q<cr> {:silent true :desc "Quit Window"})
 (vim.keymap.set :n :<Leader>wx :<cmd>bdelete<cr><cmd>q<cr>
                 {:desc "Kill window"})
@@ -537,27 +546,53 @@
                            :t "Log tab"
                            :v "Log Split vertical"}})
 
-(vim.keymap.set [:n :i] :<C-c><C-c> :<LocalLeader>er
-                {:desc "Eval top-level form" :remap true})
+(fn conjure-bindings
+  [{: buf}]
+  (vim.keymap.set [:n :i] :<C-c><C-c> :<LocalLeader>er
+                  {:desc "Eval top-level form" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] :<C-c><C-e> :<LocalLeader>ee
-                {:desc "Eval form at point" :remap true})
+  (vim.keymap.set [:n :i] :<C-c><C-e> :<LocalLeader>ee
+                  {:desc "Eval form at point" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] :<C-c><C-f>
-                :<C-c><C-C><cmd>ConjureLogCloseVisible<cr><LocalLeader>lv
-                {:desc "Eval top-level pprint" :remap true})
+  (vim.keymap.set [:n :i] :<C-c><C-f>
+                  :<C-c><C-C><cmd>ConjureLogCloseVisible<cr><LocalLeader>lv
+                  {:desc "Eval top-level pprint" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] :<C-c><C-m> :<LocalLeader>em
-                {:desc "Eval marked" :remap true})
+  (vim.keymap.set [:n :i] :<C-c><C-m> :<LocalLeader>em
+                  {:desc "Eval marked" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] :<C-c><C-l> :<LocalLeader>eb
-                {:desc "Eval buf" :remap true})
+  (vim.keymap.set [:n :i] :<C-c><C-l> :<LocalLeader>eb
+                  {:desc "Eval buf" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] :<C-c><C-k> :<LocalLeader>ef
-                {:desc "Eval file" :remap true})
+  (vim.keymap.set [:n :i] :<C-c><C-k> :<LocalLeader>ef
+                  {:desc "Eval file" :remap true :buffer buf})
 
-(vim.keymap.set [:n :i] "<C-c>;" :<LocalLeader>ecr
-                {:desc "Eval comment below" :remap true})
+  (vim.keymap.set [:n :i] "<C-c>;" :<LocalLeader>ecr
+                  {:desc "Eval comment below" :remap true :buffer buf}))
+
+;; Git Commit Bindings
+
+(fn neogit-bindings
+  [{: buf}]
+  (vim.keymap.set :n :<C-c><C-c> "<cmd>wq<cr>" 
+                  {:desc "Commit" :remap true :buffer buf})
+  (vim.keymap.set :n :<C-c><C-k> (.. "<cmd>bdelete! " buf "<cr>") 
+                  {:desc "Cancel" :remap true :buffer buf}))
+  
+
+(vim.api.nvim_create_augroup :JConditionalBindings {:clear true})
+(vim.api.nvim_create_autocmd 
+  [:BufEnter :BufWinEnter]
+  {:group  :JConditionalBindings
+   :callback 
+   (fn [args]
+     (print "bufenter" vim.o.filetype)
+     (if 
+       (lisp-filetype? vim.o.filetype) (conjure-bindings args)
+       (= vim.o.filetype :NeogitCommitMessage) (neogit-bindings args))
+       
+     nil)})    
+
 
 ;; Document Editing
 

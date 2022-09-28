@@ -52,9 +52,9 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
   - [ ] Configure terminal settings
   - [ ] Find a plugin for common file operations like renaming, moving, deleting
   - [ ] Research hard wrapping settings or plugins
-  - [ ] Setup a quickfix binding for LSP + spellchecking
   - [x] Move lsp bindings to permanent bindings
-  - [x] Install a statusline
+  - [x] -Install- write a statusline
+  - [ ] Deprioritize spelling completions
 
 * References
 
@@ -224,6 +224,17 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
    - [ ] Display type hint for item under cursor with `C-Space`
    - [ ] Prioritize lsp completions above spelling ones
 
+** Codespell code actions and word lists
+
+   It would be helpful to enhance the codespell null-lsp functionality to provide
+   code actions to make corrections.
+
+   Additionally actions to add words to dictionary would be good for reducing errors
+
+   Lastly, it would be great if it could be modified in userland to pull words 
+   from a project's vscode settings without having to change the null-ls builtin.
+
+
 
 * Bootstrapping Fennel
 
@@ -251,11 +262,10 @@ The majority of customization will be done with the {https://fennel-lang.org/}[F
 
   #tangle ./fnl/bootstrap.fnl
   @code fennel
-  (let [rtp (vim.api.nvim_get_option "runtimepath")
-        custompaths [(.. configdir "/fnl")
-                     (.. configdir "/lua")]
-        customrtp (table.concat custompaths ",")]
-    (vim.api.nvim_set_option "runtimepath" (.. customrtp "," rtp)))
+  (let [custompaths [(.. configdir "/fnl")
+                   (.. configdir "/lua")]
+      customrtp (table.concat custompaths ",")]
+    (vim.opt.runtimepath:prepend (.. customrtp ",")))
   @end
 
   Load the fennel library which we need to access some exports to setup

@@ -25,9 +25,14 @@
              ;;        this tool makes atm
              ; null-ls.builtins.formatting.fnlfmt
              null-ls.builtins.formatting.zprint
-             null-ls.builtins.formatting.codespell
              null-ls.builtins.diagnostics.checkmake
              null-ls.builtins.diagnostics.codespell
+             ;; (null-ls.builtins.diagnostics.cspell.with
+             ;;   {:args (fn [params]
+             ;;            ["--language-id" params.ft
+             ;;             "--show-suggestions"
+             ;;             "stdin"])})
+            
              null-ls.builtins.completion.spell
              null-ls.builtins.completion.luasnip
              null-ls.builtins.code_actions.gitsigns]})
