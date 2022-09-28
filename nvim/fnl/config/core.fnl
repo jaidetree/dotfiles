@@ -182,7 +182,7 @@
       (use :TimUntersberger/neogit
            {:requires [:nvim-lua/plenary.nvim]
             :config #(let [neogit (require :neogit)]
-                       (neogit.setup))})
+                       (neogit.setup {:use_magit_keybindings true}))})
       (use :pwntester/octo.nvim
            {:requires [:nvim-lua/plenary.nvim
                        :nvim-telescope/telescope.nvim
@@ -574,24 +574,30 @@
 
 (fn neogit-bindings
   [{: buf}]
-  (vim.keymap.set :n :<C-c><C-c> "<cmd>wq<cr>" 
-                  {:desc "Commit" :remap true :buffer buf})
-  (vim.keymap.set :n :<C-c><C-k> (.. "<cmd>bdelete! " buf "<cr>") 
-                  {:desc "Cancel" :remap true :buffer buf}))
+  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-c> "<cmd>wq<cr>" 
+                  {:desc "Commit" :noremap true})
+  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-k> (.. "<cmd>bdelete! " buf "<cr>") 
+                  {:desc "Cancel" :noremap true}))
   
 
 (vim.api.nvim_create_augroup :JConditionalBindings {:clear true})
 (vim.api.nvim_create_autocmd 
-  [:BufEnter :BufWinEnter]
+  [:BufEnter :BufWinEnter :BufNew]
   {:group  :JConditionalBindings
    :callback 
    (fn [args]
-     (print "bufenter" vim.o.filetype)
      (if 
-       (lisp-filetype? vim.o.filetype) (conjure-bindings args)
-       (= vim.o.filetype :NeogitCommitMessage) (neogit-bindings args))
-       
+       (lisp-filetype? vim.bo.filetype) (conjure-bindings args))
      nil)})    
+
+(vim.api.nvim_create_augroup :JNeogitBindings {:clear true})
+(vim.api.nvim_create_autocmd 
+  :Filetype
+  {:group :JNeogitBindings
+   :pattern :NeogitCommitMessage
+   :callback 
+   (fn [args]
+     (neogit-bindings args))})
 
 
 ;; Document Editing
