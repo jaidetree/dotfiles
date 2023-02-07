@@ -10,7 +10,7 @@
   (vim.api.nvim_replace_termcodes key-str true false true))
 
 (set vim.g.mapleader (kbd :<Space>))
-(set vim.g.maplocalleader (kbd :<Space>s))
+(set vim.g.maplocalleader (kbd :<Space>m))
 
 (set vim.opt.autoread true)
 (set vim.opt.showmode true)
@@ -26,7 +26,11 @@
 (set vim.opt.clipboard :unnamedplus)
 (set vim.opt.splitright true)
 (set vim.opt.splitbelow true)
-(set vim.opt.guifont ["OperatorMono Nerd Font:h15"]) 
+(set vim.opt.guifont ["OperatorMono Nerd Font:h15"])
+(set vim.opt.textwidth 80)
+(set vim.opt.foldmethod :manual)
+(set vim.opt.updatetime 250)
+(set vim.opt.lazyredraw false)
 
 ;; Replacing this with project nvim
 ;; (set vim.opt.autochdir true)
@@ -45,8 +49,8 @@
   (fn [use]
     (f #(use (pkg $...)))))
 
-(packer.startup 
-  (fnl->packer 
+(packer.startup
+  (fnl->packer
     (fn [use]
       (use :wbthomason/packer.nvim)
       (use :catppuccin/nvim
@@ -81,19 +85,7 @@
       (use :shoumodip/nvim-literate)
       (use :alexghergh/nvim-tmux-navigation
            {:config #(let [tmux (require :nvim-tmux-navigation)]
-                       (tmux.setup {:disable_when_zoomed true})
-                       (vim.keymap.set :n :<C-h>
-                                       tmux.NvimTmuxNavigateLeft)
-                       (vim.keymap.set :n :<C-j>
-                                       tmux.NvimTmuxNavigateDown)
-                       (vim.keymap.set :n :<C-k>
-                                       tmux.NvimTmuxNavigateUp)
-                       (vim.keymap.set :n :<C-l>
-                                       tmux.NvimTmuxNavigateRight)
-                       (vim.keymap.set :n :<C-Bslash>
-                                       tmux.NvimTmuxNavigateLastActive)
-                       (vim.keymap.set :n :<C-Space>
-                                       tmux.NvimTmuxNavigateNext))})
+                       (tmux.setup {:disable_when_zoomed true}))})
       (use :nvim-treesitter/nvim-treesitter
            {:requires [:p00f/nvim-ts-rainbow
                        :nvim-treesitter/nvim-treesitter-context]
@@ -136,23 +128,26 @@
       (use :AndrewRadev/bufferize.vim)
       ;; Language specific
       (use :jaawerth/fennel.vim)
-      (use "~/projects/conjure")
+      (use :Olical/conjure
+           {:config #(do
+                       (tset vim.g "conjure#mapping#log_split" "l-")
+                       (tset vim.g "conjure#mapping#log_vsplit" "l/"))})
       (use :guns/vim-sexp
            {:config #(set vim.g.sexp_filetypes "")})
       (use :nvim-neorg/neorg
            {:requires [:max397574/neorg-contexts
                        :nvim-lua/plenary.nvim
                        :nvim-neorg/neorg-telescope]
-            :after [:nvim-treesitter 
+            :after [:nvim-treesitter
                     :telescope.nvim]
             :config #(let [neorg (require :neorg)
                            tscfg (require :nvim-treesitter.configs)]
                        (tscfg.setup {:ensure_installed [:norg]
                                      :highlight {:enable true}})
                        (neorg.setup {:load {:core.defaults {}
-                                            :core.norg.dirman 
-                                            {:config 
-                                             {:workspaces 
+                                            :core.norg.dirman
+                                            {:config
+                                             {:workspaces
                                               {:work "~/neorg/work"
                                                :personal "~/neorg/personal"}}}
                                             :core.norg.concealer {}
@@ -196,6 +191,7 @@
                        :hrsh7th/cmp-path
                        :hrsh7th/cmp-cmdline
                        :hrsh7th/cmp-git
+                       :hrsh7th/cmp-nvim-lsp-signature-help
                        :onsails/lspkind.nvim
                        (pkg :L3MON4D3/LuaSnip
                             {:tag :v1.*})
@@ -211,15 +207,15 @@
            {:require [:kyazdani42/nvim-web-devicons]
             :config #(let [trouble (require :trouble)]
                        (trouble.setup))})
-      ;; (use :stevearc/dressing.nvim
-      ;;      {:config #(let [dressing (require :dressing)]
-      ;;                  (dressing.setup))})
       (use :rcarriga/nvim-notify
            {:config #(set vim.notify (require :notify))})
       (use :glepnir/lspsaga.nvim
            {:branch :main
-            :config #(let [lsp-saga (require :lspsaga)]
-                       (lsp-saga.init_lsp_saga))})
+            :config #(let [lspsaga (require :lspsaga)]
+                       (lspsaga.setup
+                         {:finder_action_keys {:open "<cr>"
+                                               :vsplit "/"
+                                               :split "-"}}))})
       (use :AckslD/nvim-FeMaco.lua
            {:config #(let [femaco (require :femaco)]
                        (femaco.setup))})
@@ -229,23 +225,60 @@
            {:config #(let [surround (require :nvim-surround)]
                        (surround.setup))})
       (use "lcheylus/overlength.nvim"
-           {:config #(let [overlength (require :overlength)]
-                       (overlength.setup
-                         {:textwidth_mode 1
-                          :default_overlength 80
-                          :grace_length 1
-                          :highlight_to_eol true
-                          :bg "#0f0b0b"
-                          :disable_ft ["" "qf" "help" "man" "packer" "NvimTree" "Telescope" "WhichKey"]}))})
+            {:config #(let [overlength (require :overlength)]
+                        (overlength.setup
+                          {:textwidth_mode 1
+                           :default_overlength 80
+                           :grace_length 1
+                           :highlight_to_eol true
+                           :bg "#0f0b0b"
+                           :disable_ft ["" "qf" "help" "man" "packer" "NvimTree" "Telescope" "WhichKey"]}))})
       (use "stevearc/dressing.nvim"
            {:config #(let [dressing (require :dressing)]
                        (dressing.setup {:select {:enabled false}}))})
 
-      ;; TODO: Install trouble to show diagnostics
-      ;; Automatically set up your configuration after cloning packer.nvim
-      ;; Put this at the end after all plugins
-      (when packer.bootstrap
-        (packer.sync)))))
+      (use "andrewferrier/wrapping.nvim"
+           {:config #(let [wrapping (require :wrapping)]
+                       (wrapping.setup
+                         {:auto_set_mode_filetype_allowlist [:asciidoc
+                                                             :gitcommit
+                                                             :mail
+                                                             :markdown
+                                                             :norg
+                                                             :org
+                                                             :text
+                                                             :tex]}))})
+      (use "seblj/nvim-tabline"
+           {:requires ["kyazdani42/nvim-web-devicons"]
+            :config #(let [tabline (require :tabline)]
+                       (tabline.setup
+                         {}))})
+
+     (use "soywod/himalaya"
+          {:after [:telescope.nvim]})
+
+     (use "~/.local/share/nvim/site/pack/packer/opt/himalaya/vim"
+          {:after [:himalaya]
+           :config #(do
+                     (set vim.g.himalaya_mailbox_picker :telescope)
+                     (set vim.g.himalaya_telescope_preview_enabled 1))})
+
+     (use "~/projects/projections.nvim"
+          {:after [:telescope.nvim]
+           :config #(require :config.plugins.projections)})
+
+     (use "debugloop/telescope-undo.nvim"
+          {:after [:telescope.nvim]
+           :config #(let [telescope (require :telescope)]
+                      (telescope.load_extension "undo"))})
+
+     (use "m4xshen/autoclose.nvim")
+
+     ;; TODO: Install trouble to show diagnostics
+     ;; Automatically set up your configuration after cloning packer.nvim
+     ;; Put this at the end after all plugins
+     (when packer.bootstrap
+       (packer.sync)))))
 
 ;; Advanced setup
 
@@ -267,9 +300,9 @@
 
 ;; Utils
 
-(fn lisp-filetype? 
+(fn lisp-filetype?
   [filetype]
-  (let [filetypes (. vim.g "conjure#filetypes")]
+  (let [filetypes (or (. vim.g "conjure#filetypes") {})]
     (vim.tbl_contains filetypes filetype)))
 
 (comment (lisp-filetype? :fennel)
@@ -295,7 +328,7 @@
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
 
 
-(fn fnlfile 
+(fn fnlfile
   [{:fargs [filepath]}]
   (fennel.dofile filepath))
 
@@ -339,7 +372,7 @@
 (vim.keymap.set :n :<Leader>bb "<cmd>Telescope buffers<cr>"
                 {:desc "Switch buffer"})
 
-;; Thanks to https://vim.fandom.com/wiki/Deleting_a_buffer_without_closing_the_window 
+;; Thanks to https://vim.fandom.com/wiki/Deleting_a_buffer_without_closing_the_window
 (vim.keymap.set :n :<Leader>bd "<cmd>:bprev<cr><cmd>:bdelete #<cr>"
                 {:desc "Delete buffer"})
 
@@ -354,11 +387,13 @@
 
 (wk.register {:<leader>p {:name :+project}})
 
-(vim.keymap.set :n :<Leader>pf "<cmd>Telescope git_files<cr>"
+(vim.keymap.set :n :<Leader>pf "<cmd>Telescope find_files<cr>"
                 {:desc "Find project file"})
 
-(vim.keymap.set :n :<Leader>pp "<cmd>Telescope projects<cr>"
+(vim.keymap.set :n :<Leader>pP "<cmd>Telescope projects<cr>"
                 {:desc "Switch project"})
+
+(vim.keymap.set "n" :<Leader>pp "<cmd>Telescope projections<cr>")
 
 ;; Org
 
@@ -422,7 +457,7 @@
 (vim.keymap.set :n "<leader>k[" "<Plug>(sexp_square_tail_wrap_element)"
               {:desc "wrap ["})
 (vim.keymap.set :n "<leader>k{" "<Plug>(sexp_curly_tail_wrap_element)"
-                              {:desc "wrap {"})
+                {:desc "wrap {"})
 (vim.keymap.set :n :<leader>kr "<Plug>(sexp_raise_element)" {:desc :raise})
 (vim.keymap.set :n :<leader>kc "<Plug>(sexp_convolute)" {:desc :convolute})
 (vim.keymap.set :n :<leader>ks "<Plug>(sexp_capture_next_element)"
@@ -456,7 +491,7 @@
  [ 1 2 3]
 
  nil)
-  
+
 
 ;; Quit
 
@@ -469,12 +504,14 @@
 (wk.register {:<leader>t {:name :+toggle}})
 (vim.keymap.set :n :<Leader>tf :<cmd>ToggleFormatting<cr>
                 {:silent true :remap false :desc :Auto-formatting})
-(vim.keymap.set :n :<Leader>tr 
+(vim.keymap.set :n :<Leader>tr
                 (fn []
-                  (if vim.bo.readonly 
+                  (if vim.bo.readonly
                      (set vim.bo.readonly false)
                      (set vim.bo.readonly true)))
                 {:silent true :remap false :desc :Readonly})
+(vim.keymap.set :n :<Leader>tw "<cmd>ToggleWrapMode<cr>"
+                {:remap false :desc "Toggle wrapping"})
 
 ;; Window
 
@@ -489,6 +526,33 @@
                 {:desc "Kill window"})
 (vim.keymap.set :n :<Leader>w= "<cmd>wincmd =<cr>"
                 {:desc "Equalize"})
+
+;; Undo
+
+(vim.keymap.set :n :<leader>u "<cmd>Telescope undo<cr>" {:desc "Undo"})
+
+;; Tmux Navigation
+
+(local tmux (require :nvim-tmux-navigation))
+
+(vim.keymap.set :n :<Leader>wh tmux.NvimTmuxNavigateLeft {:desc "Window left"})
+(vim.keymap.set :n :<Leader>wj tmux.NvimTmuxNavigateDown {:desc "Window down"})
+(vim.keymap.set :n :<Leader>wk tmux.NvimTmuxNavigateUp {:desc "Window up"})
+(vim.keymap.set :n :<Leader>wl tmux.NvimTmuxNavigateRight {:desc "Window right"})
+(vim.keymap.set :n :<Leader>w<Space> tmux.NvimTmuxNavigateNext {:desc "Window next"})
+
+(vim.keymap.set :n :<C-h>
+               tmux.NvimTmuxNavigateLeft)
+(vim.keymap.set :n :<C-j>
+              tmux.NvimTmuxNavigateDown)
+(vim.keymap.set :n :<C-k>
+              tmux.NvimTmuxNavigateUp)
+(vim.keymap.set :n :<C-l>
+              tmux.NvimTmuxNavigateRight)
+(vim.keymap.set :n :<C-Bslash>
+              tmux.NvimTmuxNavigateLastActive)
+(vim.keymap.set :n :<C-Space>
+              tmux.NvimTmuxNavigateNext)
 
 ;; Yank
 
@@ -505,7 +569,8 @@
 ;; OS X Bindings
 
 (vim.keymap.set [:n :v] :<D-s> :<cmd>w<cr>)
-(vim.keymap.set [:n :v] :<D-p> "<cmd>Telescope commands<cr>")
+(vim.keymap.set [:n :v] :<D-p> "<cmd>Telescope find_files<cr>")
+(vim.keymap.set [:n :v] :<D-S-P> "<cmd>Telescope commands<cr>")
 (vim.keymap.set [:n :v] :<D-t> :<cmd>tabnew<cr>)
 (vim.keymap.set [:n :v] "<D-;>" :gcc {:remap true})
 
@@ -523,6 +588,7 @@
 (vim.keymap.set :v :<D-c> "\"+y")
 (vim.keymap.set :c :<D-v> :<C-r>+ {:remap false})
 
+
 ;; Insert bindings
 
 ;; Escape shortcut in insert mode
@@ -531,11 +597,11 @@
 
 ;; Conjure Evaluation
 
-(wk.register {:<leader>s {:name :+mode}})
+(wk.register {:<leader>m {:name :+mode}})
 
-(wk.register {:<leader>se {:name :+eval}})
+(wk.register {:<leader>me {:name :+eval}})
 
-(wk.register {:<leader>sl {:name :+log
+(wk.register {:<leader>ml {:name :+log
                            :e "Log buf"
                            :g "Toggle log"
                            :l "Jump latest"
@@ -574,31 +640,48 @@
 
 (fn neogit-bindings
   [{: buf}]
-  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-c> "<cmd>wq<cr>" 
+  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-c> "<cmd>wq<cr>"
                   {:desc "Commit" :noremap true})
-  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-k> (.. "<cmd>bdelete! " buf "<cr>") 
+  (vim.api.nvim_buf_set_keymap buf :n :<C-c><C-k> (.. "<cmd>bdelete! " buf "<cr>")
                   {:desc "Cancel" :noremap true}))
-  
+
 
 (vim.api.nvim_create_augroup :JConditionalBindings {:clear true})
-(vim.api.nvim_create_autocmd 
+(vim.api.nvim_create_autocmd
   [:BufEnter :BufWinEnter :BufNew]
   {:group  :JConditionalBindings
-   :callback 
+   :callback
    (fn [args]
-     (if 
+     (if
        (lisp-filetype? vim.bo.filetype) (conjure-bindings args))
-     nil)})    
+     nil)})
 
 (vim.api.nvim_create_augroup :JNeogitBindings {:clear true})
-(vim.api.nvim_create_autocmd 
+(vim.api.nvim_create_autocmd
   :Filetype
   {:group :JNeogitBindings
    :pattern :NeogitCommitMessage
-   :callback 
-   (fn [args]
-     (neogit-bindings args))})
+   :callback neogit-bindings})
 
+(vim.api.nvim_create_augroup :JHelpBindings {:clear true})
+(vim.api.nvim_create_autocmd
+  :Filetype
+  {:group :JHelpBindings
+   :pattern :help
+   :callback
+   (fn [args]
+     (vim.keymap.set :n :q "<cmd>q<cr>"
+                     {:desc "Quit" :nowait true
+                      :remap true :buffer args.buf}))})
+
+(vim.api.nvim_create_augroup :JHimalaya {:clear true})
+(vim.api.nvim_create_autocmd
+  :Filetype
+  {:group :JHimalaya
+   :pattern :himalaya
+   :callback
+   (fn [args]
+     nil)})
 
 ;; Document Editing
 
@@ -615,6 +698,8 @@
 (comment ;; eval these
   (vim.opt.path:prepend :$HOME/.asdf/shims)
   (vim.opt.path:get)
+  (let [telescope (require :telescope)]
+    (print (vim.inspect telescope)))
   (print (vim.inspect (vim.opt.filetype:get)))
   (let [ts (require :conjure.tree-sitter)]
     (ts.node->str (ts.get-root)))

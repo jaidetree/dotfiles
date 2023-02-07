@@ -1,4 +1,4 @@
-;; Exploring the minimum requirements to render a custom statusline
+(local wrapping (require :wrapping))
 (local M {})
 
 ;; Borrowed from https://github.com/feline-nvim/feline.nvim/blob/496975425a28ef1f974e90e9664fe3409738f071/lua/feline/providers/vi_mode.lua#L5
@@ -329,8 +329,7 @@
   [_state]
   (filled-left
     {:prev-bg "#c36892" :fg "#ffffff" :bg "#aa4473"}
-    " %L lines "
-    (hl {:fg "#aa4473" :bg "#19192a"} icons.slant_right_2)))
+    " %L lines "))
 
 (fn cursor-pos
   [{: cursor}]
@@ -359,6 +358,19 @@
         {:fg "#444470" :bg "#19192a"}
         (string.rep "▰" (- 8 icon-index))
         " "))))
+
+(fn wrapping-mode
+  [_state]
+  (let [wrap-mode (wrapping.get_current_mode)]
+    (filled-left 
+      {:bg "#803658" 
+       :fg (if (= wrap-mode "hard") "#ffffff" "#19192a") 
+       :prev-bg "#aa4473"}
+      " 蝹"
+      (hl {:bg "#19192a" :fg "#773f59"} icons.slant_right_2))))
+
+(comment
+  (wrapping-mode))
       
 (fn section 
   [state element-fns]
@@ -393,6 +405,7 @@
          lsp-formatters
          file-type
          file-loc
+         wrapping-mode
          cursor-pos
          scrollbar])))) 
 

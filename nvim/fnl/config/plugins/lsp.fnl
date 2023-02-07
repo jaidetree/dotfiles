@@ -1,13 +1,14 @@
 (local lspcfg (require :lspconfig))
 (local twcfg (require :lspconfig.server_configurations.tailwindcss))
 (local cmp-nvim-lsp (require :cmp_nvim_lsp))
-(local capabilities
-       (cmp-nvim-lsp.update_capabilities (vim.lsp.protocol.make_client_capabilities)))
+       
 
 (local wk (require :which-key))
 (local async (require :plenary.async))
 (local util (require :vim.lsp.util))
 (local notify (require :notify))
+
+(local capabilities (cmp-nvim-lsp.default_capabilities))
 
 (comment (notify :test))
 
@@ -24,8 +25,10 @@
     (vim.keymap.set :n (.. :<leader>c lhs) rhs
                     (vim.tbl_extend :force opts custom-opts))))
 
-(map :h "<cmd>Lspsaga lsp_finder<cr>" {:desc "Goto definition"})
-(map :d "<cmd>Lspsaga peek_definition<cr>" {:desc "Goto definition"})
+(wk.register {:<leader>l {:name :+lsp}})
+
+(map :j "<cmd>Lspsaga lsp_finder<cr>" {:desc "Goto definition"})
+(map :d "<cmd>Lspsaga peek_definition<cr>" {:desc "Peek definition"})
 (map :D vim.lsp.buf.references {:desc "Goto references"})
 (map :i vim.lsp.buf.implementation {:desc "Goto implementation"})
 (map :h vim.lsp.buf.signature_help {:desc "Signature help"})
@@ -40,7 +43,11 @@
 (map :wr vim.lsp.buf.remove_workspace_folder {:desc "Remove folder"})
 (map :wl #(print (vim.inspect (vim.lsp.buf.list_workspace_folders))))
 
-(wk.register {:<leader>l {:name :+lsp}})
+(wk.register :<leader>lg {:name :+goto})
+
+(map :gd vim.lsp.buf.definition)
+(map :gl vim.lsp.buf.declaration)
+
 
 (vim.keymap.set 
   :n :<leader>le :<cmd>TroubleToggle<cr>
@@ -74,31 +81,13 @@
   displayed automatically when moving the cursor."
   (let [config (or config {})
         client (vim.lsp.get_client_by_id ctx.client_id)]
-    (set config.focus_id ctx.method)
     (when (and result result.contents)
       (let [markdown-lines (-> result.contents
                                (util.convert_input_to_markdown_lines)
                                (util.trim_empty_lines))]
         (when (not (vim.tbl_isempty markdown-lines))
-          (util.open_floating_preview markdown-lines :markdown config
-              nil))))))
+          (util.open_floating_preview markdown-lines :markdown config nil))))))
 
-;; Update global handlers
-(local handlers
-  {:textDocument/hover 
-   (vim.lsp.with 
-     vim.lsp.handlers.hover
-     {:border :rounded
-      :width 80
-      :opts {:offset_y 2}
-      :stylize_markdown true})
-
-   :textDocument/signatureHelp
-   (vim.lsp.with
-     vim.lsp.handlers.signature_help
-     {:border :rounded
-      :width 80
-      :stylize_markdown true})})
 
 ;; Create a quieter handler for hover when automating
 
@@ -110,22 +99,45 @@
                            quiet-hover-handler
                            {:border :rounded
                             :width 80
-                            :stylize_markdown true}))))
+                            :wrap_at 78
+                            :stylize_markdown true
+                            :close_events [:CursorHold :BufEnter :BufLeave]
+                            :focusable false
+                            :focus false}))))
         
 (fn on-attach 
   [client bufnr]
-  (set vim.opt.updatetime 400)
-  (vim.api.nvim_create_augroup :JLspAutoSignature {:clear true})
-  (vim.api.nvim_create_autocmd 
-    "CursorHold"
-    {:group  :JLspAutoSignature
-     :buffer bufnr
-     :callback 
-     (fn []
-       (quiet-hover)
-       (comment
-         (let [lspsaga-hover (require :lspsaga.hover)]
-           (lspsaga-hover:render_hover_doc))))}))    
+  (when (= client.name :tsserver)
+    (set client.server_capabilities.documentFormattingProvider false))
+  (vim.keymap.set :n :<C-Space> vim.lsp.buf.signature_help {:desc "Signature help"})
+  (vim.keymap.set :n :<C-.> vim.lsp.buf.signature_help {:desc "Signature help"})
+  (comment
+   (vim.api.nvim_create_augroup :JLspAutoSignature {:clear true})
+   (vim.api.nvim_create_autocmd 
+     "CursorHold"
+     {:group  :JLspAutoSignature
+      :buffer bufnr
+      :callback quiet-hover})))    
+
+;; Update global handlers
+(local handlers
+  {:textDocument/hover 
+   (vim.lsp.with 
+     vim.lsp.handlers.hover
+     {:border :rounded
+      :width 80
+      :wrap_at 78
+      :stylize_markdown true})
+
+   :textDocument/signatureHelp
+   (vim.lsp.with
+     vim.lsp.handlers.signature_help
+     {:border :rounded
+      :width 80
+      :wrap_at 78
+      :stylize_markdown true
+      :focusable false
+      :focus false})})
 
 (lspcfg.tsserver.setup 
   {: capabilities
@@ -141,6 +153,7 @@
                                 :importModuleSpecifierPreference :shortest
                                 :importModuleSpecifierEnding :minimal
                                 :allowRenameOfImportPath true}}})
+
 
 (lspcfg.clojure_lsp.setup 
   {: capabilities 

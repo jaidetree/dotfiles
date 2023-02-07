@@ -33,8 +33,9 @@
                          :format format-completion}
             :sources (cmp.config.sources [{:name :nvim_lsp}
                                           {:name :luasnip}
-                                          {:name :cmp_git}]
-                                         {:name :buffer})})
+                                          {:name :cmp_git}
+                                          {:name :buffer}
+                                          {:name :nvim_lsp_signature_help}])})
 
 (cmp.setup.filetype :gitcommit
                     {:sources (cmp.config.sources [{:name :cmp_git}]

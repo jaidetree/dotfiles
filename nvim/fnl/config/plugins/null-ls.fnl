@@ -4,12 +4,14 @@
 (fn null-ls-client? [client]
   (= client.name :null-ls))
 
-(fn format-buf 
+(fn format-buf
   [bufnr]
   (when (not vim.b.noformat)
-    (vim.lsp.buf.format {: bufnr :filter null-ls-client?})))
+    (vim.lsp.buf.format {: bufnr
+                         :filter null-ls-client?
+                         :timeout_ms 10000})))
 
-(fn on-attach 
+(fn on-attach
   [client bufnr]
   (when (client.supports_method :textDocument/formatting)
     (vim.api.nvim_clear_autocmds {:group augroup :buffer bufnr})
@@ -21,23 +23,29 @@
 (null-ls.setup
   {:debug true
    :on_attach on-attach
+   :default_timeout -1
    :sources [;; TODO - Not loving the formatting decisions
              ;;        this tool makes atm
              ; null-ls.builtins.formatting.fnlfmt
              null-ls.builtins.formatting.zprint
+             (null-ls.builtins.formatting.prettier.with
+               {:prefer_local "node_modules/.bin"
+                :timeout -1})
+
              null-ls.builtins.diagnostics.checkmake
-             null-ls.builtins.diagnostics.codespell
-             ;; (null-ls.builtins.diagnostics.cspell.with
-             ;;   {:args (fn [params]
-             ;;            ["--language-id" params.ft
-             ;;             "--show-suggestions"
-             ;;             "stdin"])})
-            
-             null-ls.builtins.completion.spell
+             ;; null-ls.builtins.diagnostics.codespell
+             (null-ls.builtins.diagnostics.cspell.with
+               {:args (fn [params]
+                        ["--language-id" params.ft
+                         "--show-suggestions"
+                         "stdin"])
+                :timeout -1})
+
              null-ls.builtins.completion.luasnip
-             null-ls.builtins.code_actions.gitsigns]})
-                          
-(fn toggle-formatting 
+             null-ls.builtins.code_actions.gitsigns
+             null-ls.builtins.code_actions.cspell]})
+
+(fn toggle-formatting
   []
   (let [disabled vim.b.noformat]
     (if disabled
@@ -53,6 +61,9 @@
 
 (comment vim.b.noformat
   vim.log.levels
+
+  null-ls.builtins.formatting.prettier
+
   (let [clients (vim.lsp.buf_get_clients)]
     (icollect [_ client (ipairs clients)]
       [client.name client.server_capabilities])))
