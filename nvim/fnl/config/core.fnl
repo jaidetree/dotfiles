@@ -26,7 +26,7 @@
 (set vim.opt.clipboard :unnamedplus)
 (set vim.opt.splitright true)
 (set vim.opt.splitbelow true)
-(set vim.opt.guifont ["OperatorMono Nerd Font:h15"])
+(set vim.opt.guifont ["Operator Mono SSm Lig:h14"])
 (set vim.opt.textwidth 80)
 (set vim.opt.foldmethod :manual)
 (set vim.opt.updatetime 250)
@@ -105,11 +105,7 @@
            {:after [:nvim-treesitter]
             :config #(let [orgmode (require :orgmode)
                            tscfg (require :nvim-treesitter.configs)]
-                       (orgmode.setup_ts_grammar)
-                       (tscfg.setup {:highlight {:enable true
-                                                 :additional_vim_regex_highlighting [:org]}
-                                     :ensure_installed [:org]})
-                       (orgmode.setup))})
+                       (require :config.org))})
       (use :gpanders/nvim-parinfer)
       (use :uga-rosa/ccc.nvim
            {:config #(let [ccc (require :ccc)]
@@ -160,16 +156,16 @@
                                                :extra true
                                                :extended true}}))})
       (use :williamboman/mason.nvim
-           {:config #(let [mason (require :mason)]
+           {:after [:nvim-lspconfig]
+            :config #(let [mason (require :mason)]
                        (mason.setup))})
       (use :williamboman/mason-lspconfig.nvim
-           {:after [:mason.nvim]
+           {:after [:mason.nvim
+                    :nvim-lspconfig]
             :config #(let [masonlsp (require :mason-lspconfig)]
                        (masonlsp.setup {:automatic_installation true}))})
       (use :neovim/nvim-lspconfig
-           {:after [:mason.nvim
-                    :mason-lspconfig.nvim
-                    :nvim-cmp
+           {:after [:nvim-cmp
                     :nvim-notify
                     :lspsaga.nvim
                     :null-ls.nvim]
@@ -273,6 +269,10 @@
                       (telescope.load_extension "undo"))})
 
      (use "m4xshen/autoclose.nvim")
+
+     (use "jonsmithers/vim-html-template-literals"
+          {:config #(do
+                      (set vim.g.htl_all_templates 1))})
 
      ;; TODO: Install trouble to show diagnostics
      ;; Automatically set up your configuration after cloning packer.nvim
@@ -694,6 +694,10 @@
 (vim.keymap.set :c :<C-e> :<End> {:remap false})
 (vim.keymap.set :c :<C-b> :<S-Left> {:remap false})
 (vim.keymap.set :c :<C-f> :<S-Right> {:remap false})
+
+;; Custom plugins
+
+(require :config.plugins.org-tangle)
 
 (comment ;; eval these
   (vim.opt.path:prepend :$HOME/.asdf/shims)

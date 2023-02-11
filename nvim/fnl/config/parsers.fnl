@@ -1,5 +1,7 @@
-(when (not fennel)
-  (local fennel (require :fennel)))
+(when (not _G.fennel)
+  (global fennel (require :fennel)))
+
+(local {:core c} (require :config.utils))
 
 ;; References
 ;; - https://www.theorangeduck.com/page/you-could-have-invented-parser-combinators
@@ -8,29 +10,36 @@
 
 (local parsers {})
 
-(fn success [output input]
+(fn success
+  [output input]
   {:ok true : output : input})
 
-(fn fail [expected actual input]
+(fn fail
+  [expected actual input]
   {:ok false :output actual : expected : actual : input})
 
-(fn read [input]
+(fn read
+  [input]
   (string.sub input.source input.index input.index))
 
-(fn read-n [input n]
+(fn read-n
+  [input n]
   (string.sub input.source input.index (- (+ input.index n) 1)))
 
-(fn advance [n input]
+(fn advance
+  [n input]
   {:source input.source :index (+ input.index n)})
 
-(fn parsers.char [c]
+(fn parsers.char
+  [c]
   (fn [input]
     (let [first-char (read input)]
       (if (= first-char c)
           (success c (advance 1 input))
           (fail c first-char input)))))
 
-(fn parsers.and [...]
+(fn parsers.and
+  [...]
   (let [parsers [...]]
     (fn [input]
       (var result-acc (success [] input))
@@ -47,7 +56,8 @@
                 (set result-acc result)))))
       result-acc)))
 
-(fn parsers.or [...]
+(fn parsers.or
+  [...]
   (let [parsers [...]]
     (fn [input]
       (var result-acc (fail nil [] input))
@@ -63,16 +73,18 @@
                 (set result-acc.input result.input)))))
       result-acc)))
 
-(fn valid-input? [input]
+(fn valid-input?
+  [input]
   (<= input.index (length input.source)))
 
-(fn parsers.many [parser]
+(fn parsers.many
+  [parser]
   (fn [input]
     (var result-acc (success [] input))
     (var done false)
     (while (and (not done) (valid-input? result-acc.input))
       (let [result (parser result-acc.input)]
-        (print (vim.inspect result))
+        (print (fennel.view result))
         (if result.ok
             (do
               (set result-acc.input result.input)
@@ -81,7 +93,8 @@
               (set done true)))))
     result-acc))
 
-(fn parsers.drop [parser]
+(fn parsers.drop
+  [parser]
   (fn [input]
     (let [result (parser input)]
       (if result.ok
@@ -95,8 +108,10 @@
                                              (parsers.char "\r")
                                              (parsers.char "\n")))))
 
-(fn parsers.contains [xs]
+(fn parsers.contains
+  [xs]
   (fn [input]
+    (print input)
     (let [first-char (read input)]
       (var result (fail (.. "[" (table.concat xs " ") "]") first-char input))
       (var i 1)
@@ -107,10 +122,12 @@
           (set i (+ i 1))))
       result)))
 
-(fn parsers.any [...]
+(fn parsers.any
+  [...]
   (parsers.many (parsers.or ...)))
 
-(fn parsers.not [parser]
+(fn parsers.not
+  [parser]
   (fn [input]
     (let [result (parser input)]
       (if result.ok
@@ -118,7 +135,8 @@
           (success result.output
                    (advance (- result.input.index 1) result.input))))))
 
-(fn parsers.lit [str]
+(fn parsers.lit
+  [str]
   (fn [input]
     (let [chars (read-n input (length str))]
       (if (= chars str)
@@ -128,7 +146,19 @@
 (fn parsers.between [start middle end]
   (parsers.and start middle end))
 
-(set parsers.alpha (parsers.contains))
+(fn parsers.alpha
+  []
+  (parsers.contains (vim.split :abcdefghijklmnoqrstuvwxyz
+                               ""
+                               {:plain true})))
+
+(comment
+  (ipairs (string.gmatch "abcdefghijklmnoqrstuvwxyz" "."))
+  (accumulate [xs []
+               x (string.gmatch "abcdefghijklmnoqrstuvwxyz" ".")]
+    (do
+     (table.insert xs x)
+     xs)))
 
 (fn input [source]
   {: source :index 1})
@@ -179,9 +209,23 @@
   (parse (parsers.char :h) :hello-world)
   (parse (parsers.not (parsers.char "]")) "target]rest")
   (parse (parsers.not (parsers.char "]")) "]rest")
-  (parse (parsers.many (parsers.not (parsers.char "]"))) "target]rest")
-  nil)
+  ;; This causes infinite loops. Don't run this.
+  ;; (parse (parsers.many (parsers.not (parsers.char "]"))) "target]rest")
+  ;;
 
-;; (parse (parsers.between (parsers.char "[")
-;;                         (parsers.many (parsers.not (parsers.char "]")))
-;;                         (parsers.char "]")) "[markdown-url]")
+  (parse (parsers.between
+           (parsers.char "a")
+           (parsers.char "b")
+           (parsers.char "c"))
+         "abc")
+  (parse (parsers.alpha)
+         "a")
+  (parse (parsers.many (parsers.alpha))
+         "abc")
+  (parse (parsers.between (parsers.char "[")
+                          (parsers.alpha)
+                          (parsers.char "]")) "[markdown-url]")
+
+
+  ;;
+  nil)
