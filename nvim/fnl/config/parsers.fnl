@@ -1,6 +1,8 @@
 (when (not _G.fennel)
   (global fennel (require :fennel)))
 
+(import-macros testing :config.macros.testing)
+
 (local {:core c} (require :config.utils))
 
 ;; References
@@ -172,9 +174,14 @@
   (assert result.ok)
   result)
 
-(print (fennel.view (assert-ok (parse (parsers.char :h) :hello-world))))
-(print (fennel.view (assert-ok ((parsers.char :e) {:source :hello-world
-                                                   :index 2}))))
+(testing.print
+  "Parses first letter h and moves cursor"
+  (parse (parsers.char :h) :hello-world))
+
+(testing.print
+  "Parses second letter given index 2"
+  ((parsers.char :e) {:source :hello-world
+                      :index 2}))
 
 (print (fennel.view (assert-ok (parse (parsers.and (parsers.char :h)
                                                    (parsers.char :e)

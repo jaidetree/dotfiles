@@ -55,12 +55,15 @@
       (use :wbthomason/packer.nvim)
       (use :catppuccin/nvim
            {:as :catppuccin
-            :config #(let [catppuccin (require :catppuccin)]
+            :config #(let [catppuccin (require :catppuccin)
+                           statusline (require :config.statusline)]
                        (set vim.g.catppuccin_flavour
                             :mocha)
                        (catppuccin.setup)
                        ;; TODO: Replace with vim.colorscheme when upgrading to 0.8
-                       (vim.cmd "colorscheme catppuccin"))})
+                       (vim.cmd "colorscheme catppuccin")
+                       (statusline.setup))})
+
       (use :jenterkin/vim-autosource
            {:config (fn []
                       (set vim.g.autosource_conf_names
@@ -281,10 +284,6 @@
        (packer.sync)))))
 
 ;; Advanced setup
-
-(local statusline (require :config.statusline))
-
-(statusline.setup)
 
 (local wk (require :which-key))
 

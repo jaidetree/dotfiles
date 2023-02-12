@@ -10,6 +10,7 @@ do
   local fnldir = (configdir .. "/fnl")
   for _, dir in ipairs({"/?.fnl", "/?/init.fnl"}) do
     fennel["path"] = (fnldir .. dir .. ";" .. fennel.path)
+    fennel["macro-path"] = (fnldir .. dir .. ";" .. fennel["macro-path"])
   end
 end
 table.insert(package.loaders, 1, fennel.searcher)
