@@ -50,11 +50,24 @@
 
 (fn utils.core.seq
   [iterator-or-coll]
-  (let [tbl []]
-   (utils.core.each
-     (fn [v]
-       (table.insert tbl v))
-     iterator-or-coll)
-   tbl))
+  (if
+    ;; Iterator was possibly an iterator function
+    (= (type iterator-or-coll) :function)
+    iterator-or-coll
+
+    ;; Iterator is a sequential table based on having
+    ;; a 1-index. Note in lua can be mixed but fennel
+    ;; does not readily support that
+    (and (= (type iterator-or-coll) :table)
+         (. iterator-or-coll 1))
+    (ipairs iterator-or-coll)
+
+    ;; Iterator is an associative table
+    (= (type iterator-or-coll) :table)
+    (pairs iterator-or-coll)
+
+    ;; No idea
+    (error (.. "utils.core.seq: Unable to provide iterator for " (vim.inspect iterator-or-coll)))))
+
 
 utils
