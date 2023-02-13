@@ -108,6 +108,7 @@
     (var done false)
     (while (and (not done) (valid-input? result-acc.input))
       (let [result (parser result-acc.input)]
+        (debug "parsers.many" (fennel.view result))
         (if result.ok
             (do
               (tset result-acc :input result.input)
@@ -154,7 +155,8 @@
       (if result.ok
           (fail false true input)
           (success result.output
-                   (advance (- result.input.index 1) result.input))))))
+                   (advance (+ 1 (- result.input.index input.index))
+                            result.input))))))
 
 (fn parsers.lit
   [str]
@@ -164,8 +166,15 @@
           (success str (advance (length str) input))
           (fail str chars input)))))
 
-(fn parsers.between [start middle end]
-  (parsers.and start middle end))
+(fn parsers.between
+  [start middle end]
+  (fn [input]
+   (let [result ((parsers.seq start middle end) input)]
+     (debug "parsers.between" (fennel.view result))
+     (if result.ok
+       (success (. result.output 2) result.input)
+       result))))
+
 
 (fn parsers.alpha
   []
@@ -355,6 +364,27 @@
    :== {:ok true
         :input {:index 14}
         :output ["****" "hello"]})
+
+(testing.print
+   "parsers.not consumes everything until it fails"
+   (parse (parsers.many
+            (parsers.not (parsers.char "*")))
+          "hello*world")
+   :== {:ok true
+        :input {:index 6}
+        :output "hello"})
+
+(testing.print
+  "parsers.between consumes data between two parsers"
+  (parse
+    (parsers.between (parsers.char "[")
+                     (parsers.many (parsers.not (parsers.char "]")))
+                     (parsers.char "]"))
+    "[hello-world]")
+  :== {:ok true
+       :input {:index 14}
+       :output "hello-world"})
+
 
 (comment ;; Testing
   (parse (parsers.lit :hello) :hello-world)
