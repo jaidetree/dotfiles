@@ -103,6 +103,7 @@
   (fn [input]
     (var result-acc (success [] input))
     (var done false)
+    (var last-result {})
     (while (and (not done) (valid-input? result-acc.input))
       (let [result (parser result-acc.input)]
         (debug "parsers.many input" (fennel.view result))
@@ -117,10 +118,13 @@
                    (table.insert result-acc.output result.output))))
 
             (do
+              (set last-result result)
               (set done true)))))
     (debug "parsers.many output" (fennel.view result-acc))
     (if (= (length result-acc.output) 0)
-      (fail {:ok true} {:ok false} result-acc.input)
+      (fail last-result.expected
+            last-result.actual
+            last-result.input)
       result-acc)))
 
 (fn parsers.drop
@@ -213,6 +217,22 @@
 
 (set parsers.xf xf)
 
+(fn parsers.map
+  [map-fn parser]
+  (parsers.xf
+    parser
+    (fn [result]
+      (if result.ok
+        (success
+          (icollect
+            [_ v (ipairs result.output)]
+            (map-fn v))
+          result.input)
+        result))))
+
+
+
+
 (fn parsers.first
   [parser]
   (xf parser
@@ -224,7 +244,7 @@
   (parsers.concat
    (parsers.many
     (parsers.contains
-      (vim.split :abcdefghijklmnoqrstuvwxyz
+      (vim.split :abcdefghijklmnopqrstuvwxyz
                  ""
                  {:plain true})))))
 

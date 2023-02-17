@@ -90,4 +90,21 @@
     []
     tbls))
 
+(fn utils.core.update
+  [tbl k f & args]
+  (let [v (. tbl k)]
+   (when v
+    (tset tbl k (f v (unpack args)))))
+  tbl)
+
+(fn utils.core.merge
+  [& tbls]
+  (accumulate
+    [merged {}
+     _ tbl (ipairs tbls)]
+    (do
+     (each [k v (pairs tbl)]
+       (tset merged k v))
+     merged)))
+
 utils
