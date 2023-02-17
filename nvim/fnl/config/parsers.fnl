@@ -7,6 +7,8 @@
   [output input]
   {:ok true : output : input})
 
+(set parsers.success success)
+
 (fn fail
   [expected actual input]
   {:ok false :output actual : expected : actual : input})
@@ -57,34 +59,31 @@
               result (parser result-acc.input)]
           (debug "parsers.seq" (fennel.view result))
           (if result.ok
-              (do
-                (set i (+ i 1))
-                (set result-acc.input result.input)
-                (if
-                  (> (length result.output) 1)
-                  (table.insert result-acc.output result.output)
-                  (> (length result.output) 0)
-                  (tset result-acc :output (c.concat result-acc.output result.output))))
-              (set result-acc result))))
+            (do
+              (set i (+ i 1))
+              (set result-acc.input result.input)
+              (if
+                (> (length result.output) 1)
+                (table.insert result-acc.output result.output)
+                (> (length result.output) 0)
+                (tset result-acc :output (c.concat result-acc.output result.output))))
+            (set result-acc result))))
       result-acc)))
 
 
 (fn parsers.or
-  [...]
-  (let [parsers [...]]
-    (fn [input]
-      (var result-acc (fail nil [] input))
-      (var i 1)
-      (while (and (not result-acc.ok) (. parsers i))
-        (let [parser (. parsers i)
-              result (parser result-acc.input)]
-          (if result.ok
-              (do
-                (set result-acc result))
-              (do
-                (set i (+ i 1))
-                (set result-acc.input result.input)))))
-      result-acc)))
+  [& parsers]
+  (fn [input]
+    (accumulate [result-acc (fail {:ok true} {:ok false} input)
+                 i parser (ipairs parsers)
+                 &until result-acc.ok]
+      (let [result (parser result-acc.input)]
+        (debug "parsers.or" (fennel.view result))
+        (if result.ok
+          (success
+            result.output
+            result.input)
+          result)))))
 
 (fn parsers.maybe
   [parser]
@@ -109,8 +108,6 @@
         (debug "parsers.many input" (fennel.view result))
         (if result.ok
             (do
-              ;; (when (not (= (type (. result-acc.output 1)) "string"))
-              ;;   (table.insert result-acc.output "")
               (tset result-acc :input result.input)
               (if
                 (= (type (. result.output 1) :string)
@@ -122,7 +119,9 @@
             (do
               (set done true)))))
     (debug "parsers.many output" (fennel.view result-acc))
-    result-acc))
+    (if (= (length result-acc.output) 0)
+      (fail {:ok true} {:ok false} result-acc.input)
+      result-acc)))
 
 (fn parsers.drop
   [parser]
@@ -228,5 +227,18 @@
       (vim.split :abcdefghijklmnoqrstuvwxyz
                  ""
                  {:plain true})))))
+
+(fn parsers.always
+  [output]
+  (fn [input]
+    (success [output] input)))
+
+(fn parsers.log
+  [label parser]
+  (fn [input]
+    (print label "input:" (fennel.view input))
+    (let [result (parser input)]
+      (print label "output:" (fennel.view result))
+      result)))
 
 parsers

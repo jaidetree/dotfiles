@@ -77,13 +77,12 @@
    (parsers.seq
      (parsers.maybe
        (parsers.drop (parsers.lit "header-args:")))
-     header-arg-lang
-     (parsers.whitespace)
+     (parsers.or
+       (parsers.concat (parsers.seq header-arg-lang (parsers.whitespace)))
+       (parsers.always "*"))
      header-arg-pairs)
    (fn [result]
-     (print (fennel.view result))
      (let [[lang keypairs] result.output]
-       (print (fennel.view {: lang : keypairs}))
        {: lang
         :props (c.pairs->tbl keypairs)}))))
 
