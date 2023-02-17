@@ -69,5 +69,25 @@
     ;; No idea
     (error (.. "utils.core.seq: Unable to provide iterator for " (vim.inspect iterator-or-coll)))))
 
+(fn utils.core.pairs->tbl
+  [pairs-tbl]
+  (accumulate
+    [assoc-tbl {}
+     _ [k v] (ipairs pairs-tbl)]
+    (do
+      (tset assoc-tbl k v)
+      assoc-tbl)))
+
+(fn utils.core.concat
+  [& tbls]
+  (utils.core.reduce
+    (fn [concated tbl]
+      (utils.core.each
+        (fn [v]
+          (table.insert concated v))
+        tbl)
+      concated)
+    []
+    tbls))
 
 utils

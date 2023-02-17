@@ -1,22 +1,7 @@
-(when (not _G.fennel)
-  (global fennel (require :fennel)))
-
-(import-macros testing :config.macros.testing)
-
 (local {:core c} (require :config.utils))
+(local {: debug} (require :config.testing))
 
 (local parsers {})
-
-(local debug-state {:active false})
-
-(fn toggle-debug
-  [bool]
-  (tset debug-state :active bool))
-
-(fn debug
-  [& args]
-  (when debug-state.active
-   (print (unpack args))))
 
 (fn success
   [output input]
@@ -43,7 +28,7 @@
   (fn [input]
     (let [first-char (read input)]
       (if (= first-char c)
-          (success c (advance 1 input))
+          (success [c] (advance 1 input))
           (fail c first-char input)))))
 
 (fn parsers.and
@@ -70,15 +55,19 @@
       (while (and result-acc.ok (. parsers i))
         (let [parser (. parsers i)
               result (parser result-acc.input)]
-          (debug "parsers.seq result" (fennel.view result))
+          (debug "parsers.seq" (fennel.view result))
           (if result.ok
               (do
                 (set i (+ i 1))
                 (set result-acc.input result.input)
-                (when (> (length result.output) 0)
-                  (table.insert result-acc.output result.output)))
+                (if
+                  (> (length result.output) 1)
+                  (table.insert result-acc.output result.output)
+                  (> (length result.output) 0)
+                  (tset result-acc :output (c.concat result-acc.output result.output))))
               (set result-acc result))))
       result-acc)))
+
 
 (fn parsers.or
   [...]
@@ -97,6 +86,15 @@
                 (set result-acc.input result.input)))))
       result-acc)))
 
+(fn parsers.maybe
+  [parser]
+  (fn [input]
+    (debug "parsers.maybe" (fennel.view input))
+    (let [result (parser input)]
+      (if result.ok
+        result
+        (success [] input)))))
+
 (fn valid-input?
   [input]
   (<= input.index (length input.source)))
@@ -104,17 +102,26 @@
 (fn parsers.many
   [parser]
   (fn [input]
-    (var result-acc (success "" input))
+    (var result-acc (success [] input))
     (var done false)
     (while (and (not done) (valid-input? result-acc.input))
       (let [result (parser result-acc.input)]
-        (debug "parsers.many" (fennel.view result))
+        (debug "parsers.many input" (fennel.view result))
         (if result.ok
             (do
+              ;; (when (not (= (type (. result-acc.output 1)) "string"))
+              ;;   (table.insert result-acc.output "")
               (tset result-acc :input result.input)
-              (tset result-acc :output (.. result-acc.output result.output)))
+              (if
+                (= (type (. result.output 1) :string)
+                  (each [_ v (ipairs result.output)]
+                   (table.insert result-acc.output v)))
+                (= (type (. result.output 1) :table)
+                   (table.insert result-acc.output result.output))))
+
             (do
               (set done true)))))
+    (debug "parsers.many output" (fennel.view result-acc))
     result-acc))
 
 (fn parsers.drop
@@ -124,37 +131,41 @@
       (if result.ok
           (let [index result.input.index]
             (success
-              ""
-              {:index index
+              []
+              {:index result.input.index
                :source input.source}))
           result))))
 
 (fn parsers.whitespace
   []
-  (parsers.drop (parsers.many (parsers.or (parsers.char " ")
-                                          (parsers.char "\t")
-                                          (parsers.char "\r")
-                                          (parsers.char "\n")))))
+  (parsers.drop
+    (parsers.many
+      (parsers.or
+        (parsers.char " ")
+        (parsers.char "\t")
+        (parsers.char "\r")
+        (parsers.char "\n")))))
 
 (fn parsers.contains
   [xs]
   (fn [input]
     (let [first-char (read input)]
       (accumulate
-        [result (fail (fennel.view xs) first-char input)
+        [result (fail (fennel.view xs) [first-char] input)
          i x (ipairs xs)
          &until (or result.ok (not (valid-input? input)))]
         (if (= x first-char)
-          (success x (advance 1 input))
+          (success [x] (advance 1 input))
           result)))))
 
 (fn parsers.not
   [parser]
   (fn [input]
     (let [result (parser input)]
+      (debug "parsers.not" (fennel.view result))
       (if result.ok
           (fail false true input)
-          (success result.output
+          (success [result.output]
                    (advance (+ 1 (- result.input.index input.index))
                             result.input))))))
 
@@ -163,7 +174,7 @@
   (fn [input]
     (let [chars (read-n input (length str))]
       (if (= chars str)
-          (success str (advance (length str) input))
+          (success [str] (advance (length str) input))
           (fail str chars input)))))
 
 (fn parsers.between
@@ -172,25 +183,10 @@
    (let [result ((parsers.seq start middle end) input)]
      (debug "parsers.between" (fennel.view result))
      (if result.ok
-       (success (. result.output 2) result.input)
+       (success [(. result.output 2)] result.input)
        result))))
 
 
-(fn parsers.alpha
-  []
-  (parsers.many
-   (parsers.contains
-     (vim.split :abcdefghijklmnoqrstuvwxyz
-                ""
-                {:plain true}))))
-
-(comment
-  (ipairs (string.gmatch "abcdefghijklmnoqrstuvwxyz" "."))
-  (accumulate [xs []
-               x (string.gmatch "abcdefghijklmnoqrstuvwxyz" ".")]
-    (do
-     (table.insert xs x)
-     xs)))
 
 (fn input [source]
   {: source :index 1})
@@ -200,214 +196,37 @@
 
 (set parsers.parse parse)
 
-(fn assert-ok [result]
-  (assert result.ok)
-  result)
+(fn xf
+  [parser xf-fn]
+  (fn [input]
+    (let [result (parser input)]
+      (if result.ok
+        (xf-fn result)
+        result))))
 
-(fn ==
-  [actual expected ctx]
-  (accumulate [state {:ok true :msg ""}
-               k expected-v (c.seq expected)
-               &until (not state.ok)]
-    (let [actual-v (and actual (. actual k))
-          path-k (if (and ctx ctx.parent-k)
-                   (.. ctx.parent-k "." k)
-                   k)]
-     (if
-       ;; Early fail: Types don't match
-       (not (= (type actual-v) (type expected-v)))
-       {:ok false :msg (.. "expected " path-k " to be a " (type expected-v) " got " (type actual-v))}
+(fn parsers.concat
+  [parser]
+  (parsers.xf
+    parser
+    (fn
+      [result]
+      (success [(table.concat result.output "")] result.input))))
 
-       ;; Recurse if fail
-       (and (= (type actual-v) :table))
-       (== actual-v expected-v {:parent-k k})
+(set parsers.xf xf)
 
-       ;; Equivalent primitive values
-       (= actual-v expected-v)
-       state
+(fn parsers.first
+  [parser]
+  (xf parser
+      (fn [result]
+        (success (. result.output 1) result.input))))
 
-       ;; Else
-       {:ok false
-        :msg (.. "expected " path-k " to be " (fennel.view expected-v) " got " (fennel.view actual-v))}))))
+(fn parsers.alpha
+  []
+  (parsers.concat
+   (parsers.many
+    (parsers.contains
+      (vim.split :abcdefghijklmnoqrstuvwxyz
+                 ""
+                 {:plain true})))))
 
-(testing.print
-  "Parses first letter h and moves cursor"
-  (parse (parsers.char :h) :hello-world)
-  :== {:output "h"
-       :ok true
-       :input {:index 2
-               :source :hello-world}})
-
-(testing.print
-  "Parses second letter given index 2"
-  ((parsers.char :e) {:source :hello-world
-                      :index 2})
-  :== {:output "e"
-       :input {:index 3 :source "hello-world"}
-       :ok true})
-
-(testing.print
-  "parsers.and supports sequential parses but only uses last result"
-  (parse (parsers.and (parsers.char :h)
-                      (parsers.char :e)
-                      (parsers.char :l))
-         "hello-world")
-  :== {:output "l"
-       :input {:index 4 :source "hello-world"}
-       :ok true})
-
-(testing.print
-  "parsers.and fails if any invalid"
-  (parse (parsers.and (parsers.char :h)
-                      (parsers.char :f)
-                      (parsers.char :l))
-         "hello-world")
-  :== {:actual "e"
-       :expected "f"
-       :input {:index 2 :source "hello-world"}
-       :ok false
-       :output "e"})
-
-(testing.print
-  "parsers.seq supports sequential parses but aggregates the last result"
-  (parse (parsers.seq (parsers.char :h)
-                      (parsers.char :e)
-                      (parsers.char :l))
-         "hello-world")
-  :== {:output [:h :e :l]
-       :input {:index 4 :source "hello-world"}
-       :ok true})
-
-(testing.print
-  "pasers.or support alternative parsing"
-  (parse (parsers.or (parsers.char :f)
-                     (parsers.char :h))
-         "hello-world")
-  :== {:input {:index 2}
-       :ok true
-       :output "h"})
-
-(testing.print
-  "pasers.or picks first pass"
-  (parse (parsers.or (parsers.char :h)
-                     (parsers.char :f))
-         "hello-world")
-  :== {:input {:index 2}
-       :ok true
-       :output "h"})
-
-(testing.print
-  "parsers.many repeats parsing"
-  (parse (parsers.many (parsers.char "*"))
-         "****h")
-  :== {:input {:index 5}
-       :ok true
-       :output "****"})
-
-(testing.print
-  "parsers.many stops on failure"
-  (parse (parsers.many (parsers.char "*"))
-         "**a**")
-  :== {:input {:index 3}
-       :ok true
-       :output "**"})
-
-(testing.print
-  "parsers.contains parses based on table of input"
-  (parse (parsers.contains [:h :o :e])
-         "hello")
-  :== {:input {:index 2}
-       :ok true
-       :output "h"})
-
-(testing.print
-  "parsers.contains fails when input is not within allowed-list"
-  (parse (parsers.contains [:x :y :z])
-         "hello")
-  :== {:input {:index 1}
-       :ok false
-       :output "h"})
-
-(testing.print
-  "parsers.many can parse whitespace with parsers.or"
-  (parse (parsers.many (parsers.contains ["\n" " " "\t"]))
-         "   \t \n hello-world")
-  :== {:input {:index 8}
-       :ok true
-       :output "   \t \n "})
-
-(testing.print
-  "parsers.whitespace strips all whitespace chars"
-  (parse (parsers.whitespace)
-         "   \t \n hello-world")
-  :== {:input {:index 8}
-       :output ""
-       :ok true})
-
-(testing.print
-  "parsers.whitespace advances the index correctly"
-  ((parsers.whitespace)
-   {:source "hello  world"
-           :index 6})
-  :== {:input {:index 8}
-       :output ""
-       :ok true})
-
-(testing.print
-   "parsers can be combined for complex parsing"
-   (parse (parsers.seq
-            (parsers.whitespace)
-            (parsers.many (parsers.char "*"))
-            (parsers.whitespace)
-            (parsers.alpha))
-          "   **** hello")
-   :== {:ok true
-        :input {:index 14}
-        :output ["****" "hello"]})
-
-(testing.print
-   "parsers.not consumes everything until it fails"
-   (parse (parsers.many
-            (parsers.not (parsers.char "*")))
-          "hello*world")
-   :== {:ok true
-        :input {:index 6}
-        :output "hello"})
-
-(testing.print
-  "parsers.between consumes data between two parsers"
-  (parse
-    (parsers.between (parsers.char "[")
-                     (parsers.many (parsers.not (parsers.char "]")))
-                     (parsers.char "]"))
-    "[hello-world]")
-  :== {:ok true
-       :input {:index 14}
-       :output "hello-world"})
-
-
-(comment ;; Testing
-  (parse (parsers.lit :hello) :hello-world)
-  (parse (parsers.char :h) :hello-world)
-  (parse (parsers.not (parsers.char "]")) "target]rest")
-  (parse (parsers.not (parsers.char "]")) "]rest")
-  ;; This causes infinite loops. Don't run this.
-  ;; (parse (parsers.many (parsers.not (parsers.char "]"))) "target]rest")
-  ;;
-
-  (parse (parsers.between
-           (parsers.char "a")
-           (parsers.char "b")
-           (parsers.char "c"))
-         "abc")
-  (parse (parsers.alpha)
-         "a")
-  (parse (parsers.many (parsers.alpha))
-         "abc")
-  (parse (parsers.between (parsers.char "[")
-                          (parsers.alpha)
-                          (parsers.char "]")) "[markdown-url]")
-
-
-  ;;
-  nil)
+parsers

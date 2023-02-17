@@ -1,5 +1,6 @@
 (local {:core c :string s} (require :config.utils))
 (local query vim.treesitter.query)
+(local {: parse &as parsers} (require :config.parsers))
 
 (fn min-spaces-len
   [str min]
@@ -42,53 +43,79 @@
          (let [(_ col) (block-prop:range)]
            (table.insert files cur-file (fix-indentation (query.get_node_text block-prop 0) col))))))))
 
-(fn drawer-prop
-  [drawer-child prop-name]
-  (->> (drawer-child:iter_children)
-       (c.reduce
-         (fn [{: is-tangle : cur-file} prop-part]
-           (let [prop-type (prop-part:type)
-                 prop-text (query.get_node_text prop-part 0)]
-            (if
-              (and (= prop-type :expr) (= prop-text prop-name))
-              {:is-tangle true : cur-file}
+(local header-arg-lang
+  (parsers.seq
+    (parsers.alpha)
+    (parsers.maybe (parsers.drop (parsers.char ":")))))
 
-              (and (= prop-type :value) is-tangle)
-              (:is-tangle false :cur-file prop-text)
-
-              {: is-tangle : cur-file}))
-          {:is-tangle false :cur-file ""}))
-       (c.prop :cur-file)))
+(local header-arg-pair
+  (parsers.seq
+    (parsers.drop (parsers.char ":"))
+    (parsers.alpha)
+    (parsers.whitespace)
+    (parsers.concat
+     (parsers.many
+       (parsers.not
+         (parsers.char " "))))
+    (parsers.maybe (parsers.whitespace))))
 
 
+(local header-arg-pairs
+  (parsers.xf
+   (parsers.many
+     (parsers.xf
+       header-arg-pair
+       (fn [result]
+         (tset result :output [result.output])
+         result)))
+   (fn [result]
+      (tset result :output [result.output])
+      result)))
 
- ;; TODO: This can't process header-args. So it needs to support
- ;; header-args:{lang} props
-
-;; {
-;;   ["prop-text"] = "header-args",
-;;   ["prop-type"] = "expr")}
-
-;; {
-;;   ["prop-text"] = ":",
-;;   ["prop-type"] = ":"}
-
-;; {
-;;   ["prop-text"] = "conf: :tangle base.conf",
-;;   ["prop-type"] = "value"}
-
-;; {
-;;   ["cur-file"] = "",
-;;   files = {}}
+(local header-args-parser
+  (parsers.xf
+   (parsers.seq
+     (parsers.maybe
+       (parsers.drop (parsers.lit "header-args:")))
+     header-arg-lang
+     (parsers.whitespace)
+     header-arg-pairs)
+   (fn [result]
+     (print (fennel.view result))
+     (let [[lang keypairs] result.output]
+       (print (fennel.view {: lang : keypairs}))
+       {: lang
+        :props (c.pairs->tbl keypairs)}))))
 
 (fn parse-header-args
   [header-args-txt]
-  nil)
+  (let [header-args (parse header-args-parser header-args-txt)]
+    header-args))
+
+(fn process-directive
+  [directive-node tangle-state]
+  (accumulate
+    [state {:props []
+            :prop-name ""}
+     prop-part (directive-node:iter_children)]
+    (let [prop-type (prop-part:type)
+          prop-text (query.get_node_text prop-part 0)]
+      (print (fennel.view {: prop-type : prop-text}))
+      (if
+        (and (= prop-type :expr) (or (= prop-text "property")
+                                     (= prop-text "tangle")))
+        (tset state :prop-name prop-text)
+
+        (and (= prop-type :value) (s.starts-with? prop-text "header-args"))
+        (table.insert state.props {state.prop-name (parse-header-args prop-text)}))
+
+
+      state)))
 
 (fn parse-drawer-props
   [drawer-child]
   (accumulate
-    [state {:props {}
+    [state {:props []
             :prop-name   ""}
      prop-part (drawer-child:iter_children)]
 
@@ -99,10 +126,8 @@
        (tset state :prop-name prop-text)
 
        (and (= prop-type :value) (= state.prop-name :header-args))
-       (tset state.props state.prop-name (parse-header-args prop-text))
+       (table.insert state.props {state.prop-name (parse-header-args prop-text)}))
 
-       (= prop-type :value)
-       (tset state.props state.prop-name prop-text))
      state)))
 
 (fn process-property-drawer
@@ -113,9 +138,9 @@
            (= (drawer-child:type) :property)))
        (c.each
          (fn [drawer-child]
-           (let [cur-file (drawer-prop drawer-child "TANGLE")]
-             (when cur-file
-               (tset tangle-state :cur-file cur-file))))))
+           (let [drawer-props (parse-drawer-props drawer-child)]
+             (print (fennel.view drawer-props))
+             drawer-props))))
   tangle-state)
 
 (fn process-node
@@ -127,7 +152,10 @@
           (= node-type :block)
           (process-block subnode tangle-state)
 
-          (= node-type :property_drawer)
+          (= node-type :directive)
+          (print (fennel.view (process-directive subnode tangle-state)))
+
+          (or (= node-type :drawer) (= node-type :property_drawer))
           (print (vim.inspect (process-property-drawer subnode tangle-state)))
 
           (process-node subnode tangle-state)))))
@@ -157,10 +185,8 @@
                    {:callback toggle-org-item
                     :noremap true}))
                (vim.api.nvim_buf_set_keymap
-                 0 :n :<leader>oxt ""
-                 {:callback #(let [tangle (require :config.plugins.org-tangle)]
-                              (tangle.tangle))
-                  :desc "tangle"
+                 0 :n :<leader>oxt "<cmd>Tangle<cr>"
+                 {:desc "tangle"
                   :noremap true}))})
 
 (vim.api.nvim_create_user_command
@@ -169,4 +195,5 @@
      (tangle.tangle))
   {})
 
-{: tangle}
+{: tangle
+ : header-args-parser}

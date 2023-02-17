@@ -37,6 +37,9 @@
   (vim.fn.stdpath "data")
   (vim.fn.stdpath "cache")
 
+  (let [projects {}]
+    (printn "work" projects))
+
   ;; (.. (Path.new (vim.fn.stdpath "data")) "projections_workspaces.json")
 
   (let [Workspace (require :projections.workspace)

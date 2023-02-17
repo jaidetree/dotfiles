@@ -448,42 +448,59 @@
 (wk.register {:<leader>k {:name :+lisp}})
 (wk.register {:<leader>k= {:name :+indent}})
 
-(vim.keymap.set :n :<leader>k== "<Plug>(sexp_indent)<cr>" {:desc :indent})
-(vim.keymap.set :n :<leader>k=- "<Plug>(sexp_indent_top)<cr>"
+(comment
+  (vim.cmd "(sexp_indent)")
+  (vim.cmd "<Plug>(sexp_raise_element)"))
+
+(fn sexp
+  [cmd]
+  (.. "<cmd>ParinferOff<cr>" cmd "<cmd>ParinferOn<cr>"))
+   ;(vim.cmd "ParinferOn")))
+
+(comment
+  (vim.cmd "execute normal <Plug>(sexp_raise_element)")
+  (do
+    (vim.cmd "ParinferOff")
+    (vim.cmd "execute normal <Plug>(sexp_raise_element)<cr>")
+    (vim.cmd "ParinferOn")))
+
+
+(vim.keymap.set :n :<leader>k== (sexp "<Plug>(sexp_indent)<cr>") {:desc :indent})
+(vim.keymap.set :n :<leader>k=- (sexp "<Plug>(sexp_indent_top)<cr>")
                 {:desc "indent top"})
-(vim.keymap.set :n :<leader>kw "<Plug>(sexp_round_tail_wrap_element)"
+(vim.keymap.set :n :<leader>kw (sexp "<Plug>(sexp_round_tail_wrap_element)<cr>")
                {:desc "wrap ("})
-(vim.keymap.set :n "<leader>k[" "<Plug>(sexp_square_tail_wrap_element)"
+(vim.keymap.set :n "<leader>k[" (sexp "<Plug>(sexp_square_tail_wrap_element)<cr>")
               {:desc "wrap ["})
-(vim.keymap.set :n "<leader>k{" "<Plug>(sexp_curly_tail_wrap_element)"
+(vim.keymap.set :n "<leader>k{" (sexp "<Plug>(sexp_curly_tail_wrap_element)<cr>")
                 {:desc "wrap {"})
-(vim.keymap.set :n :<leader>kr "<Plug>(sexp_raise_element)" {:desc :raise})
-(vim.keymap.set :n :<leader>kc "<Plug>(sexp_convolute)" {:desc :convolute})
-(vim.keymap.set :n :<leader>ks "<Plug>(sexp_capture_next_element)"
+(vim.keymap.set :n :<leader>kr (sexp "<Plug>(sexp_raise_element)<cr>") {:desc :raise})
+(vim.keymap.set :n :<leader>kc (sexp "<Plug>(sexp_convolute)<cr>") {:desc :convolute})
+(vim.keymap.set :n :<leader>ks (sexp "<Plug>(sexp_capture_next_element)")
                 {:desc :slurp})
-(vim.keymap.set :n :<leader>kS "<Plug>(sexp_capture_prev_element)"
+(vim.keymap.set :n :<leader>kS (sexp "<Plug>(sexp_capture_prev_element)")
                 {:desc "slurp backward"})
-(vim.keymap.set :n :<leader>kb "<Plug>(sexp_emit_tail_element)"
+(vim.keymap.set :n :<leader>kb (sexp "<Plug>(sexp_emit_tail_element)")
                 {:desc "barf"})
-(vim.keymap.set :n :<leader>kB "<Plug>(sexp_emit_head_element)"
+(vim.keymap.set :n :<leader>kB (sexp "<Plug>(sexp_emit_head_element)")
                 {:desc "barf backward"})
-(vim.keymap.set :n :<leader>kk "<Plug>(sexp_move_to_prev_element_head)"
+(vim.keymap.set :n :<leader>kk (sexp "<Plug>(sexp_move_to_prev_element_head)")
                 {:desc "prev element"})
-(vim.keymap.set :n :<leader>kK "<Plug>(sexp_move_to_prev_top_element)"
+(vim.keymap.set :n :<leader>kK (sexp "<Plug>(sexp_move_to_prev_top_element)")
                 {:desc "prev top element"})
-(vim.keymap.set :n :<leader>kj "<Plug>(sexp_move_to_next_element_head)"
+(vim.keymap.set :n :<leader>kj (sexp "<Plug>(sexp_move_to_next_element_head)")
                 {:desc "next element"})
-(vim.keymap.set :n :<leader>kJ "<Plug>(sexp_move_to_next_top_element)"
+(vim.keymap.set :n :<leader>kJ (sexp "<Plug>(sexp_move_to_next_top_element)")
                 {:desc "next top element"})
-(vim.keymap.set :n :<leader>kh "<Plug>(sexp_flow_to_prev_leaf_head)"
+(vim.keymap.set :n :<leader>kh (sexp "<Plug>(sexp_flow_to_prev_leaf_head)")
                 {:desc "back element"})
-(vim.keymap.set :n :<leader>kl "<Plug>(sexp_flow_to_next_leaf_head)"
+(vim.keymap.set :n :<leader>kl (sexp "<Plug>(sexp_flow_to_next_leaf_head)")
                 {:desc "next element"})
-(vim.keymap.set :n :<leader>kt "<Plug>(sexp_swap_element_backward)"
+(vim.keymap.set :n :<leader>kt (sexp "<Plug>(sexp_swap_element_backward)")
                 {:desc "transition"})
-(vim.keymap.set :n :<leader>kT "<Plug>(sexp_swap_element_forward)"
+(vim.keymap.set :n :<leader>kT (sexp "<Plug>(sexp_swap_element_forward)")
                 {:desc "transition forward"})
-(vim.keymap.set :n "<leader>kW" "<Plug>(sexp_splice_list)"
+(vim.keymap.set :n "<leader>kW" (sexp "<Plug>(sexp_splice_list)")
                 {:desc "splice"})
 (comment
  nil
