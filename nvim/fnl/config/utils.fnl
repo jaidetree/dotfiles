@@ -107,4 +107,15 @@
        (tset merged k v))
      merged)))
 
+(fn utils.core.inc
+  [x]
+  (+ x 1))
+
+(fn utils.core.count
+  [x]
+  (let [data-type (type x)]
+   (case (type x)
+     :string (length x)
+     :table  (length (vim.tbl_keys x)))))
+
 utils

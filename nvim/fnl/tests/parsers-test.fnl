@@ -210,7 +210,7 @@
     "6hello*world")
   :== {:ok false
        :input {:index 1}
-       :output {:ok false}})
+       :output ["6"]})
 
 (testing.print
    "parsers can be combined for complex parsing"

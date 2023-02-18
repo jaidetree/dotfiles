@@ -2,6 +2,38 @@
 (local query vim.treesitter.query)
 (local {: parse &as parsers} (require :config.parsers))
 
+;; Example: [[file:tmux.org::*Window Status][Window Status:1]]
+(local comment-begin-format "[[file:%s::*%s][%s:%d]]")
+;; Example: Window Status:1 ends here
+(local comment-end-format "%s:%d ends here")
+
+(local  comment-forms
+  {:slashes   "//  %s"
+   :dashes    "-- %s"
+   :hash      "# %s"
+   :percent   "%% %s"
+   :semicolon ";; %s"
+   :html      "<!-- %s -->"
+   :jsx       "{/* %s */}"})
+
+(local comment-langs
+  [[[:c :c++ :c# :js :javascript :ts :typescript :rescript :rust :go] :slashes]
+   [[:sql :pgsql :psql :mssql :haskell :elm] :dashes]
+   [[:bash :fish :sh :zsh :shell :elvish :elixir :ash :conf] :hash]
+   [[:jsx :tsx] :jsx]
+   [[:html] :html]
+   [[:lisp :clojure :cl :common-lisp :scheme :guile :guix :fennel] :semicolon]
+   [[:erlang] :percent]])
+
+(fn get-comment-format
+  [block-lang tangle-file]
+  (accumulate
+    [format-str comment-forms.slashes
+     _i [langs format-key] (ipairs comment-langs)]
+    (if (vim.tbl_contains langs block-lang)
+      (. comment-forms format-key)
+      format-str)))
+
 (fn min-spaces-len
   [str min]
   (c.reduce
@@ -12,6 +44,11 @@
          min)))
     min
     (string.gmatch str "\n([ \t]+)")))
+
+(comment
+  (vim.fn.expand "%")
+  (vim.fn.expand "%:p:.")
+  (vim.fn.fnamemodify "/Users/j/dotfiles/ntmux/tmux.org" ":."))
 
 (fn fix-indentation
   [str min-spaces]
@@ -135,35 +172,82 @@
         resolved (c.merge shared-props file-props block-props)]
     {:props resolved
      :lang  lang
-     :file  (vim.fn.expand resolved.tangle)}))
+     :filename  (vim.fn.expand resolved.tangle)
+     :filepath  (vim.fn.resolve (.. tangle-state.context.dir "/" resolved.tangle))}))
 
+(fn format-comment
+  [{: file : headline : idx : line : lang}]
+  (let [format (get-comment-format lang file)]
+    [(->> (string.format comment-begin-format file headline headline idx)
+          (string.format format))
+     (->> (string.format comment-end-format headline idx)
+          (string.format format))]))
+
+(fn tangle-block
+  [tangle-state {: line : node : conf}]
+  (let [{: files : headline} tangle-state
+        {: filename : filepath } conf
+        mode (if (. tangle-state.files filename) :a+ :w)
+        (_ col) (node:range)
+        text (fix-indentation (query.get_node_text node 0) col)
+        format-str (get-comment-format conf.lang conf.file)]
+    ;; Used to replace the original file contents on first block for target
+    ;; file
+    (when (= mode :w)
+      (tset tangle-state.files filename {headline 1}))
+
+    (let [{: files : headline} tangle-state
+          sections (. files filename)]
+      (if (. sections headline)
+        (c.update sections headline c.inc)
+        (tset sections headline 1)))
+
+    ;; @TODO Deal with mkdirp true
+    ;; @TODO Nested sections should not replace parent's header-args outside of
+    ;; section
+    (with-open [fout (io.open filepath mode)]
+      (let [[begin-comment end-comment] (format-comment
+                                          {:lang     conf.lang
+                                           :file     filename
+                                           :headline headline
+                                           :idx      (. files filename headline)
+                                           :line     line})]
+        (fout:write (.. begin-comment "\n"
+                        text "\n"
+                        end-comment "\n\n"))))))
+
+
+(fn find-child
+  [predicate? node]
+  (accumulate
+    [target nil
+     child (node:iter_children) &until target]
+    (if (predicate? child)
+      child
+      nil)))
+
+(fn find-child-by-type
+  [type-str node]
+  (find-child #(= ($1:type) type-str) node))
+
+(fn process-headline
+  [tangle-state node]
+  (let [item (find-child-by-type :item node)
+        text (query.get_node_text item 0)]
+    (set tangle-state.headline text)))
 
 (fn process-block
   [tangle-state node]
   (let [block-meta (parse-lang-block (query.get_node_text node 0))]
    (when block-meta.ok
-    (each [block-prop (node:iter_children)]
-       (let [block-type (block-prop:type)]
-           (when (= block-type :contents)
-             (let [(_ col) (block-prop:range)
-                     conf (resolve-conf tangle-state block-meta)
-                     mode (if (. tangle-state.files conf.file) :a+ :w)
-                     text (fix-indentation (query.get_node_text block-prop 0) col)]
-               (when (= mode :w)
-                 (tset tangle-state.files conf.file true))
-               (with-open [fout (io.open conf.file mode)]
-                 (fout:write text)))))))))
-
-(comment
- (when cur-file
-   (when (not (. files cur-file))
-     (tset files cur-file {}))
-   (each [block-prop (node:iter_children)]
-     (when (= (block-prop:type) "contents")
-       (let [(_ col) (block-prop:range)]
-         ()
-         (table.insert files cur-file (fix-indentation (query.get_node_text block-prop 0) col)))))))
-
+     (let [(row _col _count) (node:start)
+           contents-node (find-child-by-type :contents node)
+           conf (resolve-conf tangle-state block-meta)
+           context {:line row
+                    :conf conf
+                    :node contents-node}]
+       (when (and contents-node conf.props.tangle (not= conf.props.tangle :none))
+         (tangle-block tangle-state context))))))
 
 (fn parse-header-args
   [header-args-txt]
@@ -222,8 +306,12 @@
   [tangle-state node]
   (when node
     (each [subnode (node:iter_children)]
+      (print (.. "process-node\n" (fennel.view tangle-state.conf)))
       (let [node-type (subnode:type)]
         (if
+          (= node-type :headline)
+          (process-headline tangle-state subnode)
+
           (= node-type :block)
           (process-block tangle-state subnode)
 
@@ -241,21 +329,24 @@
           (process-node tangle-state subnode)))))
   tangle-state)
 
-(fn save-files
-  [files]
-  (print "files:" (vim.inspect files)))
-
 (fn tangle
   []
-  (let [tangle-state {:files {}
+  ;; @TODO Get filename and path of current org doc
+  (let [lang-tree (vim.treesitter.get_parser 0)
+        bufnr     (lang-tree:source)
+        filename (vim.fn.expand "%:p")
+        dir (vim.fs.dirname filename)
+        tangle-state {:files {}
                       :conf {}
-                      :cur-file ""}
-        lang-tree (vim.treesitter.get_parser 0)
+                      :path []
+                      :context {: bufnr
+                                : dir
+                                : filename}}
         syntax-tree (lang-tree:parse)
         root (: (. syntax-tree 1) :root)
         tangle-state (process-node tangle-state root)]
-    (print (fennel.view tangle-state))
-    (save-files tangle-state.files)))
+    (print "Tangled" (c.count tangle-state.files) "files" (fennel.view (vim.tbl_keys tangle-state.files)))))
+
 
 (vim.api.nvim_create_autocmd
   "FileType"
