@@ -45,11 +45,6 @@
     min
     (string.gmatch str "\n([ \t]+)")))
 
-(comment
-  (vim.fn.expand "%")
-  (vim.fn.expand "%:p:.")
-  (vim.fn.fnamemodify "/Users/j/dotfiles/ntmux/tmux.org" ":."))
-
 (fn fix-indentation
   [str min-spaces]
   (let [min-spaces (min-spaces-len str (or min-spaces 1000))
@@ -203,20 +198,23 @@
         (_ col) (node:range)
         text (fix-indentation (query.get_node_text node 0) col)
         format-str (get-comment-format conf.lang conf.file)]
-    ;; Used to replace the original file contents on first block for target
-    ;; file
+    ;; Clear
     (when (= mode :w)
-      (tset tangle-state.files filename {headline 1}))
+      (tset tangle-state.files filename {}))
 
+    ;; Set or increment the src block index for current headline
     (let [{: files : headline} tangle-state
           sections (. files filename)]
       (if (. sections headline)
         (c.update sections headline c.inc)
         (tset sections headline 1)))
 
-    ;; @TODO Deal with mkdirp true
-    ;; @TODO Nested sections should not replace parent's header-args outside of
-    ;; section
+    ;; Create the directory tree if mkdirp is true
+    (when (and (= mode :w) conf.props.mkdirp)
+      (let [dir tangle-state.context.dir]
+        (vim.fn.mkdir dir "p")))
+
+    ;; Write block text to target tangle file
     (with-open [fout (io.open filepath mode)]
       (let [[begin-comment end-comment] (format-comment
                                           {:lang     conf.lang
@@ -349,7 +347,6 @@
 
 (fn tangle
   []
-  ;; @TODO Get filename and path of current org doc
   (let [lang-tree (vim.treesitter.get_parser 0)
         bufnr     (lang-tree:source)
         filename (vim.fn.expand "%:p")
