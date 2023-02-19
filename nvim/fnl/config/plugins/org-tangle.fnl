@@ -198,16 +198,14 @@
         (_ col) (node:range)
         text (fix-indentation (query.get_node_text node 0) col)
         format-str (get-comment-format conf.lang conf.file)]
-    ;; Clear
+    ;; Create initial file entry to store block counts in headlines
     (when (= mode :w)
-      (tset tangle-state.files filename {}))
+      (tset tangle-state.files filename {headline 0}))
 
     ;; Set or increment the src block index for current headline
     (let [{: files : headline} tangle-state
           sections (. files filename)]
-      (if (. sections headline)
-        (c.update sections headline c.inc)
-        (tset sections headline 1)))
+      (c.update sections headline c.inc))
 
     ;; Create the directory tree if mkdirp is true
     (when (and (= mode :w) conf.props.mkdirp)
