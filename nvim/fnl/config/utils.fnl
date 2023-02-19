@@ -41,7 +41,8 @@
   (let [mapped []]
     (utils.core.each
       (fn [v]
-        (table.insert mapped (f v))))
+        (table.insert mapped (f v)))
+      coll)
     mapped))
 
 (fn utils.core.prop

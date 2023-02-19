@@ -164,16 +164,28 @@
     block-lang-parser
     "#+begin_src conf :tangle test.conf :results none\n;; content"))
 
+(fn merge-confs
+  [tangle-state {: lang : block-props}]
+  (->> tangle-state.conf
+       (c.filter #(<= $.level tangle-state.level))
+       (c.map
+         (fn [{:props conf}]
+           (let [shared-props (or (. conf :*) {})
+                 file-props   (or (. conf lang) {})
+                 block-props  (or block-props {})]
+             (c.merge shared-props file-props block-props))))
+       (c.reduce
+         (fn [resolved conf]
+           (c.merge resolved conf))
+         {})))
+
 (fn resolve-conf
   [tangle-state {: lang :props block-props}]
-  (let [block-props (or block-props {})
-        shared-props (. tangle-state.conf :*)
-        file-props (. tangle-state.conf lang)
-        resolved (c.merge shared-props file-props block-props)]
-    {:props resolved
-     :lang  lang
-     :filename  (vim.fn.expand resolved.tangle)
-     :filepath  (vim.fn.resolve (.. tangle-state.context.dir "/" resolved.tangle))}))
+  (let [conf (merge-confs tangle-state {: lang : block-props})]
+    {:props conf
+     :lang lang
+     :filename (vim.fn.expand conf.tangle)
+     :filepath (vim.fn.resolve (.. tangle-state.context.dir "/" conf.tangle))}))
 
 (fn format-comment
   [{: file : headline : idx : line : lang}]
@@ -233,8 +245,16 @@
 (fn process-headline
   [tangle-state node]
   (let [item (find-child-by-type :item node)
-        text (query.get_node_text item 0)]
-    (set tangle-state.headline text)))
+        stars (find-child-by-type :stars node)
+        title (query.get_node_text item 0)
+        level (length (query.get_node_text stars 0))]
+    (when (<= level tangle-state.level)
+      (set tangle-state.conf
+           (->> tangle-state.conf
+                (c.filter
+                  #(< $1.level level)))))
+    (set tangle-state.headline title)
+    (set tangle-state.level level)))
 
 (fn process-block
   [tangle-state node]
@@ -296,17 +316,15 @@
 (fn update-conf
   [tangle-state header-args-list]
   (each [_ header-args (ipairs header-args-list)]
-    (if (not (. tangle-state.conf header-args.lang))
-      (tset tangle-state.conf header-args.lang header-args.props)
-      (let [lang (. tangle-state.conf header-args.lang)]
-        (c.update tangle-state.conf header-args.lang c.merge header-args.props)))))
+    (let [lang (. tangle-state.conf header-args.lang)]
+        (table.insert tangle-state.conf {:level tangle-state.level
+                                         :props {header-args.lang header-args.props}}))))
 
 
 (fn process-node
   [tangle-state node]
   (when node
     (each [subnode (node:iter_children)]
-      (print (.. "process-node\n" (fennel.view tangle-state.conf)))
       (let [node-type (subnode:type)]
         (if
           (= node-type :headline)
@@ -336,9 +354,9 @@
         bufnr     (lang-tree:source)
         filename (vim.fn.expand "%:p")
         dir (vim.fs.dirname filename)
-        tangle-state {:files {}
-                      :conf {}
-                      :path []
+        tangle-state {:level 0
+                      :conf []
+                      :files {}
                       :context {: bufnr
                                 : dir
                                 : filename}}
