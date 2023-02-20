@@ -149,7 +149,6 @@
        :input {:index 7}
        :output ["aaa.aa"]})
 
-
 (testing.print
   "parsers.contains parses based on table of input"
   (parse (parsers.contains [:h :o :e])

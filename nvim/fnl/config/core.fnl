@@ -26,7 +26,7 @@
 (set vim.opt.clipboard :unnamedplus)
 (set vim.opt.splitright true)
 (set vim.opt.splitbelow true)
-(set vim.opt.guifont ["Operator Mono SSm Lig:h14"])
+(set vim.opt.guifont ["Operator Mono SSm Lig Medium:h12"])
 (set vim.opt.textwidth 80)
 (set vim.opt.foldmethod :manual)
 (set vim.opt.updatetime 250)
@@ -256,13 +256,14 @@
      (use "soywod/himalaya"
           {:after [:telescope.nvim]})
 
-     (use "~/.local/share/nvim/site/pack/packer/opt/himalaya/vim"
-          {:after [:himalaya]
-           :config #(do
-                     (set vim.g.himalaya_mailbox_picker :telescope)
-                     (set vim.g.himalaya_telescope_preview_enabled 1))})
+     (comment
+      (use "~/.local/share/nvim/site/pack/packer/opt/himalaya/vim"
+           {:after [:himalaya]
+            :config #(do
+                      (set vim.g.himalaya_mailbox_picker :telescope)
+                      (set vim.g.himalaya_telescope_preview_enabled 1))}))
 
-     (use "~/projects/projections.nvim"
+     (use "GnikDroy/projections.nvim"
           {:after [:telescope.nvim]
            :config #(require :config.plugins.projections)})
 
