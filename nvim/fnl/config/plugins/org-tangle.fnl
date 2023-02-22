@@ -130,14 +130,16 @@
   (parsers.xf
    (parsers.seq
      (parsers.drop (parsers.lit "#+begin_src"))
-     (parsers.whitespace)
+     (parsers.drop
+       (parsers.many
+         (parsers.contains-char " \t")))
      (parsers.concat
-      (parsers.many (parsers.not (parsers.or
-                                   (parsers.char " ")
-                                   (parsers.char "\n")))))
+      (parsers.many (parsers.not (parsers.whitespace))))
      (parsers.maybe
        (parsers.seq
-        (parsers.whitespace)
+        (parsers.drop
+         (parsers.many
+           (parsers.contains-char " \t")))
         header-arg-pairs)))
    (fn [results]
      (let [[lang props] results.output]
@@ -157,6 +159,9 @@
     "#+begin_src conf\n;; content")
   (parsers.parse
     block-lang-parser
+    "#+begin_src vim\n:vert Bufferize nmap")
+  (parsers.parse
+    block-lang-parser
     "#+begin_src conf :tangle test.conf :results none\n;; content"))
 
 (fn merge-confs
@@ -166,21 +171,22 @@
        (c.map
          (fn [{:props conf}]
            (let [shared-props (or (. conf :*) {})
-                 file-props   (or (. conf lang) {})
-                 block-props  (or block-props {})]
-             (c.merge shared-props file-props block-props))))
+                 file-props   (or (. conf lang) {})]
+             (c.merge shared-props file-props))))
        (c.reduce
          (fn [resolved conf]
            (c.merge resolved conf))
-         {})))
+         (or block-props {}))))
 
 (fn resolve-conf
   [tangle-state {: lang :props block-props}]
   (let [conf (merge-confs tangle-state {: lang : block-props})]
-    {:props conf
-     :lang lang
-     :filename (vim.fn.expand conf.tangle)
-     :filepath (vim.fn.resolve (.. tangle-state.context.dir "/" conf.tangle))}))
+    (if conf.tangle
+     {:props conf
+      :lang lang
+      :filename (vim.fn.expand conf.tangle)
+      :filepath (vim.fn.resolve (.. tangle-state.context.dir "/" conf.tangle))}
+     nil)))
 
 (fn format-comment
   [{: file : headline : idx : line : lang}]
@@ -255,21 +261,21 @@
 (fn process-block
   [tangle-state node]
   (let [block-text (query.get_node_text node 0)
-        block-meta (parse-lang-block block-text)]
+        block-meta (parse-lang-block (query.get_node_text node 0))]
     (print "process-block\n"
            (fennel.view
              {:type (node:type)
               :text block-text
               :meta block-meta}))
     (when block-meta.ok
-       (let [(row _col _count) (node:start)
-             contents-node (find-child-by-type :contents node)
-             conf (resolve-conf tangle-state block-meta)
-             context {:line row
-                      :conf conf
-                      :node contents-node}]
-         (when (and contents-node conf.props.tangle (not= conf.props.tangle :none))
-           (tangle-block tangle-state context))))))
+      (let [(row _col _count) (node:start)
+            contents-node (find-child-by-type :contents node)
+            conf (resolve-conf tangle-state block-meta)
+            context {:line row
+                     :conf conf
+                     :node contents-node}]
+        (when (and contents-node conf conf.props.tangle (not= conf.props.tangle :none))
+          (tangle-block tangle-state context))))))
 
 (fn parse-header-args
   [header-args-txt]

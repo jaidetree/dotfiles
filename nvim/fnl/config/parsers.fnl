@@ -161,6 +161,14 @@
           (success [x] (advance 1 input))
           result)))))
 
+(fn parsers.contains-char
+  [chars]
+  (fn [input]
+    (let [first-char (read input)]
+      (if (string.find chars first-char 1 true)
+        (success [first-char] (advance 1 input))
+        (fail chars [first-char] input))))) 
+
 (fn parsers.not
   [parser]
   (fn [input]
@@ -188,8 +196,6 @@
      (if result.ok
        (success [(. result.output 2)] result.input)
        result))))
-
-
 
 (fn input [source]
   {: source :index 1})
