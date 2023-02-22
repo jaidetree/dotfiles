@@ -254,16 +254,22 @@
 
 (fn process-block
   [tangle-state node]
-  (let [block-meta (parse-lang-block (query.get_node_text node 0))]
-   (when block-meta.ok
-     (let [(row _col _count) (node:start)
-           contents-node (find-child-by-type :contents node)
-           conf (resolve-conf tangle-state block-meta)
-           context {:line row
-                    :conf conf
-                    :node contents-node}]
-       (when (and contents-node conf.props.tangle (not= conf.props.tangle :none))
-         (tangle-block tangle-state context))))))
+  (let [block-text (query.get_node_text node 0)
+        block-meta (parse-lang-block block-text)]
+    (print "process-block\n"
+           (fennel.view
+             {:type (node:type)
+              :text block-text
+              :meta block-meta}))
+    (when block-meta.ok
+       (let [(row _col _count) (node:start)
+             contents-node (find-child-by-type :contents node)
+             conf (resolve-conf tangle-state block-meta)
+             context {:line row
+                      :conf conf
+                      :node contents-node}]
+         (when (and contents-node conf.props.tangle (not= conf.props.tangle :none))
+           (tangle-block tangle-state context))))))
 
 (fn parse-header-args
   [header-args-txt]
