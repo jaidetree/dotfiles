@@ -26,7 +26,7 @@
 (set vim.opt.clipboard :unnamedplus)
 (set vim.opt.splitright true)
 (set vim.opt.splitbelow true)
-(set vim.opt.guifont ["Operator Mono SSm Lig Medium:h12"])
+(set vim.opt.guifont ["Operator Mono SSm Lig:h14"])
 (set vim.opt.textwidth 80)
 (set vim.opt.foldmethod :manual)
 (set vim.opt.updatetime 250)

@@ -19,7 +19,7 @@
     (set kind.kind (.. " " kind-label " "))
     (set kind.menu (.. "    (" menu ")"))
     kind))
-  
+
 
 (cmp.setup {:snippet {:expand expand-snippet}
             :mapping {:<C-Space> (cmp.mapping.complete)
@@ -35,7 +35,8 @@
                                           {:name :luasnip}
                                           {:name :cmp_git}
                                           {:name :buffer}
-                                          {:name :nvim_lsp_signature_help}])})
+                                          {:name :nvim_lsp_signature_help}
+                                          {:name :orgmode}])})
 
 (cmp.setup.filetype :gitcommit
                     {:sources (cmp.config.sources [{:name :cmp_git}]

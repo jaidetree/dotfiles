@@ -35,34 +35,58 @@
       format-str)))
 
 (fn min-spaces-len
-  [str min]
-  (c.reduce
-    (fn [min whitespace-chunk]
-      (let [len (length whitespace-chunk)]
-       (if (> min len)
-         len
-         min)))
-    min
-    (string.gmatch str "\n([ \t]+)")))
+  [str max]
+  (->> (c.map
+         (fn [whitespace-chunk]
+          whitespace-chunk)
+         (string.gmatch str "\n([ \t]+)"))
+       (c.reduce
+         (fn [{:len prev-max :spc prev-chunk : diff} chunk]
+           (let [chunk-len (length chunk)]
+             (if (>= prev-max chunk-len)
+               {:len chunk-len
+                :diff (- chunk-len prev-max)
+                :spc chunk}
+               {:len prev-max
+                :diff diff
+                :spc prev-chunk})))
+         {:len max
+          :diff 0
+          :spc (string.rep " " max)})))
+
+
 
 (fn fix-indentation
   [str min-spaces]
-  (let [min-spaces (min-spaces-len str (or min-spaces 1000))
-        pattern (.. "\n" (string.rep "[ \t]" min-spaces))]
-    (string.gsub str pattern "\n")))
+  (let [{: spc : len : diff } (min-spaces-len str (or min-spaces 1000))
+        pattern (.. "\n" (string.rep "[ \t]" len))]
+    (-> (.. spc str)
+        (string.gsub pattern "\n"))))
+
 
 (comment
   ;; dbg
-  (each [x (string.gmatch "\n\t     text" "\n([ \t]+)")]
-    (print "out" (.. "\"" x "\"")))
-  (string.gmatch "\n\t     text" "\n([ \t]+)")
-  ( (string.gmatch "\n\t     test" "\n([ \t]+)"))
+  (icollect
+   [x (string.gmatch
+        "dependencies:
+      | reagent
+  promesa"
+        "\n([ \t]+)")]
+   x)
+
   (min-spaces-len
-   "\n\t   test"
-   3)
+    "
+   dependencies:
+   | reagent
+     promesa
+   "
+    3)
   (fix-indentation
-    "\n\t   test"
-    4))
+    "  dependencies:
+        | reagent
+          promesa\n"
+    3)
+  nil)
 
 (local header-arg-lang
   (parsers.seq
@@ -153,6 +177,20 @@
     block-meta))
 
 
+(local block-parser
+  (parsers.xf
+    (parsers.between
+      (parsers.lit "#+begin_src")
+      (parsers.lit "#+end_src"))
+    (fn [results]
+      (comment
+       (let [[lang props] results.output]
+         {:ok true
+          : lang
+          : props}))
+      results)))
+
+
 (comment
   (parsers.parse
     block-lang-parser
@@ -162,7 +200,14 @@
     "#+begin_src vim\n:vert Bufferize nmap")
   (parsers.parse
     block-lang-parser
-    "#+begin_src conf :tangle test.conf :results none\n;; content"))
+    "#+begin_src conf :tangle test.conf :results none\n;; content")
+
+  (parsers.parse
+    block-parser
+    "   #+begin_src clojure
+         :dependencies
+         [[reagent \"1.2.0\"]
+          [promesa \"1.50.0\"]"))
 
 (fn merge-confs
   [tangle-state {: lang : block-props}]
@@ -201,17 +246,24 @@
   (let [{: files : headline} tangle-state
         {: filename : filepath } conf
         mode (if (. tangle-state.files filename) :a+ :w)
-        (_ col) (node:range)
+        (_ col) (: (node:parent) :range)
         text (fix-indentation (query.get_node_text node 0) col)
         format-str (get-comment-format conf.lang conf.file)]
     ;; Create initial file entry to store block counts in headlines
     (when (= mode :w)
-      (tset tangle-state.files filename {headline 0}))
+      (tset tangle-state.files filename {}))
 
     ;; Set or increment the src block index for current headline
-    (let [{: files : headline} tangle-state
-          sections (. files filename)]
-      (c.update sections headline c.inc))
+    (let [sections (. files filename)]
+      (when (not (. sections headline))
+        (tset sections headline 0))
+      (c.update sections headline c.inc)
+      (print "tangle-block"
+             (fennel.view
+               {: headline
+                :text (query.get_node_text node 0)
+                :block (. sections headline)
+                :col col})))
 
     ;; Create the directory tree if mkdirp is true
     (when (and (= mode :w) conf.props.mkdirp)
@@ -262,11 +314,6 @@
   [tangle-state node]
   (let [block-text (query.get_node_text node 0)
         block-meta (parse-lang-block (query.get_node_text node 0))]
-    (print "process-block\n"
-           (fennel.view
-             {:type (node:type)
-              :text block-text
-              :meta block-meta}))
     (when block-meta.ok
       (let [(row _col _count) (node:start)
             contents-node (find-child-by-type :contents node)
