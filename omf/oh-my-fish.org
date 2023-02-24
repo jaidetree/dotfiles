@@ -38,6 +38,7 @@ to specify a path prefix.
 
 #+begin_src fish
 set -x PATH \
+    $HOME/.deno/bin \
     $HOME/.npm-global/bin \
     $HOME/bin \
     $HOME/.yarn/bin \
@@ -58,6 +59,15 @@ set -x PATH \
 
 #+begin_src fish
 fish_default_key_bindings
+#+end_src
+
+** Shell override
+
+Because I don't set my default shell to fish, the =$SHELL= env var will be zsh as
+it's the OS X default. Let's manually set it to fish.
+
+#+begin_src fish
+set -x SHELL (which fish)
 #+end_src
 
 * Plugins

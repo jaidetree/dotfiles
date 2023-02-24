@@ -1,5 +1,6 @@
 # [[file:oh-my-fish.org::*Path][Path:1]]
 set -x PATH \
+    $HOME/.deno/bin \
     $HOME/.npm-global/bin \
     $HOME/bin \
     $HOME/.yarn/bin \
@@ -19,6 +20,10 @@ set -x PATH \
 # [[file:oh-my-fish.org::*Bindings][Bindings:1]]
 fish_default_key_bindings
 # Bindings:1 ends here
+
+# [[file:oh-my-fish.org::*Shell override][Shell override:1]]
+set -x SHELL (which fish)
+# Shell override:1 ends here
 
 # [[file:oh-my-fish.org::*Dir Env][Dir Env:1]]
 direnv hook fish | source
