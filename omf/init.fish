@@ -30,5 +30,5 @@ direnv hook fish | source
 # Dir Env:1 ends here
 
 # [[file:oh-my-fish.org::*ASDF Version Manager][ASDF Version Manager:1]]
-source (brew --prefix asdf)"/asdf.fish"
+source (brew --prefix asdf)"/libexec/asdf.fish"
 # ASDF Version Manager:1 ends here

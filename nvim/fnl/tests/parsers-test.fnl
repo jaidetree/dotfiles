@@ -250,15 +250,14 @@
        :input {:index 1}})
 
 (testing.print
-  "parsers.between consumes data between two parsers"
-  (parse
-    (parsers.between (parsers.char "[")
-                     (parsers.concat (parsers.many (parsers.not (parsers.char "]"))))
-                     (parsers.char "]"))
-    "[hello-world]")
+  "parsers.take-until reads just about anything until parser succeeds"
+  (parse 
+    (parsers.take-until
+      (parsers.char "b"))
+    "aaaab")
   :== {:ok true
-       :input {:index 14}
-       :output ["hello-world"]})
+       :input {:index 5}
+       :output ["aaaa"]})
 
 (testing.print
    "parsers compose for single header-args pair"
@@ -285,3 +284,59 @@
    :== {:lang "*"
         :props {:tangle "base.conf"
                 :results "none"}})
+
+(testing.print
+  "parsers can compose to parse the body of src blocks"
+  (parse
+    (parsers.seq
+      (parsers.whitespace)
+      (parsers.drop (parsers.and
+                      (parsers.lit "#+begin_src")
+                      (parsers.take-until (parsers.char "\n"))
+                      (parsers.char "\n")))
+      (parsers.take-until (parsers.seq
+                            (parsers.whitespace)
+                            (parsers.lit "#+end_src"))))
+    "   
+   #+begin_src clojure
+    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]
+  #+end_src
+")
+  :== {:ok true
+       :output ["    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]"]})
+
+(testing.print
+  "parsers.between consumes data between two parsers"
+  (parse
+    (parsers.between (parsers.char "[")
+                     (parsers.char "]"))
+    "[hello-world]")
+  :== {:ok true
+       :input {:index 14}
+       :output ["hello-world"]})
+
+(testing.print
+  "parsers.between can parse the body of src blocks"
+  (parse
+    (parsers.between
+      (parsers.and (parsers.whitespace)
+                   (parsers.lit "#+begin_src")
+                   (parsers.take-until (parsers.char "\n"))
+                   (parsers.char "\n"))
+      (parsers.and (parsers.whitespace)
+                   (parsers.lit "#+end_src")))
+    "   
+   #+begin_src clojure
+    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]
+  #+end_src
+")
+  :== {:ok true
+       :output ["    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]"]})

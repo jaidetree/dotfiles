@@ -87,7 +87,7 @@ A version manager for a wide variety of tools such as node.
 http://asdf-vm.com/guide/getting-started.html#_3-install-asdf
 
 #+begin_src fish
-source (brew --prefix asdf)"/asdf.fish"
+source (brew --prefix asdf)"/libexec/asdf.fish"
 #+end_src
 
 

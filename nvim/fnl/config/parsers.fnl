@@ -188,15 +188,6 @@
           (success [str] (advance (length str) input))
           (fail str chars input)))))
 
-(fn parsers.between
-  [start middle end]
-  (fn [input]
-   (let [result ((parsers.seq start middle end) input)]
-     (debug "parsers.between" (fennel.view result))
-     (if result.ok
-       (success [(. result.output 2)] result.input)
-       result))))
-
 (fn input [source]
   {: source :index 1})
 
@@ -259,6 +250,45 @@
   (fn [input]
     (success [output] input)))
 
+(fn parsers.take-until
+  [parser]
+  (fn [input]
+    (var done false)
+    (var end-result (fail "take-until: at least one valid parse" "no valid parses" input))
+    (var input-acc input)
+    (var output "")
+    (while (and (not done) (valid-input? input-acc))
+      (let [result (parser input-acc)]
+        (if 
+          ;; No output collected, end reached first try
+          ;; Considered a failure
+          (and (= output "") result.ok) 
+          (set done true)
+          
+          ;; Some output was collected, done parsing
+          ;; Considered a success
+          result.ok
+          (do
+            (set done true)
+            (set end-result (success [output] input-acc)))
+          
+          ;; Else
+          (do
+            (set output (.. output (read input-acc)))
+            (set input-acc (advance 1 input-acc))))))
+    end-result)) 
+
+(fn parsers.between
+  [start end]
+  (fn [input]
+   (let [parser (parsers.seq 
+                  (parsers.drop start)
+                  (parsers.take-until end)
+                  (parsers.drop end))
+         result (parser input)]
+     (debug "parsers.between" (fennel.view result))
+     result)))
+        
 (fn parsers.log
   [label parser]
   (fn [input]
