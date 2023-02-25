@@ -49,7 +49,7 @@
         (set diff-paths (+ diff-paths 1))
         (table.insert rel-paths (. dest-paths i))))
     (.. (if (= diff-paths 1)
-          "./"
+          ""
           (string.rep "../" (- diff-paths 1)))
         (table.concat rel-paths "/"))))
 
@@ -280,8 +280,7 @@
 
 (fn format-file
   [src dest]
-  (-> (relative src dest)
-      (string.gsub "^%./" "")))
+  (relative src dest))
 
 (fn tangle-block
   [tangle-state {: block : node : conf}]
