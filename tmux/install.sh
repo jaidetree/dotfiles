@@ -9,3 +9,4 @@ brew install tmux
 # [[file:tmux.org::*Installer][Installer:2]]
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 # Installer:2 ends here
+

@@ -12,9 +12,27 @@ given that it's the default shell on macs.
 
 * Config
 
+** Setup Path
+
 #+begin_src sh
 export PATH=$HOME/bin:$HOME/.emacs.d/bin:$HOME/.luarocks/bin:/usr/local/opt/openjdk/bin:/usr/local/bin:$PATH
 #+end_src
+
+** Setup ASDF
+
+https://asdf-vm.com/guide/getting-started.html#_3-install-asdf
+
+Evalulate this to generate the correct path string
+
+#+begin_src sh :tangle no
+echo -e "\n. $(brew --prefix asdf)/libexec/asdf.sh" >> ~/.zshrc
+#+end_src
+
+#+begin_src sh
+. /usr/local/opt/asdf/libexec/asdf.sh
+#+end_src
+
+#+RESULTS:
 
 ;; Local Variables:
 ;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)

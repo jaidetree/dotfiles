@@ -280,8 +280,8 @@
          :action "guides:clear"}
         {:key ";"
          :title "Toggle"
-         :action "guides:toggle"}
-        ])
+         :action "guides:toggle"}])
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,12 +299,15 @@
         {:key :k
          :title "Clear Console"
          :action hs.console.clearConsole}
-        ])
+        {:key :t
+         :title "Test Modal Delay"
+         :action "debug-modal-delay:start!"}])
+
 
 (local menu-items
        [{:key :space
          :title "Alfred"
-         :action (activator "Alfred 4")}
+         :action (activator "Alfred 5")}
         {:key :w
          :title "Window"
          :enter "windows:enter-window-menu"
@@ -422,7 +425,7 @@
 (local browser-keys
        [{:mods [:cmd :shift]
          :key :l
-         :action "chrome:open-location"}
+         :action "chrome:open-location"}])
         ;; {:mods [:cmd]
         ;;  :key :k
         ;;  :action "chrome:prev-tab"
@@ -431,7 +434,7 @@
         ;;  :key :j
         ;;  :action "chrome:next-tab"
         ;;  :repeat true}
-        ])
+
 
 (local brave-config
        {:key "Brave Browser"

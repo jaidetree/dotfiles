@@ -1,10 +1,8 @@
 #+title: TMUX
-:CONFIG:
 #+property: header-args:conf :tangle tmux.conf
 #+property: header-args:bash :tangle install.sh
 #+property: header-args :mkdirp yes
 #+startup: indent
-:END:
 
 
 * Install
