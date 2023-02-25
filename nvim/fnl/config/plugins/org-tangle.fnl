@@ -157,7 +157,7 @@
     (parsers.whitespace)
     (parsers.drop (parsers.lit "#+begin_src"))
     (parsers.drop (parsers.many (parsers.any-char " \t")))
-    (parsers.take-until (parsers.any-char " \t\n"))))
+    (parsers.take-until (parsers.whitespace))))
 
 
 (fn parse-lang-block
@@ -179,16 +179,17 @@
 (local block-parser
   (parsers.xf
    (parsers.seq
-     block-lang-parser
-     (parsers.or block-header-args-parser
-               (parsers.always [{}])))
+     block-lang-parser)
+     ;; (parsers.or block-header-args-parser
+     ;;           (parsers.always [{}]))
      ;; block-body-parser)
    (fn [result]
      (let [[lang props body] result.output]
        {:ok true
         : lang
         : props
-        : body}))))
+        : body}
+       result))))
 
 
 (comment

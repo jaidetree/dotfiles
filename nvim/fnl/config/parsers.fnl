@@ -247,6 +247,8 @@
   (fn [input]
     (success [output] input)))
 
+;; @TODO Maybe this should fail if it reaches the end of input without hitting
+;; terminating parser?
 (fn parsers.take-until
   [parser]
   (fn [input]
@@ -266,14 +268,14 @@
           ;; Considered a success
           result.ok
           (do
-            (set end-result (success [output] end-result.input))
-            (set done true))
+            (set end-result (success [output] end-result.input)
+                        (set done true)
 
-          ;; Else
-          (do
-            (set output (.. output (read end-result.input)))
-            (set end-result (success [output] (advance 1 end-result.input)))))))
-    end-result))
+                      ;; Else
+                      (do
+                        (set output (.. output (read end-result.input)))
+                        (set end-result (success [output] (advance 1 end-result.input))))
+                end-result)))))))
 
 (fn parsers.between
   [start end]
