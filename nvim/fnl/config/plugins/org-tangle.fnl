@@ -26,13 +26,42 @@
    [[:erlang] :percent]])
 
 (fn get-comment-format
-  [block-lang tangle-file]
-  (accumulate
-    [format-str comment-forms.slashes
-     _i [langs format-key] (ipairs comment-langs)]
-    (if (vim.tbl_contains langs block-lang)
-      (. comment-forms format-key)
-      format-str)))
+ [block-lang tangle-file]
+ (accumulate
+   [format-str comment-forms.slashes
+    _i [langs format-key] (ipairs comment-langs)]
+   (if (vim.tbl_contains langs block-lang)
+     (. comment-forms format-key)
+     format-str)))
+
+(fn relative
+  [src dest]
+  (var diff-paths 0)
+  (let [cwd (vim.fn.expand ".")
+        src (vim.fs.normalize src)
+        src-paths (vim.split src "/" {:plain true})
+        dest (vim.fs.normalize dest)
+        dest-paths (vim.split dest "/" {:plain true})
+        rel-paths []
+        total-paths (- (length dest-paths) 1)]
+    (each [i p (ipairs src-paths)]
+      (when (not= p (. dest-paths i))
+        (set diff-paths (+ diff-paths 1))
+        (table.insert rel-paths (. dest-paths i))))
+    (.. (if (= diff-paths 1)
+          "./"
+          (string.rep "../" (- diff-paths 1)))
+        (table.concat rel-paths "/"))))
+
+
+(comment
+  (vim.fn.expand "%:.")
+  (relative
+    "/Users/j/dotfiles/tmux/tmux.org"
+    "/Users/j/dotfiles/tmux/tmux.conf")
+  (relative
+    "/Users/j/dotfiles/tmux/tmux.org"
+    "/Users/j/dotfiles/install.sh"))
 
 (fn min-spaces-len
   [str max]
@@ -59,9 +88,11 @@
 (fn fix-indentation
   [str min-spaces]
   (let [{: spc : len : diff } (min-spaces-len str (or min-spaces 1000))
-        pattern (.. "\n" (string.rep "[ \t]" len))]
-    (-> (.. spc str)
-        (string.gsub pattern "\n"))))
+        head-pattern (.. "^" (string.rep "[ \t]" len))
+        rest-pattern (.. "\n" (string.rep "[ \t]" len))]
+    (-> str
+        (string.gsub head-pattern "")
+        (string.gsub rest-pattern "\n"))))
 
 
 (comment
@@ -247,6 +278,11 @@
      (->> (string.format comment-end-format headline idx)
           (string.format format))]))
 
+(fn format-file
+  [src dest]
+  (-> (relative src dest)
+      (string.gsub "^%./" "")))
+
 (fn tangle-block
   [tangle-state {: block : node : conf}]
   (let [{: files : headline} tangle-state
@@ -275,7 +311,9 @@
     (with-open [fout (io.open filepath mode)]
       (let [[begin-comment end-comment] (format-comment
                                           {:lang     conf.lang
-                                           :file     filename
+                                           :file     (format-file
+                                                       filepath
+                                                       tangle-state.context.filename)
                                            :headline headline
                                            :idx      (. files filename headline)
                                            :line     line})]
@@ -312,13 +350,13 @@
     (set tangle-state.level level)))
 
 (fn process-block
-  [tangle-state node]
-  (let [block-text (query.get_node_text node 0)
-        block (or (parse-block block-text) {})
+  [tangle-state {: node : text}]
+  (let [text (query.get_node_text node 0)
+        block (or (parse-block text) {})
         contents-node (find-child-by-type :contents node)
         conf (if block.ok (resolve-conf tangle-state block) nil)]
     (when (and block.ok contents-node conf conf.props.tangle (not= conf.props.tangle :none))
-      (tangle-block tangle-state 
+      (tangle-block tangle-state
                     {:block block
                      :conf conf
                      :node contents-node}))))
@@ -385,7 +423,10 @@
           (process-headline tangle-state subnode)
 
           (= node-type :block)
-          (process-block tangle-state subnode)
+          (let [block-text (query.get_node_text subnode 0)]
+            (when (string.gmatch block-text "^#%+begin_src")
+              (process-block tangle-state {:node subnode
+                                           :text block-text})))
 
           (= node-type :directive)
           (->> subnode
