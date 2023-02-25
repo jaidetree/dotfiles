@@ -107,15 +107,17 @@
 (local header-arg-pair
   (parsers.seq
     (parsers.drop (parsers.char ":"))
-    (parsers.alpha)
-    (parsers.whitespace)
-    (parsers.concat
-     (parsers.many
-       (parsers.not
-         (parsers.or
-          (parsers.char " ")
-          (parsers.char "\n")))))
-    (parsers.maybe (parsers.whitespace))))
+    (parsers.take-until (parsers.any-char " \t"))
+    (parsers.drop (parsers.many (parsers.any-char " \t")))
+    (parsers.take-until
+      (parsers.any-char " \n"))
+    (parsers.maybe (parsers.char " "))))
+
+(comment
+
+  (parsers.parse
+    header-arg-pair
+    ":tangle base.conf\n"))
 
 
 (local header-arg-pairs
@@ -151,44 +153,60 @@
         : props}))))
 
 (local block-lang-parser
-  (parsers.xf
-   (parsers.seq
-     (parsers.drop (parsers.lit "#+begin_src"))
-     (parsers.drop
-       (parsers.many
-         (parsers.contains-char " \t")))
-     (parsers.concat
-      (parsers.many (parsers.not (parsers.whitespace))))
-     (parsers.maybe
-       (parsers.seq
-        (parsers.drop
-         (parsers.many
-           (parsers.contains-char " \t")))
-        header-arg-pairs)))
-   (fn [results]
-     (let [[lang props] results.output]
-       {:ok true
-        : lang
-        : props}))))
+  (parsers.seq
+    (parsers.whitespace)
+    (parsers.drop (parsers.lit "#+begin_src"))
+    (parsers.drop (parsers.many (parsers.any-char " \t")))
+    (parsers.take-until (parsers.any-char " \t\n"))))
+
 
 (fn parse-lang-block
   [block-text]
   (let [block-meta (parse block-lang-parser block-text)]
     block-meta))
 
+(local block-header-args-parser
+  (parsers.seq
+    (parsers.drop (parsers.take-until (parsers.char ":")))
+    header-arg-pairs))
+
+(local block-body-parser
+  (parsers.between
+    (parsers.char "\n")
+    (parsers.and (parsers.whitespace)
+                 (parsers.lit "#+end_src"))))
 
 (local block-parser
   (parsers.xf
-    (parsers.between
-      (parsers.lit "#+begin_src")
-      (parsers.lit "#+end_src"))
-    (fn [results]
-      (comment
-       (let [[lang props] results.output]
-         {:ok true
-          : lang
-          : props}))
-      results)))
+   (parsers.seq
+     block-lang-parser
+     (parsers.or block-header-args-parser
+               (parsers.always [{}])))
+     ;; block-body-parser)
+   (fn [result]
+     (let [[lang props body] result.output]
+       {:ok true
+        : lang
+        : props
+        : body}))))
+
+
+(comment
+ (local block-parser
+   (parsers.xf)
+   (parsers.between
+      (parsers.and (parsers.whitespace)
+                   (parsers.lit "#+begin_src")
+                   (parsers.take-until (parsers.char "\n"))
+                   (parsers.char "\n"))
+      (parsers.and (parsers.whitespace)
+                  (parsers.lit "#+end_src")))))
+
+(fn parse-block-body
+  [block-text]
+  (let [result (parse block-parser block-text)
+        [body] result.output]
+    body))
 
 
 (comment
@@ -207,7 +225,8 @@
     "   #+begin_src clojure
          :dependencies
          [[reagent \"1.2.0\"]
-          [promesa \"1.50.0\"]"))
+          [promesa \"1.50.0\"]
+        #+end_src"))
 
 (fn merge-confs
   [tangle-state {: lang : block-props}]
@@ -317,6 +336,7 @@
     (when block-meta.ok
       (let [(row _col _count) (node:start)
             contents-node (find-child-by-type :contents node)
+            body-text (parse-block-body block-text)
             conf (resolve-conf tangle-state block-meta)
             context {:line row
                      :conf conf
@@ -441,4 +461,5 @@
   {})
 
 {: tangle
- : header-args-parser}
+ : header-args-parser
+ : block-parser}

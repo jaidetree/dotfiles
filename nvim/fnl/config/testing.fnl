@@ -37,6 +37,13 @@
        {:ok false
         :msg (.. "expected " path-k " to be " (fennel.view expected-v) " got " (fennel.view actual-v))}))))
 
+(fn ===
+  [actual expected]
+  (if (not (= actual expected))
+    {:ok false  :msg (.. "expected " expected " got " actual)}
+    {:ok true :msg ""}))
+
 {: ==
+ : ===
  : debug
  : toggle-debug}

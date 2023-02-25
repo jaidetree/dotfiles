@@ -1,8 +1,8 @@
 (import-macros testing :config.macros.testing)
 (local {: parse &as parsers} (require :config.parsers))
-(local {: == : toggle-debug} (require :config.testing))
+(local {: == : === : toggle-debug} (require :config.testing))
 (local {:core c} (require :config.utils))
-(local {: header-args-parser} (require :config.plugins.org-tangle))
+(local {: header-args-parser : block-parser} (require :config.plugins.org-tangle))
 
 
 (testing.print
@@ -251,7 +251,7 @@
 
 (testing.print
   "parsers.take-until reads just about anything until parser succeeds"
-  (parse 
+  (parse
     (parsers.take-until
       (parsers.char "b"))
     "aaaab")
@@ -260,12 +260,12 @@
        :output ["aaaa"]})
 
 (testing.print
-   "parsers compose for single header-args pair"
-   (parse
-     header-args-parser
-     "conf :tangle base.conf")
-   :== {:lang "conf"
-        :props {:tangle "base.conf"}})
+  "parsers compose for single header-args pair"
+  (parse
+    header-args-parser
+    "conf :tangle base.conf")
+  :== {:lang "conf"
+       :props {:tangle "base.conf"}})
 
 (testing.print
    "parsers compose for multiple header-args pairs"
@@ -297,7 +297,7 @@
       (parsers.take-until (parsers.seq
                             (parsers.whitespace)
                             (parsers.lit "#+end_src"))))
-    "   
+    "
    #+begin_src clojure
     :dependencies
     [[reagent \"1.2.0\"]
@@ -320,16 +320,10 @@
        :output ["hello-world"]})
 
 (testing.print
-  "parsers.between can parse the body of src blocks"
+  "parsers can compose to parse entire src blocks without args"
   (parse
-    (parsers.between
-      (parsers.and (parsers.whitespace)
-                   (parsers.lit "#+begin_src")
-                   (parsers.take-until (parsers.char "\n"))
-                   (parsers.char "\n"))
-      (parsers.and (parsers.whitespace)
-                   (parsers.lit "#+end_src")))
-    "   
+    block-parser
+    "
    #+begin_src clojure
     :dependencies
     [[reagent \"1.2.0\"]
@@ -337,6 +331,27 @@
   #+end_src
 ")
   :== {:ok true
-       :output ["    :dependencies
+       :lang "clojure"
+       :props {}
+       :body "    :dependencies
     [[reagent \"1.2.0\"]
-     [promesa \"10.1.850\"]]"]})
+     [promesa \"10.1.850\"]]"})
+
+(testing.print
+  "parsers can compose to parse entire src blocks"
+  (parse
+    block-parser
+    "
+   #+begin_src clojure :tangle shadow-cljs.edn :results none
+    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]
+  #+end_src
+")
+  :== {:ok true
+       :lang "clojure"
+       :props {:results "none" :tangle "shadow-cljs.edn"}
+       :body "    :dependencies
+    [[reagent \"1.2.0\"]
+     [promesa \"10.1.850\"]]"})
+

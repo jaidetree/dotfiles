@@ -161,13 +161,13 @@
           (success [x] (advance 1 input))
           result)))))
 
-(fn parsers.contains-char
+(fn parsers.any-char
   [chars]
   (fn [input]
     (let [first-char (read input)]
       (if (string.find chars first-char 1 true)
         (success [first-char] (advance 1 input))
-        (fail chars [first-char] input))))) 
+        (fail chars [first-char] input)))))
 
 (fn parsers.not
   [parser]
@@ -227,9 +227,6 @@
           result.input)
         result))))
 
-
-
-
 (fn parsers.first
   [parser]
   (xf parser
@@ -255,40 +252,40 @@
   (fn [input]
     (var done false)
     (var end-result (fail "take-until: at least one valid parse" "no valid parses" input))
-    (var input-acc input)
     (var output "")
-    (while (and (not done) (valid-input? input-acc))
-      (let [result (parser input-acc)]
-        (if 
+    (while (and (not done) (valid-input? end-result.input))
+      (let [result (parser end-result.input)]
+        (if
           ;; No output collected, end reached first try
           ;; Considered a failure
-          (and (= output "") result.ok) 
-          (set done true)
-          
+          (and result.ok (= output ""))
+          (do
+            (set done true))
+
           ;; Some output was collected, done parsing
           ;; Considered a success
           result.ok
           (do
-            (set done true)
-            (set end-result (success [output] input-acc)))
-          
+            (set end-result (success [output] end-result.input))
+            (set done true))
+
           ;; Else
           (do
-            (set output (.. output (read input-acc)))
-            (set input-acc (advance 1 input-acc))))))
-    end-result)) 
+            (set output (.. output (read end-result.input)))
+            (set end-result (success [output] (advance 1 end-result.input)))))))
+    end-result))
 
 (fn parsers.between
   [start end]
   (fn [input]
-   (let [parser (parsers.seq 
+   (let [parser (parsers.seq
                   (parsers.drop start)
                   (parsers.take-until end)
                   (parsers.drop end))
          result (parser input)]
      (debug "parsers.between" (fennel.view result))
      result)))
-        
+
 (fn parsers.log
   [label parser]
   (fn [input]
