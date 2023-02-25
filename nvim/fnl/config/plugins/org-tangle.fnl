@@ -154,7 +154,7 @@
 
 (local block-lang-parser
   (parsers.seq
-    (parsers.whitespace)
+    (parsers.maybe (parsers.whitespace))
     (parsers.drop (parsers.lit "#+begin_src"))
     (parsers.drop (parsers.many (parsers.any-char " \t")))
     (parsers.take-until (parsers.whitespace))))
@@ -167,7 +167,7 @@
 
 (local block-header-args-parser
   (parsers.seq
-    (parsers.drop (parsers.take-until (parsers.char ":")))
+    (parsers.drop (parsers.take-until (parsers.any-char "\n:")))
     header-arg-pairs))
 
 (local block-body-parser
@@ -179,35 +179,21 @@
 (local block-parser
   (parsers.xf
    (parsers.seq
-     block-lang-parser)
-     ;; (parsers.or block-header-args-parser
-     ;;           (parsers.always [{}]))
-     ;; block-body-parser)
+     block-lang-parser
+     (parsers.or block-header-args-parser
+               (parsers.always {}))
+     block-body-parser)
    (fn [result]
      (let [[lang props body] result.output]
        {:ok true
         : lang
         : props
-        : body}
-       result))))
+        : body}))))
 
-
-(comment
- (local block-parser
-   (parsers.xf)
-   (parsers.between
-      (parsers.and (parsers.whitespace)
-                   (parsers.lit "#+begin_src")
-                   (parsers.take-until (parsers.char "\n"))
-                   (parsers.char "\n"))
-      (parsers.and (parsers.whitespace)
-                  (parsers.lit "#+end_src")))))
-
-(fn parse-block-body
+(fn parse-block
   [block-text]
-  (let [result (parse block-parser block-text)
-        [body] result.output]
-    body))
+  (let [block (parse block-parser block-text)]
+    block))
 
 
 (comment
@@ -262,12 +248,13 @@
           (string.format format))]))
 
 (fn tangle-block
-  [tangle-state {: line : node : conf}]
+  [tangle-state {: block : node : conf}]
   (let [{: files : headline} tangle-state
         {: filename : filepath } conf
-        mode (if (. tangle-state.files filename) :a+ :w)
+        mode (if (. files filename) :a+ :w)
+        (line _col _count) (node:start)
         (_ col) (: (node:parent) :range)
-        text (fix-indentation (query.get_node_text node 0) col)
+        text (fix-indentation block.body col)
         format-str (get-comment-format conf.lang conf.file)]
     ;; Create initial file entry to store block counts in headlines
     (when (= mode :w)
@@ -277,13 +264,7 @@
     (let [sections (. files filename)]
       (when (not (. sections headline))
         (tset sections headline 0))
-      (c.update sections headline c.inc)
-      (print "tangle-block"
-             (fennel.view
-               {: headline
-                :text (query.get_node_text node 0)
-                :block (. sections headline)
-                :col col})))
+      (c.update sections headline c.inc))
 
     ;; Create the directory tree if mkdirp is true
     (when (and (= mode :w) conf.props.mkdirp)
@@ -333,17 +314,14 @@
 (fn process-block
   [tangle-state node]
   (let [block-text (query.get_node_text node 0)
-        block-meta (parse-lang-block (query.get_node_text node 0))]
-    (when block-meta.ok
-      (let [(row _col _count) (node:start)
-            contents-node (find-child-by-type :contents node)
-            body-text (parse-block-body block-text)
-            conf (resolve-conf tangle-state block-meta)
-            context {:line row
+        block (or (parse-block block-text) {})
+        contents-node (find-child-by-type :contents node)
+        conf (if block.ok (resolve-conf tangle-state block) nil)]
+    (when (and block.ok contents-node conf conf.props.tangle (not= conf.props.tangle :none))
+      (tangle-block tangle-state 
+                    {:block block
                      :conf conf
-                     :node contents-node}]
-        (when (and contents-node conf conf.props.tangle (not= conf.props.tangle :none))
-          (tangle-block tangle-state context))))))
+                     :node contents-node}))))
 
 (fn parse-header-args
   [header-args-txt]
@@ -462,5 +440,10 @@
   {})
 
 {: tangle
+ : block-lang-parser
+ : block-header-args-parser
+ : header-arg-pair
+ : header-arg-pairs
  : header-args-parser
+ : header-arg-lang
  : block-parser}
