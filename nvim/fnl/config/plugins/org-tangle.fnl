@@ -53,15 +53,56 @@
           (string.rep "../" (- diff-paths 1)))
         (table.concat rel-paths "/"))))
 
+(fn strip-trailing-slash
+  [path]
+  (let [last-char (string.sub path -1 -1)]
+    (if (= last-char "/")
+      (string.sub path 1 -2)
+      path)))
+
+(fn split-paths
+  [path-str]
+  (-> path-str
+      (vim.fs.normalize)
+      (vim.fn.resolve)
+      (vim.split "/" {:plain true})))
+
+(fn relative
+  [path-a path-b]
+  (let [tree-a (split-paths path-a)
+        len-a (length tree-a)
+        tree-b (split-paths path-b)
+        len-b (length tree-b)
+        min-idx (math.min len-a len-b)
+        i (faccumulate
+            [common-paths 1
+             i 1 min-idx
+             &until (not= (. tree-a i) (. tree-b i))]
+            (+ common-paths 1))]
+    (->
+      (..
+        (string.rep "../" (- len-a i))
+        (table.concat tree-b "/" i))
+      (strip-trailing-slash))))
 
 (comment
-  (vim.fn.expand "%:.")
-  (relative
+  (relative2
     "/Users/j/dotfiles/tmux/tmux.org"
     "/Users/j/dotfiles/tmux/tmux.conf")
-  (relative
+  (relative2
     "/Users/j/dotfiles/tmux/tmux.org"
-    "/Users/j/dotfiles/install.sh"))
+    "/Users/j/dotfiles/install.sh")
+  (relative2
+    "/Users/j/dayjob-express/docs/cljs/readme.org"
+    "/Users/j/dayjob-express/shadow-cljs.edn")
+  (relative2
+    "/Users/j/dotfiles/tmux/tmux.conf"
+    "/Users/j/dotfiles/tmux/tmux.org")
+  (relative2
+    "/Users/j/dayjob-express/shadow-cljs.edn"
+    "/Users/j/dayjob-express/docs/cljs/readme.org"))
+
+
 
 (fn min-spaces-len
   [str max]
@@ -70,24 +111,18 @@
           whitespace-chunk)
          (string.gmatch str "\n([ \t]+)"))
        (c.reduce
-         (fn [{:len prev-max :spc prev-chunk : diff} chunk]
+         (fn [prev-max chunk]
            (let [chunk-len (length chunk)]
              (if (>= prev-max chunk-len)
-               {:len chunk-len
-                :diff (- chunk-len prev-max)
-                :spc chunk}
-               {:len prev-max
-                :diff diff
-                :spc prev-chunk})))
-         {:len max
-          :diff 0
-          :spc (string.rep " " max)})))
+               chunk-len
+               prev-max)))
+         max)))
 
 
 
 (fn fix-indentation
   [str min-spaces]
-  (let [{: spc : len : diff } (min-spaces-len str (or min-spaces 1000))
+  (let [len (min-spaces-len str (or min-spaces 1000))
         head-pattern (.. "^" (string.rep "[ \t]" len))
         rest-pattern (.. "\n" (string.rep "[ \t]" len))]
     (-> str
@@ -311,8 +346,8 @@
       (let [[begin-comment end-comment] (format-comment
                                           {:lang     conf.lang
                                            :file     (format-file
-                                                       filepath
-                                                       tangle-state.context.filename)
+                                                       tangle-state.context.filename
+                                                       filepath)
                                            :headline headline
                                            :idx      (. files filename headline)
                                            :line     line})]

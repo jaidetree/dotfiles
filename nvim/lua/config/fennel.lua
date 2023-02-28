@@ -3019,6 +3019,7 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         return ("[" .. tostring(compiled) .. "]")
       end
     end
+    local keys = {}
     local buffer
     do
       local tbl_16_auto = {}
@@ -3027,6 +3028,7 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         local val_18_auto
         do
           local nval = ((nil ~= ast[(i + 1)]) and 1)
+          do end (keys)[i] = true
           val_18_auto = exprs1(compile1(elem, scope, parent, {nval = nval}))
         end
         if (nil ~= val_18_auto) then
@@ -3042,7 +3044,7 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       local i_17_auto = #tbl_16_auto
       for k, v in utils.stablepairs(ast) do
         local val_18_auto
-        if not buffer[k] then
+        if not keys[k] then
           local _let_365_ = compile1(ast[k], scope, parent, {nval = 1})
           local v0 = _let_365_[1]
           val_18_auto = string.format("%s = %s", escape_key(k), tostring(v0))
@@ -4780,7 +4782,7 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
 end
 package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(...)
   local view = require("fennel.view")
-  local version = "1.3.0-dev"
+  local version = "1.3.0"
   local function luajit_vm_3f()
     return ((nil ~= _G.jit) and (type(_G.jit) == "table") and (nil ~= _G.jit.on) and (nil ~= _G.jit.off) and (type(_G.jit.version_num) == "number"))
   end
