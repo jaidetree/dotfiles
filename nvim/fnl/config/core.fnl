@@ -104,11 +104,11 @@
                        (ts-ctx.setup)
                        (set parser-cfg.markdown.filetype_to_parsername
                             :octo))})
+
       (use :nvim-orgmode/orgmode
            {:after [:nvim-treesitter]
-            :config #(let [orgmode (require :orgmode)
-                           tscfg (require :nvim-treesitter.configs)]
-                       (require :config.org))})
+            :config #(require :config.plugins.org)})
+
       (use :gpanders/nvim-parinfer)
       (use :uga-rosa/ccc.nvim
            {:config #(let [ccc (require :ccc)]
@@ -133,24 +133,6 @@
                        (tset vim.g "conjure#mapping#log_vsplit" "l/"))})
       (use :guns/vim-sexp
            {:config #(set vim.g.sexp_filetypes "")})
-      (use :nvim-neorg/neorg
-           {:requires [:max397574/neorg-contexts
-                       :nvim-lua/plenary.nvim
-                       :nvim-neorg/neorg-telescope]
-            :after [:nvim-treesitter
-                    :telescope.nvim]
-            :config #(let [neorg (require :neorg)
-                           tscfg (require :nvim-treesitter.configs)]
-                       (tscfg.setup {:ensure_installed [:norg]
-                                     :highlight {:enable true}})
-                       (neorg.setup {:load {:core.defaults {}
-                                            :core.norg.dirman
-                                            {:config
-                                             {:workspaces
-                                              {:work "~/neorg/work"
-                                               :personal "~/neorg/personal"}}}
-                                            :core.norg.concealer {}
-                                            :external.context {}}}))})
       (use :numToStr/Comment.nvim
            {:config #(let [cmnt (require :Comment)]
                        (cmnt.setup {:padding true
@@ -319,11 +301,17 @@
 (vim.api.nvim_create_user_command :ReloadStatusLine reload-statusline {})
 
 (fn reload-config []
-  (each [module-name exports (pairs package.loaded)]
-    (when (s.starts-with? module-name :config)
-      (tset package.loaded module-name nil)))
-  (require :config.core)
-  (print "Reloaded config"))
+  (let [modules []]
+   (each [module-name exports (pairs package.loaded)]
+     (when (s.starts-with? module-name :config)
+       (table.insert modules module-name)
+       (tset package.loaded module-name nil)))
+
+   (require :config.core)
+   (each [_i module-name (ipairs modules)]
+     (when (not= module-name :config.core)
+       (require module-name)))
+   (print "Reloaded config")))
 
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
 
@@ -713,7 +701,9 @@
 (vim.keymap.set :c :<C-f> :<S-Right> {:remap false})
 
 ;; Custom plugins
-
+;; - These are worth separating from normal plugin setup as these can be
+;;   reloaded quickly with `<SPC>hr` vs going through the packer sync
+;;   process
 (require :config.plugins.org-tangle)
 
 (comment ;; eval these

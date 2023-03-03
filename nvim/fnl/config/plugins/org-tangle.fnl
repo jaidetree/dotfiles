@@ -34,25 +34,6 @@
      (. comment-forms format-key)
      format-str)))
 
-(fn relative
-  [src dest]
-  (var diff-paths 0)
-  (let [cwd (vim.fn.expand ".")
-        src (vim.fs.normalize src)
-        src-paths (vim.split src "/" {:plain true})
-        dest (vim.fs.normalize dest)
-        dest-paths (vim.split dest "/" {:plain true})
-        rel-paths []
-        total-paths (- (length dest-paths) 1)]
-    (each [i p (ipairs src-paths)]
-      (when (not= p (. dest-paths i))
-        (set diff-paths (+ diff-paths 1))
-        (table.insert rel-paths (. dest-paths i))))
-    (.. (if (= diff-paths 1)
-          ""
-          (string.rep "../" (- diff-paths 1)))
-        (table.concat rel-paths "/"))))
-
 (fn strip-trailing-slash
   [path]
   (let [last-char (string.sub path -1 -1)]
@@ -86,19 +67,19 @@
       (strip-trailing-slash))))
 
 (comment
-  (relative2
+  (relative
     "/Users/j/dotfiles/tmux/tmux.org"
     "/Users/j/dotfiles/tmux/tmux.conf")
-  (relative2
+  (relative
     "/Users/j/dotfiles/tmux/tmux.org"
     "/Users/j/dotfiles/install.sh")
-  (relative2
-    "/Users/j/dayjob-express/docs/cljs/readme.org"
-    "/Users/j/dayjob-express/shadow-cljs.edn")
-  (relative2
+  (relative
+    "/Users/j/dayjob-express/shadow-cljs.edn"
+    "/Users/j/dayjob-express/docs/cljs/readme.org")
+  (relative
     "/Users/j/dotfiles/tmux/tmux.conf"
     "/Users/j/dotfiles/tmux/tmux.org")
-  (relative2
+  (relative
     "/Users/j/dayjob-express/shadow-cljs.edn"
     "/Users/j/dayjob-express/docs/cljs/readme.org"))
 
@@ -346,8 +327,8 @@
       (let [[begin-comment end-comment] (format-comment
                                           {:lang     conf.lang
                                            :file     (format-file
-                                                       tangle-state.context.filename
-                                                       filepath)
+                                                       filepath
+                                                       tangle-state.context.filename)
                                            :headline headline
                                            :idx      (. files filename headline)
                                            :line     line})]
@@ -493,20 +474,6 @@
         tangle-state (process-node tangle-state root)]
     (print "Tangled" (c.count tangle-state.files) "files" (fennel.view (vim.tbl_keys tangle-state.files)))))
 
-
-(vim.api.nvim_create_autocmd
-  "FileType"
-  {:pattern "org"
-   :callback (fn []
-               (comment
-                 (vim.api.nvim_buf_set_keymap
-                   0 :n :<cr> ""
-                   {:callback toggle-org-item
-                    :noremap true}))
-               (vim.api.nvim_buf_set_keymap
-                 0 :n :<leader>oxt "<cmd>Tangle<cr>"
-                 {:desc "tangle"
-                  :noremap true}))})
 
 (vim.api.nvim_create_user_command
   :Tangle
