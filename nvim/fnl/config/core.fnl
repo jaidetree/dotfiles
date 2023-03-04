@@ -1,7 +1,6 @@
 (local packer (require :config.packer))
 (local {:core c :string s} (require :config.utils))
 
-(require :config.tangle)
 ;; Just exploring writing a custom statusline from scratch
 ;; (require :config.statusline)
 
@@ -312,6 +311,9 @@
      (when (not= module-name :config.core)
        (require module-name)))
    (print "Reloaded config")))
+
+(comment
+  (reload-config))
 
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
 

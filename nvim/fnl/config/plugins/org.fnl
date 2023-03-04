@@ -68,6 +68,7 @@
   []
   (let [node (ts-utils.get_node_at_cursor)
         action-str (node->action node)]
+    (print "selected-action" action-str)
     (when action-str
       (org.action action-str))))
 
