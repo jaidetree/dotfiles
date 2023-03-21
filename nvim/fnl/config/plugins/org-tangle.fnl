@@ -263,7 +263,7 @@
         #+end_src"))
 
 (fn merge-confs
-  [tangle-state {: lang : block-props}]
+  [tangle-state {: lang}]
   (->> tangle-state.conf
        (c.filter #(<= $.level tangle-state.level))
        (c.map
@@ -274,11 +274,13 @@
        (c.reduce
          (fn [resolved conf]
            (c.merge resolved conf))
-         (or block-props {}))))
+         {})))
 
 (fn resolve-conf
   [tangle-state {: lang :props block-props}]
-  (let [conf (merge-confs tangle-state {: lang : block-props})]
+  (let [conf (-> tangle-state
+                 (merge-confs {: lang})
+                 (c.merge block-props))]
     (if conf.tangle
      {:props conf
       :lang lang
@@ -319,7 +321,7 @@
 
     ;; Create the directory tree if mkdirp is true
     (when (and (= mode :w) conf.props.mkdirp)
-      (let [dir tangle-state.context.dir]
+      (let [dir (vim.fs.dirname filepath)]
         (vim.fn.mkdir dir "p")))
 
     ;; Write block text to target tangle file
@@ -370,11 +372,11 @@
         block (or (parse-block text) {})
         contents-node (find-child-by-type :contents node)
         conf (if block.ok (resolve-conf tangle-state block) nil)]
-    (when (and block.ok contents-node conf conf.props.tangle (not= conf.props.tangle :none))
-      (tangle-block tangle-state
-                    {:block block
-                     :conf conf
-                     :node contents-node}))))
+   (when (and block.ok contents-node conf conf.props.tangle (not= conf.props.tangle :none))
+     (tangle-block tangle-state
+                   {:block block
+                    :conf conf
+                    :node contents-node}))))
 
 (fn parse-header-args
   [header-args-txt]
