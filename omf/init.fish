@@ -7,6 +7,7 @@ set -x PATH \
     $HOME/.config/yarn/global/node_modules/.bin \
     $HOME/.luarocks/bin \
     $HOME/.emacs.d/bin \
+    $HOME/.cargo/bin \
     /usr/local/bin \
     /usr/local/opt/openjdk/bin \
     /usr/bin \
@@ -32,3 +33,4 @@ direnv hook fish | source
 # [[file:oh-my-fish.org::*ASDF Version Manager][ASDF Version Manager:1]]
 source (brew --prefix asdf)"/libexec/asdf.fish"
 # ASDF Version Manager:1 ends here
+

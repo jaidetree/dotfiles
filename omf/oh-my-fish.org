@@ -1,10 +1,8 @@
 #+title: Oh My Fish
-:CONFIG:
 #+property: header-args:fish :tangle init.fish
 #+property: header-args:bash :tangle install.sh
 #+property: header-args :mkdirp yes
 #+startup: indent
-:END:
 
 
 * Install
@@ -45,6 +43,7 @@ set -x PATH \
     $HOME/.config/yarn/global/node_modules/.bin \
     $HOME/.luarocks/bin \
     $HOME/.emacs.d/bin \
+    $HOME/.cargo/bin \
     /usr/local/bin \
     /usr/local/opt/openjdk/bin \
     /usr/bin \
