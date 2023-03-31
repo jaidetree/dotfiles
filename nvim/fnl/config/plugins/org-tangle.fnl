@@ -304,39 +304,41 @@
   [tangle-state {: block : node : conf}]
   (let [{: files : headline} tangle-state
         {: filename : filepath } conf
-        mode (if (. files filename) :a+ :w)
+        file-handles tangle-state.file-handles
         (line _col _count) (node:start)
+        new-file (not (. file-handles filepath))
         (_ col) (: (node:parent) :range)
         text (fix-indentation block.body col)
         format-str (get-comment-format conf.lang conf.file)]
-    ;; Create initial file entry to store block counts in headlines
-    (when (= mode :w)
-      (tset tangle-state.files filename {}))
+   ;; Create the directory tree if mkdirp is true
+   (when (and new-file conf.props.mkdirp)
+     (let [dir (vim.fs.dirname filepath)]
+       (vim.fn.mkdir dir "p")))
 
-    ;; Set or increment the src block index for current headline
-    (let [sections (. files filename)]
-      (when (not (. sections headline))
-        (tset sections headline 0))
-      (c.update sections headline c.inc))
+   ;; Create initial file entry to store block counts and file handles
+   (when new-file
+     (tset tangle-state.files filename {})
+     (tset file-handles filepath (io.open filepath)))
 
-    ;; Create the directory tree if mkdirp is true
-    (when (and (= mode :w) conf.props.mkdirp)
-      (let [dir (vim.fs.dirname filepath)]
-        (vim.fn.mkdir dir "p")))
+   ;; Set or increment the src block index for current headline
+   (let [sections (. files filename)]
+     (when (not (. sections headline))
+       (tset sections headline 0))
+     (c.update sections headline c.inc))
 
-    ;; Write block text to target tangle file
-    (with-open [fout (io.open filepath mode)]
-      (let [[begin-comment end-comment] (format-comment
-                                          {:lang     conf.lang
-                                           :file     (format-file
-                                                       filepath
-                                                       tangle-state.context.filename)
-                                           :headline headline
-                                           :idx      (. files filename headline)
-                                           :line     line})]
-        (fout:write (.. begin-comment "\n"
-                        text "\n"
-                        end-comment "\n\n"))))))
+   ;; Write block text to target tangle file
+   (let [fout (. file-handles filepath)
+         [begin-comment end-comment] (format-comment
+                                         {:lang     conf.lang
+                                          :file     (format-file
+                                                      filepath
+                                                      tangle-state.context.filename)
+                                          :headline headline
+                                          :idx      (. files filename headline)
+                                          :line     line})]
+     (fout:write (.. begin-comment "\n"
+                     text "\n"
+                     end-comment "\n\n")))))
 
 
 (fn find-child
@@ -426,8 +428,10 @@
   [tangle-state header-args-list]
   (each [_ header-args (ipairs header-args-list)]
     (let [lang (. tangle-state.conf header-args.lang)]
-        (table.insert tangle-state.conf {:level tangle-state.level
-                                         :props {header-args.lang header-args.props}}))))
+        (table.insert
+          tangle-state.conf
+          {:level tangle-state.level
+           :props {header-args.lang header-args.props}}))))
 
 
 (fn process-node
@@ -459,6 +463,11 @@
           (process-node tangle-state subnode)))))
   tangle-state)
 
+(fn close-handles
+  [tangle-state]
+  (each [filepath fout (pairs tangle-state.file-handles)]
+    (fout:close)))
+
 (fn tangle
   []
   (let [lang-tree (vim.treesitter.get_parser 0)
@@ -468,12 +477,14 @@
         tangle-state {:level 0
                       :conf []
                       :files {}
+                      :file-handles {}
                       :context {: bufnr
                                 : dir
                                 : filename}}
         syntax-tree (lang-tree:parse)
         root (: (. syntax-tree 1) :root)
         tangle-state (process-node tangle-state root)]
+    (close-handles tangle-state)
     (print "Tangled" (c.count tangle-state.files) "files" (fennel.view (vim.tbl_keys tangle-state.files)))))
 
 
