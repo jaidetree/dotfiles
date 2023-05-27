@@ -99,7 +99,8 @@
                        (ts-cfg.setup {:sync_install true
                                       :auto_install true
                                       :highlight {:enable true}
-                                      :rainbow {:enable true}})
+                                      :rainbow {:enable true}
+                                      :indent {:enable true}})
                        (ts-ctx.setup)
                        (set parser-cfg.markdown.filetype_to_parsername
                             :octo))})
@@ -302,10 +303,10 @@
 (fn reload-config []
   (let [modules []]
    (each [module-name exports (pairs package.loaded)]
-     (when (s.starts-with? module-name :config)
+     (when (and (s.starts-with? module-name :config)
+                (not= module-name :config.fennel))
        (table.insert modules module-name)
        (tset package.loaded module-name nil)))
-
    (require :config.core)
    (each [_i module-name (ipairs modules)]
      (when (not= module-name :config.core)
@@ -313,9 +314,12 @@
    (print "Reloaded config")))
 
 (comment
-  (reload-config))
+  (require "init")
+  (reload-config)
+  package.loaded)
 
 (vim.api.nvim_create_user_command :ReloadConfig reload-config {})
+;; (vim.api.nvim_create_user_command :ReloadConfig (fn [] nil) {})
 
 
 (fn fnlfile

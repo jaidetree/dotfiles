@@ -318,7 +318,7 @@
    ;; Create initial file entry to store block counts and file handles
    (when new-file
      (tset tangle-state.files filename {})
-     (tset file-handles filepath (io.open filepath)))
+     (tset file-handles filepath (io.open filepath "w+")))
 
    ;; Set or increment the src block index for current headline
    (let [sections (. files filename)]

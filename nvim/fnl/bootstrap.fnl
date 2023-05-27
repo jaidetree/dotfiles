@@ -33,6 +33,8 @@
 (local cfg (require :config.core))
 ;; Bootstrapping Fennel:7 ends here
 
+(print "\nLOADED init.fnl\n")
+
 ;; [[file:./fnl/bootstrap.fnl::*Bootstrapping Fennel][Bootstrapping Fennel:8]]
 cfg
 ;; Bootstrapping Fennel:8 ends here
