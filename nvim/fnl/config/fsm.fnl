@@ -1,4 +1,4 @@
-(local p (require :config.validators))
+(local p (require :config.predicates))
 (local {:core c} (require :config.utils))
 (local spec-tag {:type :fsm-spec})
 (local fsm-tag {:type :fsm-instance})
@@ -20,6 +20,10 @@
 
 (fn actions->validator
   [name validators-tbl]
+  (assert (p.assoc? validators-tbl)
+          (.. "fsm error [ " name "]: Expected actions table. Received "
+              (fennel.view validators-tbl)))
+          
   (let [validators-tbl (vim.tbl_map p.map validators-tbl)]
    (fn [action]
      (when (not (action? action))
@@ -42,7 +46,7 @@
              :actions actions
              :context context}
    :validators {:state (state->validator name state)
-                :context (p.map context)
+                :context (if context (p.map context) (fn [] true))
                 :actions (actions->validator name actions)}
    :transitions {}})
 
@@ -106,8 +110,8 @@
 (fn append-transition
   [machine spec]
   (let [prefix (machine-prefix machine)]
-   (each [_ state (ipairs transition-tbl.when)]
-     (each [_ action (ipairs transition-tbl.on)]
+   (each [_ state ipairs spec.when]
+     (each [_ action (ipairs spec.on)]
        (let [key (.. state " " action)]
          (assert 
            (not (. machine.transitions key))
@@ -253,7 +257,7 @@
     {:on   [:fetch]
      :when [:idle :fulfilled :failed]
      :do
-     (fn [{: state : ctx : cancel-effect &as machine} {: url &as action}]
+     (fn [{: state : ctx : clear-effect &as machine} {: url &as action}]
        {:state {:is :pending
                 :url url
                 :started-at (now)}
@@ -274,7 +278,7 @@
     {:on   [:resolve]
      :when [:pending]
      :do
-     (fn [{: state : ctx : cancelEffect &as machine} {: response :as}]
+     (fn [{: state : ctx : clear-effect &as machine} {: response &as action}]
        {:state {:is :fulfilled
                 :response response
                 :data     response.data
