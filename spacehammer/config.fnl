@@ -1,14 +1,14 @@
-(require-macros :lib.macros)
-(require-macros :lib.advice.macros)
-(local windows (require :windows))
+(require-macros :spacehammer.lib.macros)
+(require-macros :spacehammer.lib.advice.macros)
+(local windows (require :spacehammer.windows))
 (local {:concat concat
         :filter filter
         :logf logf
         :map map
-        :range range} (require :lib.functional))
-(local vim (require :vim))
+        :range range} (require :spacehammer.lib.functional))
+(local vim (require :spacehammer.vim))
 
-(local {:activate-modal activate-modal} (require :lib.modal))
+(local {:activate-modal activate-modal} (require :spacehammer.lib.modal))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Private Config
@@ -99,19 +99,19 @@
          :title "Jump"}
         {:mods [:cmd]
          :key :h
-         :action "windows:jump-window-left"
+         :action "spacehammer.windows:jump-window-left"
          :repeatable true}
         {:mods [:cmd]
          :key :j
-         :action "windows:jump-window-above"
+         :action "spacehammer.windows:jump-window-above"
          :repeatable true}
         {:mods [:cmd]
          :key :k
-         :action "windows:jump-window-below"
+         :action "spacehammer.windows:jump-window-below"
          :repeatable true}
         {:mods [:cmd]
          :key :l
-         :action "windows:jump-window-right"
+         :action "spacehammer.windows:jump-window-right"
          :repeatable true}])
 
 (local window-layouts
@@ -145,18 +145,18 @@
          :key "n, p"
          :title "Move up\\down screens"}
         {:key :n
-         :action "windows:move-south"
+         :action "spacehammer.windows:move-south"
          :repeatable true}
         {:key :p
-         :action "windows:move-north"
+         :action "spacehammer.windows:move-north"
          :repeatable true}
         {:mods [:shift]
          :key :n
-         :action "windows:move-west"
+         :action "spacehammer.windows:move-west"
          :repeatable true}
         {:mods [:shift]
          :key :p
-         :action "windows:move-east"
+         :action "spacehammer.windows:move-east"
          :repeatable true}])
 
 (local window-items
@@ -164,22 +164,22 @@
         [return
          {:key :w
           :title "Last Window"
-          :action "windows:jump-to-last-window"}]
+          :action "spacehammer.windows:jump-to-last-window"}]
         window-layouts
         window-jumps
         window-move-screens
         [{:key :m
           :title "Maximize"
-          :action "windows:maximize-window-frame"}
+          :action "spacehammer.windows:maximize-window-frame"}
          {:key :c
           :title "Center"
-          :action "windows:center-window-frame"}
+          :action "spacehammer.windows:center-window-frame"}
          {:key :g
           :title "Grid"
-          :action "windows:show-grid"}
+          :action "spacehammer.windows:show-grid"}
          {:key :u
           :title "Undo"
-          :action "windows:undo-action"}
+          :action "spacehammer.windows:undo-action"}
          {:key :s
           :title "Move to Screen"
           :enter (fn [] (print "Entered move to screen"))
@@ -209,7 +209,7 @@
          :action (activator "iTerm2")}
         {:key :s
          :title "Slack"
-         :action "slack:quick-switcher"}
+         :action "spacehammer.slack:quick-switcher"}
         {:key :b
          :title "Brave"
          :action (activator "Brave")}
@@ -310,8 +310,8 @@
          :action (activator "Alfred 5")}
         {:key :w
          :title "Window"
-         :enter "windows:enter-window-menu"
-         :exit "windows:exit-window-menu"
+         :enter "spacehammer.windows:enter-window-menu"
+         :exit "spacehammer.windows:exit-window-menu"
          :items window-items}
         {:key :a
          :title "Apps"
@@ -337,12 +337,15 @@
          :items shadow-items}
         {:key :z
          :title "Zoom"
-         :items zoom-items}])
+         :items zoom-items}
+        {:key :b
+         :title "Set url-handlers"
+         :action "url-handlers:set-handlers"}])
 
 (local common-keys
        [{:mods [:cmd]
          :key :space
-         :action "lib.modal:activate-modal"}
+         :action "spacehammer.lib.modal:activate-modal"}
         {:mods [:cmd :ctrl]
          :key :space}
         ;; {:mods [:alt]
@@ -372,7 +375,7 @@
          :action "layouts:right-small"}
         {:mods [:hyper]
          :key :v
-         :action "vim:enable"}
+         :action "spacehammer.vim:enable"}
         {:mods [:hyper]
          :key :f
          :action (fn []
@@ -466,7 +469,7 @@
                 [{:mods [:ctrl]
                   :key :c
                   :title "Return to Emacs"
-                  :action "grammarly:back-to-emacs"}])
+                  :action "spacehammer.grammarly:back-to-emacs"}])
         :keys ""})
 
 (local hammerspoon-config
@@ -496,48 +499,48 @@
        {:key "Slack"
         :keys [{:mods [:cmd]
                 :key  :g
-                :action "slack:scroll-to-bottom"}
+                :action "spacehammer.slack:scroll-to-bottom"}
                {:mods [:ctrl]
                 :key :r
-                :action "slack:add-reaction"}
+                :action "spacehammer.slack:add-reaction"}
                {:mods [:ctrl]
                 :key :h
-                :action "slack:prev-element"}
+                :action "spacehammer.slack:prev-element"}
                {:mods [:ctrl]
                 :key :l
-                :action "slack:next-element"}
+                :action "spacehammer.slack:next-element"}
                {:mods [:ctrl]
                 :key :t
-                :action "slack:thread"}
+                :action "spacehammer.slack:thread"}
                {:mods [:ctrl]
                 :key :p
-                :action "slack:prev-day"}
+                :action "spacehammer.slack:prev-day"}
                {:mods [:ctrl]
                 :key :n
-                :action "slack:next-day"}
+                :action "spacehammer.slack:next-day"}
                {:mods [:ctrl]
                 :key :i
-                :action "slack:next-history"
+                :action "spacehammer.slack:next-history"
                 :repeat true}
                {:mods [:alt]
                 :key :k
-                :action "slack:scroll-up"
+                :action "spacehammer.slack:scroll-up"
                 :repeat true}
                {:mods [:alt]
                 :key :j
-                :action "slack:scroll-down"
+                :action "spacehammer.slack:scroll-down"
                 :repeat true}
                {:mods [:ctrl]
                 :key :o
-                :action "slack:prev-history"
+                :action "spacehammer.slack:prev-history"
                 :repeat true}
                {:mods [:ctrl]
                 :key :j
-                :action "slack:down"
+                :action "spacehammer.slack:down"
                 :repeat true}
                {:mods [:ctrl]
                 :key :k
-                :action "slack:up"
+                :action "spacehammer.slack:up"
                 :repeat true}]})
 
 (local apps

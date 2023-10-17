@@ -1,7 +1,7 @@
-(local atom (require :lib.atom))
+(local atom (require :spacehammer.lib.atom))
 (local {:concat concat
         :slice slice
-        :merge merge} (require :lib.functional))
+        :merge merge} (require :spacehammer.lib.functional))
 (local fu hs.fnutils)
 
 "

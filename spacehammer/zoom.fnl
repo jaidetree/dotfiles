@@ -1,4 +1,4 @@
-(require-macros :lib.macros)
+(require-macros :spacehammer.lib.macros)
 (local log (hs.logger.new "zoom.fnl" "debug"))
 
 (fn get-zoom

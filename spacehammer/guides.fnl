@@ -1,6 +1,6 @@
-(require-macros :lib.macros)
-(require-macros :lib.advice.macros)
-(local statemachine (require :lib.statemachine))
+(require-macros :spacehammer.lib.macros)
+(require-macros :spacehammer.lib.advice.macros)
+(local statemachine (require :spacehammer.lib.statemachine))
 (local {: eq?
         : filter
         : first
@@ -8,7 +8,7 @@
         : last
         : map
         : merge
-        : reduce} (require :lib.functional))
+        : reduce} (require :spacehammer.lib.functional))
 
 
 ;; Create some concise aliases
@@ -280,8 +280,8 @@
         [false ?cont ?events] (do
                                 (tap:stop)
                                 (fsm:send :error err)
-                                (values false [event])))
-      ))
+                                (values false [event])))))
+
 
   (set tap (hs.eventtap.new
             (map #(. event-types $1) events)
@@ -342,7 +342,7 @@
   [canvas id]
   (-?>> (canvas:canvasElements)
         (map (fn [element index] [index element]))
-        (filter (fn [[ index element ]]
+        (filter (fn [[ index element]]
                   (= element.id id)))
         (first)
         (first)
@@ -359,9 +359,9 @@
             :x (- (-> (hs.screen.mainScreen)
                       (: :frame)
                       (. :w))
-                  340)
+                  340)}
 
-            }
+
     :textAlignment :right
     :textColor (colors.cyan)
     :textSize 30
@@ -392,8 +392,8 @@
         point (hs.geometry.new point)
         guide-rect (hs.geometry.new (- x 5) (- y 5)
                                     (+ w 15) (+ h 15))]
-    (point:inside guide-rect)
-    ))
+    (point:inside guide-rect)))
+
 
 (fn near-guide?
   [point guide]
@@ -427,8 +427,8 @@
           tbl)
         [])
        (sort (asc #(. $1 :distance)))
-       (first)
-       ))
+       (first)))
+
 
 (fn edit
   [state extra]
@@ -495,8 +495,8 @@
                 (do
                   (tset canvas index :fillColor (colors.magenta))
                   (set hover-target index))
-                (tset canvas index :fillColor (colors.cyan)))
-            ))))
+                (tset canvas index :fillColor (colors.cyan)))))))
+
 
      (key-fx
       {:key :escape}
@@ -507,8 +507,8 @@
 
      (fn cleanup []
        (watcher:stop)
-       (canvas:mouseCallback nil))
-     )))
+       (canvas:mouseCallback nil)))))
+
 
 (fn clear
   [state extra]
@@ -581,9 +581,9 @@
       {:key :escape}
       (fn [event]
         (remove-by-id canvas :new-guide)
-        (fsm.send :escape)))
+        (fsm.send :escape))))))
 
-     )))
+
 
 (fn move-guide
   [state {: element :point origin : direction}]
@@ -623,9 +623,9 @@
           :horizontal (tset frame :y origin.y)
           :vertical (tset frame :x origin.x))
         (tset element :fillColor {:red 0 :green 255 :blue 255})
-        (fsm.send :escape)))
+        (fsm.send :escape))))))
 
-     )))
+
 
 (local primary-effects
        (statemachine.effect-handler
@@ -677,8 +677,8 @@
               (- point.x coords.w 10))
        :y (if (< point.y bottom-edge)
               point.y
-              (- point.y coords.h 10))}
-      )))
+              (- point.y coords.h 10))})))
+
 
 (fn pos-canvas-frame
   [direction point]
@@ -699,8 +699,8 @@
     [:vertical   point] {:x (+ point.x 10)
                          :y point.y
                          :w 200
-                         :h 30})
-  )
+                         :h 30}))
+
 
 (fn create-pos-canvas
   [{: direction : initial : origin}]
@@ -755,8 +755,8 @@
 
      (fn cleanup
        []
-       (pos-canvas:delete)
-       ))))
+       (pos-canvas:delete)))))
+
 
 (fn color->tbl
   [color]
@@ -781,7 +781,7 @@
       :action "fill"
       :type "rectangle"
       :fillColor cyan
-      :frame {:x 0 :y 2 :w 2 :h canvas-frame.h }})
+      :frame {:x 0 :y 2 :w 2 :h canvas-frame.h}})
 
     (combine-fx
      (mouse-fx
@@ -805,22 +805,22 @@
                   (tset canvas :hint-top :fillColor cyan))
 
                 (when (eq? left-color magenta)
-                  (tset canvas :hint-left :fillColor cyan))))
+                  (tset canvas :hint-left :fillColor cyan)))))))
 
-        )))
+
 
      (fn cleanup-hints
        []
        (remove-by-id canvas :hint-top)
-       (remove-by-id canvas :hint-left))))
-)
+       (remove-by-id canvas :hint-left)))))
+
 
 (local secondary-effects
        (statemachine.effect-handler
         {:edit         show-hints
          :create-guide show-pos
-         :move-guide   show-pos})
-       )
+         :move-guide   show-pos}))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

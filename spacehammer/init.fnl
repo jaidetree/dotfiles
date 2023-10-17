@@ -1,12 +1,10 @@
-(require-macros :lib.macros)
-(require-macros :lib.advice.macros)
+(require-macros :spacehammer.lib.macros)
+(require-macros :spacehammer.lib.advice.macros)
 
 (hs.console.clearConsole)
 
-(hs.loadSpoon "SpoonInstall")
 
-
-(local hyper (require :lib.hyper))
+(local hyper (require :spacehammer.lib.hyper))
 (local zoom (require :zoom))
 (local tmux (require :tmux))
 (local idle (require :idle))
@@ -62,11 +60,11 @@
 (fn loop
   [get-song-fn callback-fn]
   (let [song (get-song-fn)]
-  (when (not (= state.last-song song))
-    (when song
-      (callback-fn song))
-    (tset state :last-song song)))
-	(hs.timer.doAfter 1 #(loop get-song-fn callback-fn)))
+   (when (not (= state.last-song song))
+     (when song
+       (callback-fn song))
+     (tset state :last-song song)))
+  (hs.timer.doAfter 1 #(loop get-song-fn callback-fn)))
 
 (fn get-track
   []

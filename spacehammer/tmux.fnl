@@ -1,4 +1,4 @@
-(require-macros :lib.macros)
+(require-macros :spacehammer.lib.macros)
 (local {: compose
         : filter
         : identity
@@ -6,8 +6,8 @@
         : map
         : merge
         : reduce
-        : split} (require :lib.functional))
-(local atom (require :lib.atom))
+        : split} (require :spacehammer.lib.functional))
+(local atom (require :spacehammer.lib.atom))
 
 (local session (atom.new nil))
 (local prev-window (atom.new nil))
@@ -112,8 +112,8 @@
   (->> stdout
        (split "\n")
        (filter #(not (= $1 "")))
-       (map parse-session)
-       ))
+       (map parse-session)))
+
 
 (fn session-selector
   [f]
@@ -216,9 +216,9 @@
                   send-file-to-tmux
                   commit-command
                   delete-tmp-file
-                  confirmation-alert
+                  confirmation-alert)
                   ;; activate-terminal
-                  )
+
                  pprint))
 
 (fn send-to-tmux
@@ -249,8 +249,8 @@
             (when (not (= text ""))
               (send {:text (string.gsub text "\n" "")})
               (hs.eventtap.keyStroke [] :escape)
-              (hs.eventtap.keyStroke [] :j)))
-          )})
+              (hs.eventtap.keyStroke [] :j))))})
+
 
 (fn prepare-selection
   [send]

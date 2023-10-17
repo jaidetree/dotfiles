@@ -1,9 +1,9 @@
-(local atom (require :lib.atom))
-(local statemachine (require :lib.statemachine))
+(local atom (require :spacehammer.lib.atom))
+(local statemachine (require :spacehammer.lib.statemachine))
 (local {:eq? eq?
         :map map
-        :merge merge} (require :lib.functional))
-(local {:timeout timeout} (require :lib.utils))
+        :merge merge} (require :spacehammer.lib.functional))
+(local {:timeout timeout} (require :spacehammer.lib.utils))
 
 (local types hs.eventtap.event.types)
 (local fsms (atom.new []))

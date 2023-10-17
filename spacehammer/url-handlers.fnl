@@ -10,8 +10,8 @@ Default or Work browser profile
 
 https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 "
-(require-macros :lib.macros)
-(require-macros :lib.advice.macros)
+(require-macros :spacehammer.lib.macros)
+(require-macros :spacehammer.lib.advice.macros)
 
 (local {: contains?
         : filter
@@ -19,7 +19,7 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
         : join
         : map
         : merge
-        : seq} (require :lib.functional))
+        : seq} (require :spacehammer.lib.functional))
 
 (fn cmd-str
   [args]
@@ -51,19 +51,16 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
          :cmd (fn [url]
                 ["open" "-a" (quo "Brave Browser.app") "-n"
                  "--args"
-                 (.. "--profile-directory=" (quo "Profile 1"))
+                 (.. "--profile-directory=" (quo "Profile 3"))
                  (quo url)])}
 
-        :brave-browser-personal
+        :orion-browser-personal
         {:title "Personal"
-         :app "Brave Browser"
-         :subtext "Brave Browser"
+         :app "Orion"
+         :subtext "Orion Browser"
          :schemes ["http" "https" "mailto"]
          :cmd (fn [url]
-                ["open" "-a" (quo "Brave Browser.app") "-n"
-                 "--args"
-                 (.. "--profile-directory=" (quo "Default"))
-                 (quo url)])}})
+                ["open" "-a" (quo "Orion.app") (quo url)])}})
 
 (defn open-url
       [full-url selected]
@@ -102,8 +99,8 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
   (-?> app-name
        (hs.application.find)
        (: :bundleID)
-       (hs.image.imageFromAppBundle)
-       ))
+       (hs.image.imageFromAppBundle)))
+
 
 (defn url-handler
       [scheme host params full-url sender-pid]
@@ -121,8 +118,8 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
                               (map (fn [application]
                                      {:uuid application.id
                                       :text (string.format "%s\n%s" application.title application.subtext)
-                                      :image (get-app-icon application.app)
-                                      }))))
+                                      :image (get-app-icon application.app)}))))
+
         (chooser:placeholderText full-url)
         (chooser:show)))
 
@@ -144,9 +141,15 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
 
 ;; Tell hammerspoon to set hammerspoon app as the default handler
 ;; for both https:// http:// and mailto: urls
-(hs.urlevent.setDefaultHandler "https")
-(hs.urlevent.setDefaultHandler "http")
-(hs.urlevent.setDefaultHandler "mailto")
+; (hs.urlevent.setDefaultHandler "https")
+;; (hs.urlevent.setDefaultHandler "http")
+;; (hs.urlevent.setDefaultHandler "mailto")
+
+(fn set-handlers
+  []
+  (hs.urlevent.setDefaultHandler "https")
+  (hs.urlevent.setDefaultHandler "http")
+  (hs.urlevent.setDefaultHandler "mailto"))
 
 ;; Override the default root callback once PR#3127 lands, this
 ;; will not likely be necessary
@@ -164,4 +167,5 @@ https://www.hammerspoon.org/docs/hs.urlevent.html#setDefaultHandler
     (when (not ok)
       (hs.showError err)))))
 
-{:applications applications}
+{:applications applications
+ :set-handlers set-handlers}
